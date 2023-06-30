@@ -4,25 +4,35 @@ using iText.Signatures;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Security.Cryptography.X509Certificates;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Assinador
 {
     public static class AssinarPDF
     {
-        public static async Task<MemoryStream> Sign(string caminhoCertificado, string senha, MemoryStream sourceFile)
+        public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int page = 1, int x = 30, int y = 30, DateTime? dataAssinatura = null)
         {
-            string fileName = "";
-            int bufferSize;
-            FileStream fs = null;
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
 
             try
             {
-                fileName = System.IO.Path.GetTempFileName() + ".pdf";
-                bufferSize = sourceFile.ToArray().Length;
-                await File.WriteAllBytesAsync(fileName, sourceFile.ToArray());
-                fs = File.OpenRead(fileName);
+                if (!dataAssinatura.HasValue)
+                {
+                    dataAssinatura = DateTime.Now;
+                }
+
+                var fileName = System.IO.Path.GetTempFileName() + ".pdf";
+                int bufferSize = sourceFile.ToArray().Length;
+                File.WriteAllBytes(fileName, sourceFile.ToArray());
+                var fs = File.OpenRead(fileName);
+
+                fileStreams.Add(fs);
+                fileNames.Add(fileName);
 
                 char[] PASSWORD = senha.ToCharArray();
 
@@ -36,14 +46,34 @@ namespace Assinador
                         break;
                     }
                 }
-                ICipherParameters pk = pk12.GetKey(alias).Key;
 
-                X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
-                X509Certificate[] chain = new X509Certificate[ce.Length];
-                for (int k = 0; k < ce.Length; ++k)
+                AsymmetricKeyEntry key = pk12.GetKey(alias);
+                ICipherParameters pk = key.Key;
+
+                //X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
+                //X509Certificate[] chain = new X509Certificate[ce.Length];
+                //for (int k = 0; k < ce.Length; ++k)
+                //{
+                //    chain[k] = ce[k].Certificate;
+                //}
+
+                #region Construindo o caminho do certificado do assinante até o certificado de emissor 
+                X509Certificate2 subscriberCert = new X509Certificate2(caminhoCertificado, senha);
+                X509Chain chain2 = new X509Chain();
+                chain2.Build(subscriberCert);
+
+                X509Certificate2Collection certificates = new X509Certificate2Collection();
+                foreach (X509ChainElement element in chain2.ChainElements)
                 {
-                    chain[k] = ce[k].Certificate;
+                    certificates.Add(element.Certificate);
                 }
+
+                List<X509Certificate> certPath = new List<X509Certificate>();
+                foreach (X509Certificate2 cert in certificates)
+                {
+                    certPath.Add(new X509CertificateParser().ReadCertificate(cert.RawData));
+                }
+                #endregion
 
                 PdfReader reader = new PdfReader(fs);
 
@@ -52,28 +82,97 @@ namespace Assinador
                 PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
 
                 PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-                appearance.SetReason("Apenas teste")
-                    .SetLocation("Brazil")
-                    .SetPageRect(new Rectangle(36, 648, 200, 100))
-                    .SetPageNumber(1);
-                signer.SetFieldName("Goiabada");
 
-                IExternalSignature pks = new PrivateKeySignature(pk, DigestAlgorithms.SHA256);
+                var dadosCertificado = pk12.GetCertificate(alias);
 
-                signer.SignDetached(pks, chain, null, null, null, 0,
-                PdfSigner.CryptoStandard.CMS);
+                var subject = dadosCertificado.Certificate.SubjectDN.GetValueList();
+
+                appearance
+                    .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
+                    .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
+                    .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
+                    .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
+                    .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
+                    .SetLayer2FontSize(9)
+                    .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
+                    .SetPageRect(new Rectangle(x, y, 200, 50))
+                    .SetPageNumber(page);
+
+                signer.SetFieldName("assinatura");
+                signer.SetSignDate(dataAssinatura.Value);
+
+                var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
+
+                signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
+
+                //fileName = System.IO.Path.GetTempFileName() + ".pdf";
+                //fileNames.Add(fileName);
+
+                //File.WriteAllBytes(fileName, outputStream.ToArray());
+
+                //fs = File.OpenRead(fileName);
+                //fileStreams.Add(fs);
+
+                //reader = new PdfReader(fs);
+                //PdfWriter writer = new PdfWriter(System.IO.Path.GetTempFileName() + ".pdf");
+                //PdfDocument document = new PdfDocument(reader, writer, new StampingProperties().UseAppendMode());
+
+                //OCSPVerifier ocspVerifier = new OCSPVerifier(null, null);
+                //OcspClientBouncyCastle ocspClient = new OcspClientBouncyCastle(ocspVerifier);
+                //CrlClientOnline crlClient = new CrlClientOnline();
+
+                //LtvVerification ltvVerification = new LtvVerification(document);
+
+                //SignatureUtil signatureUtil = new SignatureUtil(document);
+                //var names = signatureUtil.GetSignatureNames();
+                //var sigName = names.Last();
+                //PdfPKCS7 pkcs7 = signatureUtil.ReadSignatureData(sigName);
+                //if (pkcs7.IsTsp())
+                //{
+                //    //ltvVerification.AddVerification(sigName, ocsp, crl, LtvVerification.CertificateOption.WHOLE_CHAIN,
+                //    //    LtvVerification.Level.OCSP_CRL, LtvVerification.CertificateInclusion.NO);
+                //    ltvVerification.AddVerification(sigName, ocspClient, crlClient, LtvVerification.CertificateOption.WHOLE_CHAIN,
+                //           LtvVerification.Level.OCSP_CRL,
+                //           LtvVerification.CertificateInclusion.YES);
+                //}
+                //else
+                //{
+                //    foreach (var name in names)
+                //    {
+                //        //v.AddVerification(name, ocsp, crl, LtvVerification.CertificateOption.WHOLE_CHAIN,
+                //        //    LtvVerification.Level.OCSP_CRL, LtvVerification.CertificateInclusion.NO);
+                //        ltvVerification.AddVerification(name, ocspClient, crlClient, LtvVerification.CertificateOption.WHOLE_CHAIN,
+                //            LtvVerification.Level.OCSP_CRL,
+                //            LtvVerification.CertificateInclusion.YES);
+                //    }
+                //}
+                //ltvVerification.Merge();
 
                 return outputStream;
             }
-            catch
+            catch (Exception ex)
             {
-                fs.Close();
-                File.Delete(fileName);
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
             }
             finally
             {
-                fs.Close();
-                File.Delete(fileName);
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
             }
 
             return sourceFile;
