@@ -14,7 +14,7 @@ namespace Assinador
 {
     public static class AssinarPDF
     {
-        public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int page = 1, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
         {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
@@ -81,6 +81,11 @@ namespace Assinador
 
                 PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
 
+                if (!page.HasValue)
+                {
+                    page = signer.GetDocument().GetNumberOfPages();
+                }
+
                 PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
 
                 var dadosCertificado = pk12.GetCertificate(alias);
@@ -96,7 +101,7 @@ namespace Assinador
                     .SetLayer2FontSize(9)
                     .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
                     .SetPageRect(new Rectangle(x, y, 200, 50))
-                    .SetPageNumber(page);
+                    .SetPageNumber(page.Value);
 
                 signer.SetFieldName("assinatura");
                 signer.SetSignDate(dataAssinatura.Value);
