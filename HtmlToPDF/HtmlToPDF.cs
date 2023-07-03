@@ -13,7 +13,7 @@ namespace ConversorHTML
             MemoryStream stream = new MemoryStream();
             PdfDocument pdfDocument = new PdfDocument(new PdfWriter(stream));
             pdfDocument.SetDefaultPageSize(PageSize.A4);
-            HtmlConverter.ConvertToPdf(html.Replace("px", "").Replace("%", ""), pdfDocument, converterProperties);
+            HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
             stream.Close();
             return stream;
         }
