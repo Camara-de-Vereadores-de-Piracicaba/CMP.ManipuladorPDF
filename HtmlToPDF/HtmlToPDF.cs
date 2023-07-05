@@ -150,6 +150,22 @@ namespace ConversorHTML
             return sourceFile;
         }
 
+        public static MemoryStream RetornarApenasUmaPaginaPDF(this string sourceFile, int pagina = 1)
+        {
+            var outputStream = new MemoryStream();
+
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
+            PdfDocument newPdfDoc = new PdfDocument(writer);
+
+            pdfDoc.CopyPagesTo(pagina, 1, newPdfDoc);
+
+            pdfDoc.Close();
+            newPdfDoc.Close();
+
+            return outputStream;
+        }
+
         public static int QuantidadePaginasPDF(this MemoryStream sourceFile)
         {
             List<string> fileNames = new List<string>();
