@@ -1,19 +1,12 @@
 ﻿using iText.Html2pdf;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
-using iText.Signatures;
-using Org.BouncyCastle.Crypto;
-using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.X509;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using iText.IO.Source;
+using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
-using iText.Layout;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace ConversorHTML
 {
@@ -37,18 +30,14 @@ namespace ConversorHTML
 
             try
             {
-                var fileName = System.IO.Path.GetTempFileName() + ".pdf";
-                int bufferSize = sourceFile.ToArray().Length;
-                File.WriteAllBytes(fileName, sourceFile.ToArray());
-                var fs = File.OpenRead(fileName);
-
-                fileStreams.Add(fs);
-                fileNames.Add(fileName);
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
 
                 var outputStream = new MemoryStream();
 
                 PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs), writer);
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer);
 
                 Document document = new Document(pdfDoc);
 
@@ -100,6 +89,67 @@ namespace ConversorHTML
             return sourceFile;
         }
 
+        private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source)
+        {
+            var fileName = System.IO.Path.GetTempFileName() + ".pdf";
+            File.WriteAllBytes(fileName, source.ToArray());
+            var fs = File.OpenRead(fileName);
+
+            return (fs, fileName);
+        }
+
+        public static MemoryStream RetornarApenasUmaPaginaPDF(this MemoryStream sourceFile, int pagina = 1)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
+
+                var outputStream = new MemoryStream();
+
+                PdfWriter writer = new PdfWriter(outputStream);
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
+                PdfDocument newPdfDoc = new PdfDocument(writer);
+
+                pdfDoc.CopyPagesTo(pagina, 1, newPdfDoc);
+
+                pdfDoc.Close();
+                newPdfDoc.Close();
+
+                return outputStream;
+            }
+            catch (Exception ex)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return sourceFile;
+        }
+
         public static int QuantidadePaginasPDF(this MemoryStream sourceFile)
         {
             List<string> fileNames = new List<string>();
@@ -107,20 +157,11 @@ namespace ConversorHTML
 
             try
             {
-                var fileName = System.IO.Path.GetTempFileName() + ".pdf";
-                int bufferSize = sourceFile.ToArray().Length;
-                File.WriteAllBytes(fileName, sourceFile.ToArray());
-                var fs = File.OpenRead(fileName);
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
 
-                fileStreams.Add(fs);
-                fileNames.Add(fileName);
-
-                var outputStream = new MemoryStream();
-
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs), writer);
-                Document document = new Document(pdfDoc);
-
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
                 return pdfDoc.GetNumberOfPages();
             }
             catch (Exception ex)
