@@ -115,7 +115,7 @@ namespace ConversorHTML
                 PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
                 PdfDocument newPdfDoc = new PdfDocument(writer);
 
-                pdfDoc.CopyPagesTo(pagina, 1, newPdfDoc);
+                pdfDoc.CopyPagesTo(pagina, pagina, newPdfDoc);
 
                 pdfDoc.Close();
                 newPdfDoc.Close();

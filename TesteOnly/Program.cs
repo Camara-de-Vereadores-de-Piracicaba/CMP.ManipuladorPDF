@@ -8,7 +8,7 @@ MemoryStream ms = new MemoryStream();
 await File.OpenRead("D:\\Desktop\\MINHAS_VANTAGENS.pdf").CopyToAsync(ms);
 //await File.OpenRead("C:\\Users\\0308\\Desktop\\Outros\\teste.pdf").CopyToAsync(ms);
 
-var onlyOnePage = ms.RetornarApenasUmaPaginaPDF();
+var onlyOnePage = ms.RetornarApenasUmaPaginaPDF(2);
 await File.WriteAllBytesAsync("D:\\Desktop\\umapaginaapenas.pdf", onlyOnePage.ToArray());
 //var numerado = HtmlToPDF.NumerarPDF(ms);
 //await File.WriteAllBytesAsync("C:\\Users\\0308\\source\\repos\\m-marco\\CMP.ManipuladorPDF\\numerado.pdf", numerado.ToArray());
