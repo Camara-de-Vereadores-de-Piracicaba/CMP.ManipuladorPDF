@@ -19,7 +19,7 @@ namespace ConversorHTML
 {
     public static class HtmlToPDF
     {
-        public static MemoryStream Convert(this string html)
+        public static MemoryStream ConvertToPDF(this string html)
         {
             ConverterProperties converterProperties = new ConverterProperties();
             MemoryStream stream = new MemoryStream();
@@ -30,7 +30,7 @@ namespace ConversorHTML
             return stream;
         }
 
-        public static MemoryStream Numerar(this MemoryStream sourceFile, int numeracaoInicial = 1)
+        public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1)
         {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
@@ -98,6 +98,57 @@ namespace ConversorHTML
             }
 
             return sourceFile;
+        }
+
+        public static int QuantidadePaginasPDF(this MemoryStream sourceFile)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fileName = System.IO.Path.GetTempFileName() + ".pdf";
+                int bufferSize = sourceFile.ToArray().Length;
+                File.WriteAllBytes(fileName, sourceFile.ToArray());
+                var fs = File.OpenRead(fileName);
+
+                fileStreams.Add(fs);
+                fileNames.Add(fileName);
+
+                var outputStream = new MemoryStream();
+
+                PdfWriter writer = new PdfWriter(outputStream);
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs), writer);
+                Document document = new Document(pdfDoc);
+
+                return pdfDoc.GetNumberOfPages();
+            }
+            catch (Exception ex)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return 0;
         }
     }
 }
