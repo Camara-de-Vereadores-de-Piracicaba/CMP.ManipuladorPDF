@@ -133,7 +133,7 @@ namespace Assinador
                 .SetPageRect(new Rectangle(x, y, 200, 50))
                 .SetPageNumber(page.Value);
 
-            signer.SetFieldName("assinatura");
+            signer.SetFieldName(signer.GetNewSigFieldName());
             signer.SetSignDate(dataAssinatura.Value);
 
             var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
