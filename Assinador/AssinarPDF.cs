@@ -21,11 +21,6 @@ namespace Assinador
 
             try
             {
-                if (!dataAssinatura.HasValue)
-                {
-                    dataAssinatura = DateTime.Now;
-                }
-
                 var fileName = System.IO.Path.GetTempFileName() + ".pdf";
                 int bufferSize = sourceFile.ToArray().Length;
                 File.WriteAllBytes(fileName, sourceFile.ToArray());
@@ -34,126 +29,8 @@ namespace Assinador
                 fileStreams.Add(fs);
                 fileNames.Add(fileName);
 
-                char[] PASSWORD = senha.ToCharArray();
-
-                Pkcs12Store pk12 = new Pkcs12Store(new FileStream(caminhoCertificado, FileMode.Open, FileAccess.Read), PASSWORD);
-                string alias = null;
-                foreach (object a in pk12.Aliases)
-                {
-                    alias = ((string)a);
-                    if (pk12.IsKeyEntry(alias))
-                    {
-                        break;
-                    }
-                }
-
-                AsymmetricKeyEntry key = pk12.GetKey(alias);
-                ICipherParameters pk = key.Key;
-
-                //X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
-                //X509Certificate[] chain = new X509Certificate[ce.Length];
-                //for (int k = 0; k < ce.Length; ++k)
-                //{
-                //    chain[k] = ce[k].Certificate;
-                //}
-
-                #region Construindo o caminho do certificado do assinante até o certificado de emissor 
-                X509Certificate2 subscriberCert = new X509Certificate2(caminhoCertificado, senha);
-                X509Chain chain2 = new X509Chain();
-                chain2.Build(subscriberCert);
-
-                X509Certificate2Collection certificates = new X509Certificate2Collection();
-                foreach (X509ChainElement element in chain2.ChainElements)
-                {
-                    certificates.Add(element.Certificate);
-                }
-
-                List<X509Certificate> certPath = new List<X509Certificate>();
-                foreach (X509Certificate2 cert in certificates)
-                {
-                    certPath.Add(new X509CertificateParser().ReadCertificate(cert.RawData));
-                }
-                #endregion
-
                 PdfReader reader = new PdfReader(fs);
-
-                MemoryStream outputStream = new MemoryStream();
-
-                PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
-
-                if (!page.HasValue)
-                {
-                    page = signer.GetDocument().GetNumberOfPages();
-                }
-
-                PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-
-                var dadosCertificado = pk12.GetCertificate(alias);
-
-                var subject = dadosCertificado.Certificate.SubjectDN.GetValueList();
-
-                appearance
-                    .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
-                    .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
-                    .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
-                    .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
-                    .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
-                    .SetLayer2FontSize(9)
-                    .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
-                    .SetPageRect(new Rectangle(x, y, 200, 50))
-                    .SetPageNumber(page.Value);
-
-                signer.SetFieldName("assinatura");
-                signer.SetSignDate(dataAssinatura.Value);
-
-                var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
-
-                signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
-
-                //fileName = System.IO.Path.GetTempFileName() + ".pdf";
-                //fileNames.Add(fileName);
-
-                //File.WriteAllBytes(fileName, outputStream.ToArray());
-
-                //fs = File.OpenRead(fileName);
-                //fileStreams.Add(fs);
-
-                //reader = new PdfReader(fs);
-                //PdfWriter writer = new PdfWriter(System.IO.Path.GetTempFileName() + ".pdf");
-                //PdfDocument document = new PdfDocument(reader, writer, new StampingProperties().UseAppendMode());
-
-                //OCSPVerifier ocspVerifier = new OCSPVerifier(null, null);
-                //OcspClientBouncyCastle ocspClient = new OcspClientBouncyCastle(ocspVerifier);
-                //CrlClientOnline crlClient = new CrlClientOnline();
-
-                //LtvVerification ltvVerification = new LtvVerification(document);
-
-                //SignatureUtil signatureUtil = new SignatureUtil(document);
-                //var names = signatureUtil.GetSignatureNames();
-                //var sigName = names.Last();
-                //PdfPKCS7 pkcs7 = signatureUtil.ReadSignatureData(sigName);
-                //if (pkcs7.IsTsp())
-                //{
-                //    //ltvVerification.AddVerification(sigName, ocsp, crl, LtvVerification.CertificateOption.WHOLE_CHAIN,
-                //    //    LtvVerification.Level.OCSP_CRL, LtvVerification.CertificateInclusion.NO);
-                //    ltvVerification.AddVerification(sigName, ocspClient, crlClient, LtvVerification.CertificateOption.WHOLE_CHAIN,
-                //           LtvVerification.Level.OCSP_CRL,
-                //           LtvVerification.CertificateInclusion.YES);
-                //}
-                //else
-                //{
-                //    foreach (var name in names)
-                //    {
-                //        //v.AddVerification(name, ocsp, crl, LtvVerification.CertificateOption.WHOLE_CHAIN,
-                //        //    LtvVerification.Level.OCSP_CRL, LtvVerification.CertificateInclusion.NO);
-                //        ltvVerification.AddVerification(name, ocspClient, crlClient, LtvVerification.CertificateOption.WHOLE_CHAIN,
-                //            LtvVerification.Level.OCSP_CRL,
-                //            LtvVerification.CertificateInclusion.YES);
-                //    }
-                //}
-                //ltvVerification.Merge();
-
-                return outputStream;
+                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
             }
             catch (Exception ex)
             {
@@ -181,6 +58,89 @@ namespace Assinador
             }
 
             return sourceFile;
+        }
+
+        public static MemoryStream Sign(string caminhoCertificado, string senha, string sourceFile, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        {
+            PdfReader reader = new PdfReader(sourceFile);
+            return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+        }
+
+        private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        {
+            if (!dataAssinatura.HasValue)
+            {
+                dataAssinatura = DateTime.Now;
+            }
+
+            char[] PASSWORD = senha.ToCharArray();
+
+            Pkcs12Store pk12 = new Pkcs12Store(new FileStream(caminhoCertificado, FileMode.Open, FileAccess.Read), PASSWORD);
+            string alias = null;
+            foreach (object a in pk12.Aliases)
+            {
+                alias = ((string)a);
+                if (pk12.IsKeyEntry(alias))
+                {
+                    break;
+                }
+            }
+
+            AsymmetricKeyEntry key = pk12.GetKey(alias);
+            ICipherParameters pk = key.Key;
+
+            #region Construindo o caminho do certificado do assinante até o certificado de emissor 
+            X509Certificate2 subscriberCert = new X509Certificate2(caminhoCertificado, senha);
+            X509Chain chain2 = new X509Chain();
+            chain2.Build(subscriberCert);
+
+            X509Certificate2Collection certificates = new X509Certificate2Collection();
+            foreach (X509ChainElement element in chain2.ChainElements)
+            {
+                certificates.Add(element.Certificate);
+            }
+
+            List<X509Certificate> certPath = new List<X509Certificate>();
+            foreach (X509Certificate2 cert in certificates)
+            {
+                certPath.Add(new X509CertificateParser().ReadCertificate(cert.RawData));
+            }
+            #endregion
+
+            MemoryStream outputStream = new MemoryStream();
+
+            PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
+
+            if (!page.HasValue)
+            {
+                page = signer.GetDocument().GetNumberOfPages();
+            }
+
+            PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
+
+            var dadosCertificado = pk12.GetCertificate(alias);
+
+            var subject = dadosCertificado.Certificate.SubjectDN.GetValueList();
+
+            appearance
+                .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
+                .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
+                .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
+                .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
+                .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
+                .SetLayer2FontSize(9)
+                .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
+                .SetPageRect(new Rectangle(x, y, 200, 50))
+                .SetPageNumber(page.Value);
+
+            signer.SetFieldName("assinatura");
+            signer.SetSignDate(dataAssinatura.Value);
+
+            var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
+
+            signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
+
+            return outputStream;
         }
     }
 }
