@@ -43,8 +43,6 @@ namespace ConversorHTML
 
                 for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
                 {
-                    var page = pdfDoc.GetPage(numPage);
-
                     // Adiciona o número da página no canto superior direito
                     Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
                         .SetTextAlignment(TextAlignment.RIGHT)
@@ -87,6 +85,34 @@ namespace ConversorHTML
             }
 
             return sourceFile;
+        }
+
+        public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1)
+        {
+                var outputStream = new MemoryStream();
+
+                PdfWriter writer = new PdfWriter(outputStream);
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
+
+                Document document = new Document(pdfDoc);
+
+                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                {
+                    // Adiciona o número da página no canto superior direito
+                    Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
+                        .SetTextAlignment(TextAlignment.RIGHT)
+                        .SetMargin(0)
+                        .SetFixedPosition(450, 760, 50);
+
+                    document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+
+                    numeracaoInicial++;
+                }
+
+                document.Close();
+                pdfDoc.Close();
+
+                return outputStream;
         }
 
         private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source)
