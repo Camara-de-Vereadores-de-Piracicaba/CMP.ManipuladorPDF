@@ -1,6 +1,7 @@
 ﻿using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Signatures;
+using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
@@ -120,7 +121,7 @@ namespace Assinador
 
             var dadosCertificado = pk12.GetCertificate(alias);
 
-            var subject = dadosCertificado.Certificate.SubjectDN.GetValueList();
+            var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
 
             appearance
                 .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
