@@ -17,6 +17,7 @@ using System.Text;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using Org.BouncyCastle.Ocsp;
 using Org.BouncyCastle.Math;
+using System.Security.Cryptography;
 
 namespace Assinador
 {
@@ -82,6 +83,31 @@ namespace Assinador
             }
 
             char[] PASSWORD = senha.ToCharArray();
+
+
+
+
+
+
+            X509Store my = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            //my.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+            my.Open(OpenFlags.ReadOnly);
+
+
+            // Find the certificate we'll use to sign            
+            RSACryptoServiceProvider csp = null;
+
+            var certificados = new List<X509Certificate2>();
+
+            foreach (X509Certificate2 cert in my.Certificates)
+            {
+                certificados.Add(cert);
+            }
+
+
+
+
+
 
             Pkcs12Store pk12 = new Pkcs12Store(new FileStream(caminhoCertificado, FileMode.Open, FileAccess.Read), PASSWORD);
             string alias = null;
