@@ -148,7 +148,7 @@ namespace Assinador
 
             var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
 
-            //signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
+            signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
 
 
 
