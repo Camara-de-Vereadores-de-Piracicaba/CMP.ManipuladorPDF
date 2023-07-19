@@ -14,9 +14,12 @@ MemoryStream ms = new MemoryStream();
 //var numerado = HtmlToPDF.NumerarPDF("https://localhost:44368/arquivos/solicitacaocompra/12/a191d39f-cac7-4e45-84f3-4cb79eea2002.pdf");
 //await File.WriteAllBytesAsync("C:\\Users\\0308\\source\\repos\\m-marco\\CMP.ManipuladorPDF\\numerado.pdf", numerado.ToArray());
 
+var retorno = AssinarPDF.Sign("C:\\Users\\0308\\Desktop\\Git\\CVP.Materiais\\certificados\\teste.p12",
+    "123456", "C:\\Users\\0308\\Desktop\\Lei_14063_-_2021.pdf");
 
-var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.p12",
-    "123456", "D:\\Desktop\\MINHAS_VANTAGENS.pdf");
+
+//var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.p12",
+//    "123456", "D:\\Desktop\\MINHAS_VANTAGENS.pdf");
 
 ////var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.pfx",
 ////    "teste", ms);
