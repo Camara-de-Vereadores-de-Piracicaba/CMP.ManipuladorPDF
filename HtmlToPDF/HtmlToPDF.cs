@@ -89,30 +89,30 @@ namespace ConversorHTML
 
         public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1)
         {
-                var outputStream = new MemoryStream();
+            var outputStream = new MemoryStream();
 
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
 
-                Document document = new Document(pdfDoc);
+            Document document = new Document(pdfDoc);
 
-                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
-                {
-                    // Adiciona o número da página no canto superior direito
-                    Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
-                        .SetTextAlignment(TextAlignment.RIGHT)
-                        .SetMargin(0)
-                        .SetFixedPosition(450, 760, 50);
+            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+            {
+                // Adiciona o número da página no canto superior direito
+                Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
+                    .SetTextAlignment(TextAlignment.RIGHT)
+                    .SetMargin(0)
+                    .SetFixedPosition(450, 760, 50);
 
-                    document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
 
-                    numeracaoInicial++;
-                }
+                numeracaoInicial++;
+            }
 
-                document.Close();
-                pdfDoc.Close();
+            document.Close();
+            pdfDoc.Close();
 
-                return outputStream;
+            return outputStream;
         }
 
         private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source)
@@ -232,6 +232,12 @@ namespace ConversorHTML
             }
 
             return 0;
+        }
+
+        public static int QuantidadePaginasPDF(this string file)
+        {
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(file));
+            return pdfDoc.GetNumberOfPages();
         }
     }
 }
