@@ -1,11 +1,16 @@
 ﻿using iText.Html2pdf;
+using iText.IO.Font.Constants;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace ConversorHTML
@@ -238,6 +243,143 @@ namespace ConversorHTML
         {
             PdfDocument pdfDoc = new PdfDocument(new PdfReader(file));
             return pdfDoc.GetNumberOfPages();
+        }
+
+        public static MemoryStream TornarSemEfeito(this string file)
+        {
+            var ms = new MemoryStream();
+
+            using (PdfReader pdfReader = new PdfReader(file))
+            {
+                using (PdfWriter pdfWriter = new PdfWriter(ms))
+                {
+                    PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+                    Document doc = new Document(pdfDocument);
+
+                    // Obtenha as dimensões da página
+                    Rectangle pageSize = pdfDocument.GetDefaultPageSize();
+
+                    // Defina o texto a ser adicionado
+                    string texto = "SEM EFEITO";
+
+                    // Defina a fonte e o tamanho do texto
+                    PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                    float fontSize = 80f;
+
+                    // Percorra todas as páginas do documento
+                    for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
+                    {
+                        PdfPage page = pdfDocument.GetPage(pageNumber);
+                        PdfCanvas canvas = new PdfCanvas(page);
+
+                        // Calcule a posição do texto no meio da página (diagonal)
+                        float x = (pageSize.GetLeft() + pageSize.GetRight()) / 2 - 150;
+                        float y = (pageSize.GetBottom() + pageSize.GetTop()) / 2 - 150;
+
+                        // Rotacione o texto em 45 graus
+                        canvas.SaveState()
+                              .BeginText()
+                              .SetFontAndSize(font, fontSize)
+                              .SetFillColor(DeviceGray.GRAY)
+                              .MoveText(x, y)
+                              .SetTextMatrix(0.7071f, 0.7071f, -0.7071f, 0.7071f, x, y)
+                              .ShowText(texto)
+                              .EndText()
+                              .RestoreState();
+                    }
+
+                    // Feche o documento
+                    doc.Close();
+                }
+            }
+
+            return ms;
+        }
+
+        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
+                var ms = new MemoryStream();
+
+                using (PdfReader pdfReader = new PdfReader(fs.FileStream))
+                {
+                    using (PdfWriter pdfWriter = new PdfWriter(ms))
+                    {
+                        PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+                        Document doc = new Document(pdfDocument);
+
+                        // Obtenha as dimensões da página
+                        Rectangle pageSize = pdfDocument.GetDefaultPageSize();
+
+                        // Defina o texto a ser adicionado
+                        string texto = "SEM EFEITO";
+
+                        // Defina a fonte e o tamanho do texto
+                        PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                        float fontSize = 80f;
+
+                        // Percorra todas as páginas do documento
+                        for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
+                        {
+                            PdfPage page = pdfDocument.GetPage(pageNumber);
+                            PdfCanvas canvas = new PdfCanvas(page);
+
+                            // Calcule a posição do texto no meio da página (diagonal)
+                            float x = (pageSize.GetLeft() + pageSize.GetRight()) / 2 - 150;
+                            float y = (pageSize.GetBottom() + pageSize.GetTop()) / 2 - 150;
+
+                            // Rotacione o texto em 45 graus
+                            canvas.SaveState()
+                                  .BeginText()
+                                  .SetFontAndSize(font, fontSize)
+                                  .SetFillColor(DeviceGray.GRAY)
+                                  .MoveText(x, y)
+                                  .SetTextMatrix(0.7071f, 0.7071f, -0.7071f, 0.7071f, x, y)
+                                  .ShowText(texto)
+                                  .EndText()
+                                  .RestoreState();
+                        }
+
+                        // Feche o documento
+                        doc.Close();
+                    }
+                }
+
+                return ms;
+            }
+            catch (Exception ex)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return null;
         }
     }
 }

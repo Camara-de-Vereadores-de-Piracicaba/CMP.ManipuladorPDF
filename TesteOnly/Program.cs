@@ -15,14 +15,16 @@ MemoryStream ms = new MemoryStream();
 //await File.WriteAllBytesAsync("C:\\Users\\0308\\source\\repos\\m-marco\\CMP.ManipuladorPDF\\numerado.pdf", numerado.ToArray());
 
 
-var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.p12",
-    "123456", "D:\\Desktop\\MINHAS_VANTAGENS.pdf");
+//var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.p12",
+//    "123456", "D:\\Desktop\\MINHAS_VANTAGENS.pdf");
+
+var retorno = HtmlToPDF.TornarSemEfeito("D:\\Desktop\\Outros\\MINHAS_VANTAGENS.pdf");
 
 ////var retorno = AssinarPDF.Sign("D:\\Desktop\\Git\\CMP.Compras\\certificados\\teste.pfx",
 ////    "teste", ms);
 //try
 //{
-//await File.WriteAllBytesAsync("D:\\Desktop\\umapaginaapenas_assinado.pdf", retorno.ToArray());
+await File.WriteAllBytesAsync("D:\\Desktop\\umapaginaapenas_assinado.pdf", retorno.ToArray());
 
 //}
 //catch (Exception ex)
