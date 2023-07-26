@@ -110,7 +110,7 @@ namespace Assinador
 
             MemoryStream outputStream = new MemoryStream();
 
-            PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties());
+            PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
 
             if (!page.HasValue)
             {
@@ -139,7 +139,7 @@ namespace Assinador
 
             var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
 
-            signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CADES);
+            signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 
             return outputStream;
         }
