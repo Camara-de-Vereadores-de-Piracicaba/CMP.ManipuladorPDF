@@ -28,7 +28,7 @@ namespace ConversorHTML
             return stream;
         }
 
-        public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1)
+        public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1, int left = 20, int fontSize = 9)
         {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
@@ -52,7 +52,8 @@ namespace ConversorHTML
                     Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
                         .SetTextAlignment(TextAlignment.RIGHT)
                         .SetMargin(0)
-                        .SetFixedPosition(450, 760, 50);
+                        .SetFontSize(fontSize)
+                        .SetFixedPosition(left, 760, 100);
 
                     document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
 
@@ -92,7 +93,7 @@ namespace ConversorHTML
             return sourceFile;
         }
 
-        public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1)
+        public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1, int left = 450, int fontSize = 9)
         {
             var outputStream = new MemoryStream();
 
@@ -107,7 +108,8 @@ namespace ConversorHTML
                 Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
                     .SetTextAlignment(TextAlignment.RIGHT)
                     .SetMargin(0)
-                    .SetFixedPosition(450, 760, 50);
+                    .SetFontSize(fontSize)
+                    .SetFixedPosition(left, 760, 100);
 
                 document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
 
@@ -380,6 +382,163 @@ namespace ConversorHTML
             }
 
             return null;
+        }
+
+        public static MemoryStream AdicionarRodape(this MemoryStream sourceFile, string texto, int left = 20, int fontSize = 9)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
+
+                var outputStream = new MemoryStream();
+
+                PdfWriter writer = new PdfWriter(outputStream);
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer);
+
+                Document document = new Document(pdfDoc);
+
+                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                {
+                    // Adiciona o número da página no canto superior direito
+                    Paragraph pageNumber = new Paragraph(texto)
+                        .SetMargin(0)
+                        .SetFontSize(fontSize)
+                        .SetFixedPosition(left, 760, 300);
+
+                    document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+                }
+
+                document.Close();
+                pdfDoc.Close();
+
+                return outputStream;
+            }
+            catch (Exception ex)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return sourceFile;
+        }
+
+        public static MemoryStream AdicionarRodape(this string sourceFile, string texto, int left = 20, int fontSize = 9)
+        {
+            var outputStream = new MemoryStream();
+
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
+
+            Document document = new Document(pdfDoc);
+
+            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+            {
+                // Adiciona o número da página no canto superior direito
+                Paragraph pageNumber = new Paragraph(texto)
+                        .SetMargin(0)
+                        .SetFontSize(fontSize)
+                        .SetFixedPosition(left, 760, 300);
+
+                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+            }
+
+            document.Close();
+            pdfDoc.Close();
+
+            return outputStream;
+        }
+
+        public static MemoryStream JuntarArquivosPDF(this List<MemoryStream> sourceFiles)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var outputStream = new MemoryStream();
+                PdfWriter writer = new PdfWriter(outputStream);
+                PdfDocument newPdfDoc = new PdfDocument(writer);
+                foreach (var sourceFile in sourceFiles)
+                {
+                    var fs = sourceFile.GerarFileStream();
+                    fileStreams.Add(fs.FileStream);
+                    fileNames.Add(fs.FileName);
+
+                    PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
+                    pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
+                    pdfDoc.Close();
+                }
+
+                newPdfDoc.Close();
+                return outputStream;
+            }
+            catch (Exception ex)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return null;
+        }
+
+        public static MemoryStream JuntarArquivosPDF(this List<string> sourceFiles)
+        {
+            var outputStream = new MemoryStream();
+            PdfWriter writer = new PdfWriter(outputStream);
+            PdfDocument newPdfDoc = new PdfDocument(writer);
+
+            foreach (var sourceFile in sourceFiles)
+            {
+                PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
+                pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
+                pdfDoc.Close();
+            }
+
+            newPdfDoc.Close();
+            return outputStream;
         }
     }
 }
