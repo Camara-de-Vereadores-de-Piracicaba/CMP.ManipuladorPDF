@@ -30,13 +30,16 @@ namespace Assinador
                 fileStreams.Add(fs);
                 fileNames.Add(fileName);
 
-                PdfReader reader = new PdfReader(fs);
-                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+                using (PdfReader reader = new PdfReader(fs))
+                {
+                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+                }
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
+                    fs.Dispose();
                     fs.Close();
                 }
 
@@ -49,6 +52,7 @@ namespace Assinador
             {
                 foreach (var fs in fileStreams)
                 {
+                    fs.Dispose();
                     fs.Close();
                 }
 
@@ -63,8 +67,10 @@ namespace Assinador
 
         public static MemoryStream Sign(string caminhoCertificado, string senha, string sourceFile, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
         {
-            PdfReader reader = new PdfReader(sourceFile);
-            return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+            using (PdfReader reader = new PdfReader(sourceFile))
+            {
+                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+            }
         }
 
         private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
@@ -108,40 +114,40 @@ namespace Assinador
             }
             #endregion
 
-            MemoryStream outputStream = new MemoryStream();
-
-            PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
-
-            if (!page.HasValue)
+            using (MemoryStream outputStream = new MemoryStream())
             {
-                page = signer.GetDocument().GetNumberOfPages();
+                PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
+
+                if (!page.HasValue)
+                {
+                    page = signer.GetDocument().GetNumberOfPages();
+                }
+
+                PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
+
+                var dadosCertificado = pk12.GetCertificate(alias);
+
+                var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
+
+                appearance
+                    .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
+                    .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
+                    .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
+                    .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
+                    .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
+                    .SetLayer2FontSize(9)
+                    .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
+                    .SetPageRect(new Rectangle(x, y, 200, 50))
+                    .SetPageNumber(page.Value);
+
+                signer.SetFieldName(signer.GetNewSigFieldName());
+                signer.SetSignDate(dataAssinatura.Value);
+
+                var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
+
+                signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CMS);
+                return outputStream;
             }
-
-            PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-
-            var dadosCertificado = pk12.GetCertificate(alias);
-
-            var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
-
-            appearance
-                .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
-                .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
-                .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
-                .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
-                .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
-                .SetLayer2FontSize(9)
-                .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
-                .SetPageRect(new Rectangle(x, y, 200, 50))
-                .SetPageNumber(page.Value);
-
-            signer.SetFieldName(signer.GetNewSigFieldName());
-            signer.SetSignDate(dataAssinatura.Value);
-
-            var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
-
-            signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CMS);
-
-            return outputStream;
         }
     }
 }

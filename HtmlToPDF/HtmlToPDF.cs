@@ -20,12 +20,13 @@ namespace ConversorHTML
         public static MemoryStream ConvertToPDF(this string html)
         {
             ConverterProperties converterProperties = new ConverterProperties();
-            MemoryStream stream = new MemoryStream();
-            PdfDocument pdfDocument = new PdfDocument(new PdfWriter(stream));
-            pdfDocument.SetDefaultPageSize(PageSize.A4);
-            HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
-            stream.Close();
-            return stream;
+            using (MemoryStream stream = new MemoryStream())
+            {
+                PdfDocument pdfDocument = new PdfDocument(new PdfWriter(stream));
+                pdfDocument.SetDefaultPageSize(PageSize.A4);
+                HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
+                return stream;
+            }
         }
 
         public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1, int left = 20, int fontSize = 9)
@@ -39,37 +40,42 @@ namespace ConversorHTML
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
 
-                var outputStream = new MemoryStream();
-
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer);
-
-                Document document = new Document(pdfDoc);
-
-                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                using (var outputStream = new MemoryStream())
                 {
-                    // Adiciona o número da página no canto superior direito
-                    Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
-                        .SetTextAlignment(TextAlignment.RIGHT)
-                        .SetMargin(0)
-                        .SetFontSize(fontSize)
-                        .SetFixedPosition(left, 760, 100);
+                    using (PdfWriter writer = new PdfWriter(outputStream))
+                    {
+                        using (PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer))
+                        {
+                            Document document = new Document(pdfDoc);
 
-                    document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                            {
+                                // Adiciona o número da página no canto superior direito
+                                Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
+                                    .SetTextAlignment(TextAlignment.RIGHT)
+                                    .SetMargin(0)
+                                    .SetFontSize(fontSize)
+                                    .SetFixedPosition(left, 760, 100);
 
-                    numeracaoInicial++;
+                                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+
+                                numeracaoInicial++;
+                            }
+
+                            document.Close();
+                            pdfDoc.Close();
+
+                            return outputStream;
+                        }
+                    }
                 }
-
-                document.Close();
-                pdfDoc.Close();
-
-                return outputStream;
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -82,6 +88,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -95,31 +102,34 @@ namespace ConversorHTML
 
         public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1, int left = 450, int fontSize = 9)
         {
-            var outputStream = new MemoryStream();
-
-            PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
-
-            Document document = new Document(pdfDoc);
-
-            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+            using (var outputStream = new MemoryStream())
             {
-                // Adiciona o número da página no canto superior direito
-                Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
-                    .SetTextAlignment(TextAlignment.RIGHT)
-                    .SetMargin(0)
-                    .SetFontSize(fontSize)
-                    .SetFixedPosition(left, 760, 100);
+                using (PdfWriter writer = new PdfWriter(outputStream))
+                {
+                    PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
 
-                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+                    Document document = new Document(pdfDoc);
 
-                numeracaoInicial++;
+                    for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                    {
+                        // Adiciona o número da página no canto superior direito
+                        Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
+                            .SetTextAlignment(TextAlignment.RIGHT)
+                            .SetMargin(0)
+                            .SetFontSize(fontSize)
+                            .SetFixedPosition(left, 760, 100);
+
+                        document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.RIGHT, VerticalAlignment.TOP, 0);
+
+                        numeracaoInicial++;
+                    }
+
+                    document.Close();
+                    pdfDoc.Close();
+
+                    return outputStream;
+                }
             }
-
-            document.Close();
-            pdfDoc.Close();
-
-            return outputStream;
         }
 
         private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source)
@@ -142,24 +152,30 @@ namespace ConversorHTML
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
 
-                var outputStream = new MemoryStream();
+                using (var outputStream = new MemoryStream())
+                {
+                    using (PdfWriter writer = new PdfWriter(outputStream))
+                    {
+                        using (PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream)))
+                        {
+                            PdfDocument newPdfDoc = new PdfDocument(writer);
 
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
-                PdfDocument newPdfDoc = new PdfDocument(writer);
+                            pdfDoc.CopyPagesTo(pagina, pagina, newPdfDoc);
 
-                pdfDoc.CopyPagesTo(pagina, pagina, newPdfDoc);
+                            pdfDoc.Close();
+                            newPdfDoc.Close();
 
-                pdfDoc.Close();
-                newPdfDoc.Close();
-
-                return outputStream;
+                            return outputStream;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -172,6 +188,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -185,18 +202,24 @@ namespace ConversorHTML
 
         public static MemoryStream RetornarApenasUmaPaginaPDF(this string sourceFile, int pagina = 1)
         {
-            var outputStream = new MemoryStream();
+            using (var outputStream = new MemoryStream())
+            {
+                using (PdfWriter writer = new PdfWriter(outputStream))
+                {
+                    using (PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile)))
+                    {
+                        using (PdfDocument newPdfDoc = new PdfDocument(writer))
+                        {
+                            pdfDoc.CopyPagesTo(pagina, pagina, newPdfDoc);
 
-            PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
-            PdfDocument newPdfDoc = new PdfDocument(writer);
+                            pdfDoc.Close();
+                            newPdfDoc.Close();
 
-            pdfDoc.CopyPagesTo(pagina, pagina, newPdfDoc);
-
-            pdfDoc.Close();
-            newPdfDoc.Close();
-
-            return outputStream;
+                            return outputStream;
+                        }
+                    }
+                }
+            }
         }
 
         public static int QuantidadePaginasPDF(this MemoryStream sourceFile)
@@ -218,6 +241,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -230,6 +254,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -249,68 +274,9 @@ namespace ConversorHTML
 
         public static MemoryStream TornarSemEfeito(this string file)
         {
-            var ms = new MemoryStream();
-
-            using (PdfReader pdfReader = new PdfReader(file))
+            using (var ms = new MemoryStream())
             {
-                using (PdfWriter pdfWriter = new PdfWriter(ms))
-                {
-                    PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
-                    Document doc = new Document(pdfDocument);
-
-                    // Obtenha as dimensões da página
-                    Rectangle pageSize = pdfDocument.GetDefaultPageSize();
-
-                    // Defina o texto a ser adicionado
-                    string texto = "SEM EFEITO";
-
-                    // Defina a fonte e o tamanho do texto
-                    PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
-                    float fontSize = 80f;
-
-                    // Percorra todas as páginas do documento
-                    for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
-                    {
-                        PdfPage page = pdfDocument.GetPage(pageNumber);
-                        PdfCanvas canvas = new PdfCanvas(page);
-
-                        // Calcule a posição do texto no meio da página (diagonal)
-                        float x = (pageSize.GetLeft() + pageSize.GetRight()) / 2 - 150;
-                        float y = (pageSize.GetBottom() + pageSize.GetTop()) / 2 - 150;
-
-                        // Rotacione o texto em 45 graus
-                        canvas.SaveState()
-                              .BeginText()
-                              .SetFontAndSize(font, fontSize)
-                              .SetFillColor(DeviceGray.GRAY)
-                              .MoveText(x, y)
-                              .SetTextMatrix(0.7071f, 0.7071f, -0.7071f, 0.7071f, x, y)
-                              .ShowText(texto)
-                              .EndText()
-                              .RestoreState();
-                    }
-
-                    // Feche o documento
-                    doc.Close();
-                }
-            }
-
-            return ms;
-        }
-
-        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile)
-        {
-            List<string> fileNames = new List<string>();
-            List<FileStream> fileStreams = new List<FileStream>();
-
-            try
-            {
-                var fs = sourceFile.GerarFileStream();
-                fileStreams.Add(fs.FileStream);
-                fileNames.Add(fs.FileName);
-                var ms = new MemoryStream();
-
-                using (PdfReader pdfReader = new PdfReader(fs.FileStream))
+                using (PdfReader pdfReader = new PdfReader(file))
                 {
                     using (PdfWriter pdfWriter = new PdfWriter(ms))
                     {
@@ -351,16 +317,77 @@ namespace ConversorHTML
 
                         // Feche o documento
                         doc.Close();
+                        return ms;
                     }
                 }
+            }
+        }
 
-                return ms;
+        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fs = sourceFile.GerarFileStream();
+                fileStreams.Add(fs.FileStream);
+                fileNames.Add(fs.FileName);
+
+                using (var ms = new MemoryStream())
+                {
+                    using (PdfReader pdfReader = new PdfReader(fs.FileStream))
+                    {
+                        using (PdfWriter pdfWriter = new PdfWriter(ms))
+                        {
+                            PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+                            Document doc = new Document(pdfDocument);
+
+                            // Obtenha as dimensões da página
+                            Rectangle pageSize = pdfDocument.GetDefaultPageSize();
+
+                            // Defina o texto a ser adicionado
+                            string texto = "SEM EFEITO";
+
+                            // Defina a fonte e o tamanho do texto
+                            PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                            float fontSize = 80f;
+
+                            // Percorra todas as páginas do documento
+                            for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
+                            {
+                                PdfPage page = pdfDocument.GetPage(pageNumber);
+                                PdfCanvas canvas = new PdfCanvas(page);
+
+                                // Calcule a posição do texto no meio da página (diagonal)
+                                float x = (pageSize.GetLeft() + pageSize.GetRight()) / 2 - 150;
+                                float y = (pageSize.GetBottom() + pageSize.GetTop()) / 2 - 150;
+
+                                // Rotacione o texto em 45 graus
+                                canvas.SaveState()
+                                      .BeginText()
+                                      .SetFontAndSize(font, fontSize)
+                                      .SetFillColor(DeviceGray.GRAY)
+                                      .MoveText(x, y)
+                                      .SetTextMatrix(0.7071f, 0.7071f, -0.7071f, 0.7071f, x, y)
+                                      .ShowText(texto)
+                                      .EndText()
+                                      .RestoreState();
+                            }
+
+                            // Feche o documento
+                            doc.Close();
+                            return ms;
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -373,6 +400,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -395,34 +423,40 @@ namespace ConversorHTML
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
 
-                var outputStream = new MemoryStream();
-
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer);
-
-                Document document = new Document(pdfDoc);
-
-                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                using (var outputStream = new MemoryStream())
                 {
-                    // Adiciona o número da página no canto superior direito
-                    Paragraph pageNumber = new Paragraph(texto)
-                        .SetMargin(0)
-                        .SetFontSize(fontSize)
-                        .SetFixedPosition(left, 760, 300);
+                    using (PdfWriter writer = new PdfWriter(outputStream))
+                    {
+                        using (PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer))
+                        {
 
-                    document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+                            Document document = new Document(pdfDoc);
+
+                            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                            {
+                                // Adiciona o número da página no canto superior direito
+                                Paragraph pageNumber = new Paragraph(texto)
+                                    .SetMargin(0)
+                                    .SetFontSize(fontSize)
+                                    .SetFixedPosition(left, 760, 300);
+
+                                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+                            }
+
+                            document.Close();
+                            pdfDoc.Close();
+
+                            return outputStream;
+                        }
+                    }
                 }
-
-                document.Close();
-                pdfDoc.Close();
-
-                return outputStream;
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -435,6 +469,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -448,28 +483,33 @@ namespace ConversorHTML
 
         public static MemoryStream AdicionarRodape(this string sourceFile, string texto, int left = 20, int fontSize = 9)
         {
-            var outputStream = new MemoryStream();
-
-            PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
-
-            Document document = new Document(pdfDoc);
-
-            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+            using (var outputStream = new MemoryStream())
             {
-                // Adiciona o número da página no canto superior direito
-                Paragraph pageNumber = new Paragraph(texto)
-                        .SetMargin(0)
-                        .SetFontSize(fontSize)
-                        .SetFixedPosition(left, 760, 300);
+                using (PdfWriter writer = new PdfWriter(outputStream))
+                {
+                    using (PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer))
+                    {
 
-                document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+                        Document document = new Document(pdfDoc);
+
+                        for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
+                        {
+                            // Adiciona o número da página no canto superior direito
+                            Paragraph pageNumber = new Paragraph(texto)
+                                    .SetMargin(0)
+                                    .SetFontSize(fontSize)
+                                    .SetFixedPosition(left, 760, 300);
+
+                            document.ShowTextAligned(pageNumber, numPage * 20, 70, numPage, TextAlignment.LEFT, VerticalAlignment.TOP, 0);
+                        }
+
+                        document.Close();
+                        pdfDoc.Close();
+
+                        return outputStream;
+                    }
+                }
             }
-
-            document.Close();
-            pdfDoc.Close();
-
-            return outputStream;
         }
 
         public static MemoryStream JuntarArquivosPDF(this List<MemoryStream> sourceFiles)
@@ -479,28 +519,35 @@ namespace ConversorHTML
 
             try
             {
-                var outputStream = new MemoryStream();
-                PdfWriter writer = new PdfWriter(outputStream);
-                PdfDocument newPdfDoc = new PdfDocument(writer);
-                foreach (var sourceFile in sourceFiles)
+                using (var outputStream = new MemoryStream())
                 {
-                    var fs = sourceFile.GerarFileStream();
-                    fileStreams.Add(fs.FileStream);
-                    fileNames.Add(fs.FileName);
+                    using (PdfWriter writer = new PdfWriter(outputStream))
+                    {
+                        using (PdfDocument newPdfDoc = new PdfDocument(writer))
+                        {
+                            foreach (var sourceFile in sourceFiles)
+                            {
+                                var fs = sourceFile.GerarFileStream();
+                                fileStreams.Add(fs.FileStream);
+                                fileNames.Add(fs.FileName);
 
-                    PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
-                    pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
-                    pdfDoc.Close();
+                                PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
+                                pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
+                                pdfDoc.Close();
+                            }
+
+                            newPdfDoc.Close();
+                            return outputStream;
+                        }
+                    }
                 }
-
-                newPdfDoc.Close();
-                return outputStream;
             }
             catch (Exception ex)
             {
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -513,6 +560,7 @@ namespace ConversorHTML
                 foreach (var fs in fileStreams)
                 {
                     fs.Close();
+                    fs.Dispose();
                 }
 
                 foreach (var fileName in fileNames)
@@ -526,19 +574,25 @@ namespace ConversorHTML
 
         public static MemoryStream JuntarArquivosPDF(this List<string> sourceFiles)
         {
-            var outputStream = new MemoryStream();
-            PdfWriter writer = new PdfWriter(outputStream);
-            PdfDocument newPdfDoc = new PdfDocument(writer);
-
-            foreach (var sourceFile in sourceFiles)
+            using (var outputStream = new MemoryStream())
             {
-                PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
-                pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
-                pdfDoc.Close();
-            }
+                using (PdfWriter writer = new PdfWriter(outputStream))
+                {
+                    using (PdfDocument newPdfDoc = new PdfDocument(writer))
+                    {
 
-            newPdfDoc.Close();
-            return outputStream;
+                        foreach (var sourceFile in sourceFiles)
+                        {
+                            PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
+                            pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
+                            pdfDoc.Close();
+                        }
+
+                        newPdfDoc.Close();
+                        return outputStream;
+                    }
+                }
+            }
         }
     }
 }
