@@ -1,21 +1,54 @@
-﻿using iText.Kernel.Geom;
+﻿using iText.Barcodes;
+using iText.Bouncycastle.Crypto;
+using iText.Bouncycastle.X509;
+using iText.Commons.Bouncycastle.Cert;
+using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
+using iText.Kernel.Pdf.Xobject;
+using iText.Layout;
+using iText.Layout.Element;
 using iText.Signatures;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
-using Org.BouncyCastle.X509;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Assinador
 {
     public static class AssinarPDF
     {
-        public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        public static MemoryStream AdicionarAssinaturaLateral(string caminhoCertificado, string senha, string sourceFile, string texto, string qrcode)
+        {
+            int qtdPaginas = 0;
+            using (PdfReader reader1 = new PdfReader(sourceFile))
+            {
+                var pdfDocument = new PdfDocument(reader1);
+                qtdPaginas = pdfDocument.GetNumberOfPages();
+            }
+
+            using (PdfReader reader = new PdfReader(sourceFile))
+            {
+                MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: 1, x: 535, qrData: qrcode);
+
+                if (qtdPaginas > 1)
+                {
+                    for (int i = 2; i <= qtdPaginas; i++)
+                    {
+                        retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: i, x: 535, qrcode: qrcode);
+                    }
+                }
+
+                retorno.Close();
+                retorno.Dispose();
+
+                return retorno;
+            }
+        }
+
+        public static MemoryStream AdicionarAssinaturaLateral(string caminhoCertificado, string senha, MemoryStream sourceFile, string texto, string qrcode)
         {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
@@ -30,12 +63,32 @@ namespace Assinador
                 fileStreams.Add(fs);
                 fileNames.Add(fileName);
 
+                int qtdPaginas = 0;
+                using (PdfReader reader1 = new PdfReader(sourceFile))
+                {
+                    var pdfDocument = new PdfDocument(reader1);
+                    qtdPaginas = pdfDocument.GetNumberOfPages();
+                }
+
                 using (PdfReader reader = new PdfReader(fs))
                 {
-                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+                    MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: 1, x: 535, qrData: qrcode);
+
+                    if (qtdPaginas > 1)
+                    {
+                        for (int i = 2; i <= qtdPaginas; i++)
+                        {
+                            retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: i, x: 535, qrcode: qrcode);
+                        }
+                    }
+
+                    retorno.Close();
+                    retorno.Dispose();
+
+                    return retorno;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -65,15 +118,71 @@ namespace Assinador
             return sourceFile;
         }
 
-        public static MemoryStream Sign(string caminhoCertificado, string senha, string sourceFile, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int? page = null, int x = 30, int y = 30,
+            DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
+            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool assinarTodasPaginas = false)
+        {
+            List<string> fileNames = new List<string>();
+            List<FileStream> fileStreams = new List<FileStream>();
+
+            try
+            {
+                var fileName = System.IO.Path.GetTempFileName() + ".pdf";
+                int bufferSize = sourceFile.ToArray().Length;
+                File.WriteAllBytes(fileName, sourceFile.ToArray());
+                var fs = File.OpenRead(fileName);
+
+                fileStreams.Add(fs);
+                fileNames.Add(fileName);
+
+                using (PdfReader reader = new PdfReader(fs))
+                {
+                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
+                }
+            }
+            catch (Exception)
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Dispose();
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+            finally
+            {
+                foreach (var fs in fileStreams)
+                {
+                    fs.Dispose();
+                    fs.Close();
+                }
+
+                foreach (var fileName in fileNames)
+                {
+                    File.Delete(fileName);
+                }
+            }
+
+            return sourceFile;
+        }
+
+        public static MemoryStream Sign(string caminhoCertificado, string senha, string sourceFile, int? page = null, int x = 30, int y = 30,
+            DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
+            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool assinarTodasPaginas = false)
         {
             using (PdfReader reader = new PdfReader(sourceFile))
             {
-                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura);
+                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
             }
         }
 
-        private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader, int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null)
+        private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader,
+            int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
+            float width = 200, float height = 50, int? rotate = null, string qrData = null)
         {
             if (!dataAssinatura.HasValue)
             {
@@ -93,29 +202,17 @@ namespace Assinador
                 }
             }
 
-            AsymmetricKeyEntry key = pk12.GetKey(alias);
-            ICipherParameters pk = key.Key;
-
-            #region Construindo o caminho do certificado do assinante até o certificado de emissor 
-            X509Certificate2 subscriberCert = new X509Certificate2(caminhoCertificado, senha);
-            X509Chain chain2 = new X509Chain();
-            chain2.Build(subscriberCert);
-
-            X509Certificate2Collection certificates = new X509Certificate2Collection();
-            foreach (X509ChainElement element in chain2.ChainElements)
+            ICipherParameters pk = pk12.GetKey(alias).Key;
+            X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
+            IX509Certificate[] chain = new IX509Certificate[ce.Length];
+            for (int k = 0; k < ce.Length; ++k)
             {
-                certificates.Add(element.Certificate);
+                chain[k] = new X509CertificateBC(ce[k].Certificate);
             }
-
-            List<X509Certificate> certPath = new List<X509Certificate>();
-            foreach (X509Certificate2 cert in certificates)
-            {
-                certPath.Add(new X509CertificateParser().ReadCertificate(cert.RawData));
-            }
-            #endregion
 
             using (MemoryStream outputStream = new MemoryStream())
             {
+                IExternalSignature pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
                 PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
 
                 if (!page.HasValue)
@@ -123,29 +220,73 @@ namespace Assinador
                     page = signer.GetDocument().GetNumberOfPages();
                 }
 
-                PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-
                 var dadosCertificado = pk12.GetCertificate(alias);
 
                 var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
 
+                if (string.IsNullOrEmpty(texto))
+                {
+                    texto = $"Assinado digitalmente por\n{subject[subject.Count - 1]}";
+                }
+
+                PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
+
                 appearance
-                    .SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION)
-                    .SetLayer2Text($"Assinado digitalmente por\n{subject[subject.Count - 1]}")
                     .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
                     .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
                     .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
-                    .SetLayer2FontSize(9)
                     .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
-                    .SetPageRect(new Rectangle(x, y, 200, 50))
+                    .SetPageRect(new Rectangle(x, y, width, height))
+                    .SetLayer2FontSize(fontSize)
                     .SetPageNumber(page.Value);
 
-                signer.SetFieldName(signer.GetNewSigFieldName());
+                string signatureName = signer.GetNewSigFieldName();
+
+                if (rotate.HasValue)
+                {
+                    appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
+
+                    PdfFormXObject layer2Object = appearance.GetLayer2();
+                    Rectangle rect = layer2Object.GetBBox().ToRectangle();
+                    PdfCanvas pdfCanvas = new PdfCanvas(layer2Object, signer.GetDocument());
+
+                    if (rotate == 90)
+                        pdfCanvas.ConcatMatrix(0, 1, -1, 0, rect.GetWidth(), 0);
+                    else if (rotate == 180)
+                        pdfCanvas.ConcatMatrix(-1, 0, 0, -1, rect.GetWidth(), rect.GetHeight());
+                    else if (rotate == 270)
+                        pdfCanvas.ConcatMatrix(0, -1, 1, 0, 0, rect.GetHeight());
+
+                    Rectangle rotatedRect = 0 == (rotate / 90) % 2 ? new Rectangle(rect.GetWidth(), rect.GetHeight()) : new Rectangle(rect.GetHeight(), rect.GetWidth());
+                    Canvas appearanceCanvas = new Canvas(pdfCanvas, rotatedRect);
+
+                    Paragraph text = new Paragraph();
+                    text.SetFontSize(fontSize).Add(texto);
+                    if (!string.IsNullOrEmpty(qrData))
+                    {
+                        text.SetFixedPosition(50, 5, height - 100);
+                    }
+                    appearanceCanvas.Add(text);
+
+                    if (!string.IsNullOrEmpty(qrData))
+                    {
+                        BarcodeQRCode qrCode = new BarcodeQRCode(qrData);
+                        qrCode.Regenerate();
+                        Image qrImage = new Image(qrCode.CreateFormXObject(signer.GetDocument()));
+                        qrImage.SetFixedPosition(5, 5);
+                        appearanceCanvas.Add(qrImage);
+                    }
+                }
+                else
+                {
+                    appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
+                    appearance.SetLayer2Text(texto);
+                }
+
+                signer.SetFieldName(signatureName);
                 signer.SetSignDate(dataAssinatura.Value);
+                signer.SignDetached(pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 
-                var privateKey = new PrivateKeySignature(pk, DigestAlgorithms.SHA512);
-
-                signer.SignDetached(privateKey, certPath.ToArray(), null, null, null, 0, PdfSigner.CryptoStandard.CMS);
                 return outputStream;
             }
         }

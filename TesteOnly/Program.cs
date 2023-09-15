@@ -1,5 +1,4 @@
 ﻿using Assinador;
-using ConversorHTML;
 
 Console.WriteLine("Hello, World!");
 
@@ -31,15 +30,21 @@ MemoryStream ms = new MemoryStream();
 ////{
 //await File.WriteAllBytesAsync("C:\\Users\\0308\\Desktop\\umapaginaapenas_assinado2.pdf", retorno.ToArray());
 
-var retorno = new List<string>() { "D:\\Desktop\\Outros\\0093_230210154749_001.pdf",
-    "D:\\Desktop\\Outros\\2023-02-Fevereiro_assinado.pdf",
-    "D:\\Desktop\\Outros\\Controle_Interno.pdf"}.JuntarArquivosPDF();
+//var retorno = new List<string>() { "D:\\Desktop\\Outros\\0093_230210154749_001.pdf",
+//    "D:\\Desktop\\Outros\\2023-02-Fevereiro_assinado.pdf",
+//    "D:\\Desktop\\Outros\\Controle_Interno.pdf"}.JuntarArquivosPDF();
 
-await File.WriteAllBytesAsync("D:\\Desktop\\juntado.pdf", retorno.ToArray());
+//await File.WriteAllBytesAsync("D:\\Desktop\\juntado.pdf", retorno.ToArray());
 
-retorno = "D:\\Desktop\\Outros\\0093_230210154749_001.pdf".AdicionarRodape("Cópia de documento assinado digitalmente");
+//retorno = "D:\\Desktop\\Outros\\0093_230210154749_001.pdf".AdicionarRodape("Cópia de documento assinado digitalmente");
 
-await File.WriteAllBytesAsync("D:\\Desktop\\juntado.pdf", retorno.ToArray());
+var retorno = AssinarPDF.AdicionarAssinaturaLateral("C:\\Users\\0308\\source\\repos\\m-marco\\teste.pfx",
+    "teste",
+    "D:\\Desktop\\ETP.docx.pdf",
+    "Protocolado na Câmara Municipal de Piracicaba em 19 de Setembro de 2023 às 10:57:53 sob nº 10000257-2023. Para autenticar esse documento acesse https://sistemas.camarapiraricaca.sp.gov.br/digital/validador e informe o protocolo.",
+    "qrcode");
+
+await File.WriteAllBytesAsync("D:\\Desktop\\assinatura_lateral.pdf", retorno.ToArray());
 
 //}
 //catch (Exception ex)

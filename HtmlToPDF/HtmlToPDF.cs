@@ -10,7 +10,6 @@ using iText.Layout.Element;
 using iText.Layout.Properties;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace ConversorHTML
@@ -70,7 +69,7 @@ namespace ConversorHTML
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -170,7 +169,7 @@ namespace ConversorHTML
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -236,7 +235,7 @@ namespace ConversorHTML
                 PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
                 return pdfDoc.GetNumberOfPages();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -382,7 +381,7 @@ namespace ConversorHTML
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -451,7 +450,7 @@ namespace ConversorHTML
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
@@ -542,7 +541,7 @@ namespace ConversorHTML
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 foreach (var fs in fileStreams)
                 {
