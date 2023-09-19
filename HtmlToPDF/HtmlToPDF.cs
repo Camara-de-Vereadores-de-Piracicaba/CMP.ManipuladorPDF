@@ -18,6 +18,7 @@ namespace ConversorHTML
     {
         public static MemoryStream ConvertToPDF(this string html)
         {
+            html = html.Replace("%", "");
             ConverterProperties converterProperties = new ConverterProperties();
             using (MemoryStream stream = new MemoryStream())
             {
