@@ -31,13 +31,13 @@ namespace Assinador
 
             using (PdfReader reader = new PdfReader(sourceFile))
             {
-                MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: 1, x: 535, qrData: qrcode);
+                MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 800, rotate: 90, page: 1, x: 535, qrData: qrcode);
 
                 if (qtdPaginas > 1)
                 {
                     for (int i = 2; i <= qtdPaginas; i++)
                     {
-                        retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: i, x: 535, qrcode: qrcode);
+                        retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 800, rotate: 90, page: i, x: 535, qrcode: qrcode);
                     }
                 }
 
@@ -72,13 +72,13 @@ namespace Assinador
 
                 using (PdfReader reader = new PdfReader(fs))
                 {
-                    MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: 1, x: 535, qrData: qrcode);
+                    MemoryStream retorno = AssinarInternamente(caminhoCertificado, senha, reader, texto: texto, fontSize: 7, width: 50, height: 800, rotate: 90, page: 1, x: 535, qrData: qrcode);
 
                     if (qtdPaginas > 1)
                     {
                         for (int i = 2; i <= qtdPaginas; i++)
                         {
-                            retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 750, rotate: 90, page: i, x: 535, qrcode: qrcode);
+                            retorno = Sign(caminhoCertificado, senha, retorno, texto: texto, fontSize: 7, width: 50, height: 800, rotate: 90, page: i, x: 535, qrcode: qrcode);
                         }
                     }
 
