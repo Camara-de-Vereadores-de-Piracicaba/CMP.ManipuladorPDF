@@ -175,19 +175,6 @@ namespace Assinador
             DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
             float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool assinarTodasPaginas = false)
         {
-            using (PdfReader reader = new PdfReader(sourceFile))
-            {
-                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
-            }
-        }
-
-        private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader,
-            int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
-            float width = 200, float height = 50, int? rotate = null, string qrData = null)
-        {
-
-
-
             X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
 
             try
@@ -207,6 +194,11 @@ namespace Assinador
                         Console.WriteLine("====================================");
                     }
                 }
+
+                using (PdfReader reader = new PdfReader(sourceFile))
+                {
+                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
+                }
             }
             catch (Exception ex)
             {
@@ -216,6 +208,20 @@ namespace Assinador
             {
                 store.Close();
             }
+
+
+
+            return null;
+        }
+
+        private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader,
+            int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
+            float width = 200, float height = 50, int? rotate = null, string qrData = null)
+        {
+
+
+
+           
 
 
 
