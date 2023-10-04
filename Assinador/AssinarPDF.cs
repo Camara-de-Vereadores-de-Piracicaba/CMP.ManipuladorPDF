@@ -15,6 +15,7 @@ using Org.BouncyCastle.Pkcs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Assinador
 {
@@ -184,6 +185,49 @@ namespace Assinador
             int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
             float width = 200, float height = 50, int? rotate = null, string qrData = null)
         {
+
+
+
+            X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+
+            try
+            {
+                store.Open(OpenFlags.ReadOnly);
+
+                // Obtém uma coleção de certificados no armazenamento especificado.
+                X509Certificate2Collection certificates = store.Certificates;
+
+                Console.WriteLine("Certificados no armazenamento:");
+                foreach (X509Certificate2 cert in certificates)
+                {
+                    if (cert.HasPrivateKey)
+                    {
+                        Console.WriteLine("Nome: " + cert.Subject);
+                        Console.WriteLine("Thumbprint: " + cert.Thumbprint);
+                        Console.WriteLine("====================================");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Ocorreu um erro: " + ex.Message);
+            }
+            finally
+            {
+                store.Close();
+            }
+
+
+
+
+
+
+
+
+
+
+
+
             if (!dataAssinatura.HasValue)
             {
                 dataAssinatura = DateTime.Now;
