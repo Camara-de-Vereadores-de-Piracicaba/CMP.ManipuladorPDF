@@ -15,6 +15,7 @@ using Org.BouncyCastle.Pkcs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Assinador
@@ -121,7 +122,7 @@ namespace Assinador
 
         public static MemoryStream Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int? page = null, int x = 30, int y = 30,
             DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
-            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool assinarTodasPaginas = false)
+            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool a3 = false)
         {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
@@ -138,7 +139,7 @@ namespace Assinador
 
                 using (PdfReader reader = new PdfReader(fs))
                 {
-                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
+                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode, a3);
                 }
             }
             catch (Exception)
@@ -173,96 +174,71 @@ namespace Assinador
 
         public static MemoryStream Sign(string caminhoCertificado, string senha, string sourceFile, int? page = null, int x = 30, int y = 30,
             DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
-            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool assinarTodasPaginas = false)
+            float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool a3 = false)
         {
-            X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-
-            try
+            using (PdfReader reader = new PdfReader(sourceFile))
             {
-                store.Open(OpenFlags.ReadOnly);
-
-                // Obtém uma coleção de certificados no armazenamento especificado.
-                X509Certificate2Collection certificates = store.Certificates;
-
-                Console.WriteLine("Certificados no armazenamento:");
-                foreach (X509Certificate2 cert in certificates)
-                {
-                    if (cert.HasPrivateKey)
-                    {
-                        Console.WriteLine("Nome: " + cert.Subject);
-                        Console.WriteLine("Thumbprint: " + cert.Thumbprint);
-                        Console.WriteLine("====================================");
-                    }
-                }
-
-                using (PdfReader reader = new PdfReader(sourceFile))
-                {
-                    return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode);
-                }
+                return AssinarInternamente(caminhoCertificado, senha, reader, page, x, y, dataAssinatura, texto, fontSize, width, height, rotate, qrcode, a3);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Ocorreu um erro: " + ex.Message);
-            }
-            finally
-            {
-                store.Close();
-            }
-
-
-
-            return null;
         }
 
         private static MemoryStream AssinarInternamente(string caminhoCertificado, string senha, PdfReader reader,
             int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
-            float width = 200, float height = 50, int? rotate = null, string qrData = null)
+            float width = 200, float height = 50, int? rotate = null, string qrData = null, bool a3 = false)
         {
-
-
-
-           
-
-
-
-
-
-
-
-
-
-
-
-
             if (!dataAssinatura.HasValue)
             {
                 dataAssinatura = DateTime.Now;
             }
 
-            char[] PASSWORD = senha.ToCharArray();
+            string assinante = "";
+            IX509Certificate[] chain;
+            IExternalSignature pks;
 
-            Pkcs12Store pk12 = new Pkcs12Store(new FileStream(caminhoCertificado, FileMode.Open, FileAccess.Read), PASSWORD);
-            string alias = null;
-            foreach (object a in pk12.Aliases)
+            if (!a3)
             {
-                alias = ((string)a);
-                if (pk12.IsKeyEntry(alias))
+                char[] PASSWORD = senha.ToCharArray();
+
+                Pkcs12Store pk12 = new Pkcs12Store(new FileStream(caminhoCertificado, FileMode.Open, FileAccess.Read), PASSWORD);
+                string alias = null;
+                foreach (object a in pk12.Aliases)
                 {
-                    break;
+                    alias = ((string)a);
+                    if (pk12.IsKeyEntry(alias))
+                    {
+                        break;
+                    }
                 }
-            }
 
-            ICipherParameters pk = pk12.GetKey(alias).Key;
-            X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
-            IX509Certificate[] chain = new IX509Certificate[ce.Length];
-            for (int k = 0; k < ce.Length; ++k)
+                ICipherParameters pk = pk12.GetKey(alias).Key;
+                X509CertificateEntry[] ce = pk12.GetCertificateChain(alias);
+                chain = new IX509Certificate[ce.Length];
+                for (int k = 0; k < ce.Length; ++k)
+                {
+                    chain[k] = new X509CertificateBC(ce[k].Certificate);
+                }
+                pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
+
+                var dadosCertificado = pk12.GetCertificate(alias);
+                var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
+                assinante = subject[subject.Count - 1].ToString();
+            }
+            else
             {
-                chain[k] = new X509CertificateBC(ce[k].Certificate);
+                X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+                store.Open(OpenFlags.ReadOnly);
+
+                X509Certificate2 certificate = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, caminhoCertificado, true)[0];
+                var cert = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(certificate.GetRawCertData());
+                var subject = cert.CertificateStructure.Subject.GetValueList(X509Name.CN);
+                assinante = subject[subject.Count - 1].ToString();
+                chain = new IX509Certificate[1];
+                chain[0] = new X509CertificateBC(cert);
+                pks = new X509Certificate2RSASignature(certificate);
             }
 
             using (MemoryStream outputStream = new MemoryStream())
             {
-                IExternalSignature pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
                 PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
 
                 if (!page.HasValue)
@@ -270,13 +246,9 @@ namespace Assinador
                     page = signer.GetDocument().GetNumberOfPages();
                 }
 
-                var dadosCertificado = pk12.GetCertificate(alias);
-
-                var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
-
                 if (string.IsNullOrEmpty(texto))
                 {
-                    texto = $"Assinado digitalmente por\n{subject[subject.Count - 1]}";
+                    texto = $"Assinado digitalmente por\n{assinante}";
                 }
 
                 PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
@@ -340,5 +312,44 @@ namespace Assinador
                 return outputStream;
             }
         }
+    }
+
+    class X509Certificate2RSASignature : IExternalSignature
+    {
+        public X509Certificate2RSASignature(X509Certificate2 certificate)
+        {
+            this.certificate = certificate;
+        }
+
+        public Org.BouncyCastle.X509.X509Certificate[] GetChain()
+        {
+            var bcCertificate = new Org.BouncyCastle.X509.X509Certificate(Org.BouncyCastle.Asn1.X509.X509CertificateStructure.GetInstance(certificate.RawData));
+            return new Org.BouncyCastle.X509.X509Certificate[] { bcCertificate };
+        }
+
+        public string GetSignatureAlgorithmName()
+        {
+            return "RSA";
+        }
+
+        public ISignatureMechanismParams GetSignatureMechanismParameters()
+        {
+            return null;
+        }
+
+        public string GetDigestAlgorithmName()
+        {
+            return "SHA512";
+        }
+
+        public byte[] Sign(byte[] message)
+        {
+            using (RSA rsa = certificate.GetRSAPrivateKey())
+            {
+                return rsa.SignData(message, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+            }
+        }
+
+        X509Certificate2 certificate;
     }
 }

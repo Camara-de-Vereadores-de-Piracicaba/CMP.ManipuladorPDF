@@ -7,16 +7,18 @@
 		<Company>Câmara Municipal de Piracicaba</Company>
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
-		<PackageReleaseNotes>Está é a versão 1.0.9 Versão inicial dos pacotes</PackageReleaseNotes>
-		<Version>1.0.0.9</Version>
-		<AssemblyVersion>1.0.0.9</AssemblyVersion>
-		<FileVersion>1.0.0.9</FileVersion>
+		<PackageReleaseNotes>Está é a versão 1.0.1.2 Assinando com token A3 e A1 local</PackageReleaseNotes>
+		<Version>1.0.1.2</Version>
+		<AssemblyVersion>1.0.1.2</AssemblyVersion>
+		<FileVersion>1.0.1.2</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="itext7" Version="8.0.1" />
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.1" />
+		<PackageReference Include="itext7.pdfhtml" Version="5.0.1" />
 		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+		<PackageReference Include="System.Linq" Version="4.3.0" />
 	</ItemGroup>
 
 </Project>

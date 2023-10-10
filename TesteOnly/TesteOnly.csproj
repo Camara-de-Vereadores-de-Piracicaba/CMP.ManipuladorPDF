@@ -9,7 +9,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Assinador\Assinador.csproj" />
-    <ProjectReference Include="..\HtmlToPDF\ConversorHTML.csproj" />
   </ItemGroup>
 
 </Project>
