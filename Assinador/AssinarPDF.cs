@@ -2,8 +2,10 @@
 using iText.Bouncycastle.Crypto;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
+using iText.Kernel.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Annot;
 using iText.Kernel.Pdf.Canvas;
 using iText.Kernel.Pdf.Xobject;
 using iText.Layout;
@@ -15,6 +17,7 @@ using Org.BouncyCastle.Pkcs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -253,6 +256,8 @@ namespace Assinador
 
                 PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
 
+                PdfFont font = ObterPdfFont.Obter();
+
                 appearance
                     .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
                     .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
@@ -260,6 +265,7 @@ namespace Assinador
                     .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
                     .SetPageRect(new Rectangle(x, y, width, height))
                     .SetLayer2FontSize(fontSize)
+                    .SetLayer2Font(font)
                     .SetPageNumber(page.Value);
 
                 string signatureName = signer.GetNewSigFieldName();
@@ -284,6 +290,7 @@ namespace Assinador
 
                     Paragraph text = new Paragraph();
                     text.SetFontSize(fontSize).Add(texto);
+                    text.SetFont(font);
                     if (!string.IsNullOrEmpty(qrData))
                     {
                         text.SetFixedPosition(50, 5, height - 100);
@@ -323,7 +330,7 @@ namespace Assinador
 
         public Org.BouncyCastle.X509.X509Certificate[] GetChain()
         {
-            var bcCertificate = new Org.BouncyCastle.X509.X509Certificate(Org.BouncyCastle.Asn1.X509.X509CertificateStructure.GetInstance(certificate.RawData));
+            var bcCertificate = new Org.BouncyCastle.X509.X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
             return new Org.BouncyCastle.X509.X509Certificate[] { bcCertificate };
         }
 

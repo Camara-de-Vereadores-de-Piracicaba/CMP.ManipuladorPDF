@@ -1,5 +1,4 @@
 ﻿using iText.Html2pdf;
-using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -290,7 +289,7 @@ namespace Assinador
                         string texto = "SEM EFEITO";
 
                         // Defina a fonte e o tamanho do texto
-                        PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                        PdfFont font = ObterPdfFont.Obter();
                         float fontSize = 80f;
 
                         // Percorra todas as páginas do documento
@@ -350,7 +349,7 @@ namespace Assinador
                             string texto = "SEM EFEITO";
 
                             // Defina a fonte e o tamanho do texto
-                            PdfFont font = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+                            PdfFont font = ObterPdfFont.Obter();
                             float fontSize = 80f;
 
                             // Percorra todas as páginas do documento
