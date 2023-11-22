@@ -15,10 +15,12 @@
 
 	<ItemGroup>
 	  <None Remove="Resources\Roboto-Regular.ttf" />
+	  <None Remove="Resources\sRGB Color Space Profile.icm" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
+	  <EmbeddedResource Include="Resources\sRGB Color Space Profile.icm" />
 	</ItemGroup>
 
 	<ItemGroup>

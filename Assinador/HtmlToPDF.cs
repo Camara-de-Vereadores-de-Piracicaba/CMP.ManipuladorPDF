@@ -1,4 +1,5 @@
 ﻿using iText.Html2pdf;
+using iText.Html2pdf.Resolver.Font;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
 using iText.Kernel.Geom;
@@ -7,24 +8,41 @@ using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
+using iText.Pdfa;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Assinador
 {
     public static class HtmlToPDF
     {
+        private const string NameFontFamily = "Roboto-Regular.ttf";
         public static MemoryStream ConvertToPDF(this string html)
         {
             html = html.Replace("%", "");
             ConverterProperties converterProperties = new ConverterProperties();
             using (MemoryStream stream = new MemoryStream())
             {
-                PdfDocument pdfDocument = new PdfDocument(new PdfWriter(stream));
-                pdfDocument.SetDefaultPageSize(PageSize.A4);
-                HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
-                return stream;
+                var resourceRGBColorsName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith("sRGB Color Space Profile.icm"));
+                using (Stream sRGBColorStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceRGBColorsName))
+                {
+                    using (MemoryStream msTeste = new MemoryStream())
+                    {
+                        PdfADocument pdfDocument = new PdfADocument(new PdfWriter(stream), PdfAConformanceLevel.PDF_A_3A, new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream));
+                        pdfDocument.SetDefaultPageSize(PageSize.A4);
+                        pdfDocument.SetTagged();
+                        converterProperties.SetBaseUri("");
+                        DefaultFontProvider fontProvider = new DefaultFontProvider(false, true, true);
+                        var resourceFontFamilyName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(NameFontFamily));
+                        fontProvider.AddFont(resourceFontFamilyName);
+                        converterProperties.SetFontProvider(fontProvider);
+                        HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
+                        return stream;
+                    }
+                }
             }
         }
 
