@@ -1,4 +1,7 @@
 ﻿using Assinador;
+using iText.Kernel.Pdf;
+using Org.BouncyCastle.Cms;
+using Org.BouncyCastle.X509.Store;
 
 Console.WriteLine("Hello, World!");
 
@@ -186,9 +189,11 @@ th:empty {
 </html>
 ";
 
-var response = HtmlToPDF.ConvertToPDF(html);
+//var response = HtmlToPDF.ConvertToPDF(html);
 
 //var response = AssinarPDF.Sign("C:\\arquivos\\certificados\\camara.pfx", "C@m@r@1025", "C:\\Users\\0308\\Desktop\\teste-a.pdf");
 //var assinaturas = AssinarPDF.ObterAssinaturas("C:\\Users\\0308\\Desktop\\teste-a-assinado.pdf");
 
-File.WriteAllBytes("C:\\Users\\0308\\Desktop\\html-to-pdf.pdf", response.ToArray());
+ManipuladorPDF.GetDigitalSignatures("D:\\Desktop\\assinado.pdf");
+
+//File.WriteAllBytes("C:\\Users\\0308\\Desktop\\html-to-pdf.pdf", response.ToArray());
