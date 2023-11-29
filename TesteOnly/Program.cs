@@ -197,7 +197,7 @@ th:empty {
 var arquivo = File.OpenRead("C:\\Users\\0308\\Desktop\\Solicitacao-Reserva_assinada.pdf");
 var ms = new MemoryStream();
 arquivo.CopyTo(ms);
-
+var resposta = ms.GetDigitalSignatures();
 var response = ManipuladorPDF.GetDigitalSignatures(ms);
 ManipuladorPDF.GetDigitalSignatures("D:\\Desktop\\assinado.pdf");
 
