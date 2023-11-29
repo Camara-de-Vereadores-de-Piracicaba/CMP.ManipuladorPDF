@@ -194,6 +194,11 @@ th:empty {
 //var response = AssinarPDF.Sign("C:\\arquivos\\certificados\\camara.pfx", "C@m@r@1025", "C:\\Users\\0308\\Desktop\\teste-a.pdf");
 //var assinaturas = AssinarPDF.ObterAssinaturas("C:\\Users\\0308\\Desktop\\teste-a-assinado.pdf");
 
+var arquivo = File.OpenRead("C:\\Users\\0308\\Desktop\\Solicitacao-Reserva_assinada.pdf");
+var ms = new MemoryStream();
+arquivo.CopyTo(ms);
+
+var response = ManipuladorPDF.GetDigitalSignatures(ms);
 ManipuladorPDF.GetDigitalSignatures("D:\\Desktop\\assinado.pdf");
 
 //File.WriteAllBytes("C:\\Users\\0308\\Desktop\\html-to-pdf.pdf", response.ToArray());
