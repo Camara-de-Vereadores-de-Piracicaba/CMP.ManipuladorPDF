@@ -255,7 +255,8 @@ namespace Assinador
                 .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
                 .SetPageRect(new Rectangle(x, y, width, height))
                 .SetLayer2FontSize(fontSize)
-                .SetPageNumber(page.Value);
+                .SetPageNumber(page.Value)
+                .SetLayer2Font(ObterPdfFont.Obter());
 
             string signatureName = signer.GetNewSigFieldName();
 
@@ -279,6 +280,8 @@ namespace Assinador
 
                 Paragraph text = new Paragraph();
                 text.SetFontSize(fontSize).Add(texto);
+                text.SetFont(ObterPdfFont.Obter());
+
                 if (!string.IsNullOrEmpty(qrData))
                 {
                     text.SetFixedPosition(50, 5, height - 100);
@@ -298,6 +301,7 @@ namespace Assinador
             {
                 appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
                 appearance.SetLayer2Text(texto);
+                appearance.SetLayer2Font(ObterPdfFont.Obter());
             }
 
             signer.SetFieldName(signatureName);
