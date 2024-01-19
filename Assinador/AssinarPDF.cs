@@ -237,6 +237,17 @@ namespace Assinador
                 page = signer.GetDocument().GetNumberOfPages();
             }
 
+            var a4Height = 841.92d;
+            var a4Width = 595.32d;
+
+            var dimensoesPaginaQueVouAssinar = signer.GetDocument().GetPage(page.Value).GetPageSizeWithRotation();
+
+            var proporcaoHeight = dimensoesPaginaQueVouAssinar.GetHeight() / a4Height;
+            var proporcaoWidth = dimensoesPaginaQueVouAssinar.GetWidth() / a4Width;
+
+            x = (int)Math.Round(x * proporcaoWidth, 0);
+            y = (int)Math.Round(y * Math.Pow(proporcaoHeight, 5), 0);
+
             if (string.IsNullOrEmpty(texto))
             {
                 texto = $"Assinado digitalmente por\n{assinante}";

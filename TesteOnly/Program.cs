@@ -2,6 +2,8 @@
 using iText.Kernel.Pdf;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.X509.Store;
+using System.Net.Http;
+using System.Net.Http.Headers;
 
 Console.WriteLine("Hello, World!");
 
@@ -194,11 +196,37 @@ th:empty {
 //var response = AssinarPDF.Sign("C:\\arquivos\\certificados\\camara.pfx", "C@m@r@1025", "C:\\Users\\0308\\Desktop\\teste-a.pdf");
 //var assinaturas = AssinarPDF.ObterAssinaturas("C:\\Users\\0308\\Desktop\\teste-a-assinado.pdf");
 
-var arquivo = File.OpenRead("C:\\Users\\0308\\Desktop\\Solicitacao-Reserva_assinada.pdf");
-var ms = new MemoryStream();
-arquivo.CopyTo(ms);
-var resposta = ms.GetDigitalSignatures();
-var response = ManipuladorPDF.GetDigitalSignatures(ms);
-ManipuladorPDF.GetDigitalSignatures("D:\\Desktop\\assinado.pdf");
+//var arquivo = File.OpenRead("C:\\Users\\0308\\Desktop\\Solicitacao-Reserva_assinada.pdf");
+//var ms = new MemoryStream();
+//arquivo.CopyTo(ms);
+//var resposta = ms.GetDigitalSignatures();
+//var response = ManipuladorPDF.GetDigitalSignatures(ms);
+//ManipuladorPDF.GetDigitalSignatures("D:\\Desktop\\assinado.pdf");
 
 //File.WriteAllBytes("C:\\Users\\0308\\Desktop\\html-to-pdf.pdf", response.ToArray());
+
+//var httpClientHandler = new HttpClientHandler();
+//httpClientHandler.ServerCertificateCustomValidationCallback += (message, cert, chain, errors) =>
+//{
+//    return true;
+//};
+
+//var AccessToken= "eyJhbGciOiJSUzI1NiIsInR5cCI6IkJlYXJlciJ9.eyJGdW5jaW9uYXJpbyI6IkZ1bmNpb25hcmlvIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvbmFtZSI6Ik1hcmNvIEFudG9uaW8gUGVyZWlyYSBKdW5pb3IiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6MjQsIk1hdHLDrWN1bGEiOiIwMzA4IiwiaXNzIjoiQ01QLlNTTyIsImF1ZCI6IkRvY3VtZW50byBEaWdpdGFsIiwiZXhwIjoxNzA1NzE5NjAwLCJpYXQiOjE3MDU2NjU1OTYsIm5iZiI6MTcwNTY2NTU5Nn0.TI-AOzZFYTXbfzu0emDja5F_ZKfo-O4_ThkRsPxFVEfGyaCOqEq8ZqKeQsc-mdoEnVeNS1ZT98650wLwHutEL1MScWDgpH_mVZbeH6AmIudcyLLARgx7MQnbQOTy_ukFSKFWkfj1B9Bg9g6nDtSievp8raguUSFd5QNAjD2cNXUiRBA52Tt8QBQTUgw--a0Ncm0Twkxq5TE3HKIrgk3oggCmL0XDkEGRacydgwHLPcKwpAV87ZrXowxpiHl5Abx8XPfkKVEmGY5X-HTo6otWEQDFdAJ-ELkTUNSJyLwz6abqMp4u1fzYvGrow6PjHrE1mPcjSSDgCUV6hFsaf81EmA";
+
+//var _httpClient = new HttpClient(httpClientHandler);
+//_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", AccessToken);
+
+//var UrlDownloadDocumento = "https://localhost:44302/arquivo/1027/dad55f64-4bcf-43fd-9738-a67cd390bfbd.pdf";
+
+//var responseArquivoParaAssinar = await _httpClient.GetAsync(UrlDownloadDocumento);
+//var arquivoParaAssinar = await responseArquivoParaAssinar.Content.ReadAsByteArrayAsync();
+
+var file = File.ReadAllBytes("D:\\Google Drive\\Organizado\\Imprimir\\Antigos\\BOLSA MENSAL ATUALIZADA.pdf");
+//var file = File.ReadAllBytes("D:\\Desktop\\Outros\\relatorio_unfinished_v2.pdf");
+
+var msParaAssinar = new MemoryStream(file);
+
+var retorno = AssinarPDF.Sign("CN=MARCO ANTONIO PEREIRA JUNIOR:44875067860, OU=19116390000198, OU=Presencial, OU=AR CUNHA, OU=AC VALID RFB V5, OU=RFB e-CPF A3, OU=Secretaria da Receita Federal do Brasil - RFB, O=ICP-Brasil, C=BR",
+    null, msParaAssinar, y: 300, x: 205, page: 1, a3: true);
+
+File.WriteAllBytes("D:\\Desktop\\teste.pdf", retorno.ToArray());    
