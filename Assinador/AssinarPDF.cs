@@ -15,6 +15,7 @@ using Org.BouncyCastle.Pkcs;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -214,7 +215,7 @@ namespace Assinador
 
                 var dadosCertificado = pk12.GetCertificate(alias);
                 var subject = dadosCertificado.Certificate.SubjectDN.GetValueList(X509Name.CN);
-                assinante = subject[subject.Count - 1].ToString();
+                assinante = new String(subject[subject.Count - 1].ToString().Where(x => char.IsLetter(x) || x == ' ').ToArray());
             }
             else
             {
@@ -224,7 +225,7 @@ namespace Assinador
                 X509Certificate2 certificate = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, caminhoCertificado, true)[0];
                 var cert = new Org.BouncyCastle.X509.X509CertificateParser().ReadCertificate(certificate.GetRawCertData());
                 var subject = cert.CertificateStructure.Subject.GetValueList(X509Name.CN);
-                assinante = subject[subject.Count - 1].ToString();
+                assinante = new String(subject[subject.Count - 1].ToString().Where(x => char.IsLetter(x) || x == ' ').ToArray());
                 chain = new IX509Certificate[1];
                 chain[0] = new X509CertificateBC(cert);
                 pks = new X509Certificate2RSASignature(certificate);
@@ -306,7 +307,7 @@ namespace Assinador
             signer.SignDetached(pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 
             return outputStream;
-        } 
+        }
         #endregion
 
         #region BLOB
@@ -571,7 +572,7 @@ namespace Assinador
             signer.SignDetached(pks, chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
 
             return outputStream;
-        } 
+        }
         #endregion
     }
 
