@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assinador\Assinador.csproj" />
+    <ProjectReference Include="..\Assinador\CMP.ManipuladorPDF.csproj" />
   </ItemGroup>
 
 </Project>

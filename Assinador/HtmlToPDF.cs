@@ -15,13 +15,18 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Assinador
-{
-    public static class HtmlToPDF
-    {
-        private const string NameFontFamily = "Roboto-Regular.ttf";
-        public static MemoryStream ConvertToPDF(this string html)
-        {
+namespace CMP.ManipuladorPDF {
+    public static class HtmlToPDF {
+
+        private static byte[] ExtractFontResource(string filename) {
+            using (Stream Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CMP.GeradorPDF.Resources.Fonts." + filename)) {
+                byte[] ByteArray = new byte[Stream.Length];
+                Stream.Read(ByteArray, 0, ByteArray.Length);
+                return ByteArray;
+            }
+        }
+
+        public static MemoryStream ConvertToPDF(this string html) {
             html = html.Replace("%", "");
             ConverterProperties converterProperties = new ConverterProperties();
             using MemoryStream stream = new MemoryStream();
@@ -32,21 +37,23 @@ namespace Assinador
             pdfDocument.SetDefaultPageSize(PageSize.A4);
             pdfDocument.SetTagged();
             converterProperties.SetBaseUri("");
-            DefaultFontProvider fontProvider = new DefaultFontProvider(false, true, true);
-            var resourceFontFamilyName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(NameFontFamily));
-            fontProvider.AddFont(resourceFontFamilyName);
+            DefaultFontProvider fontProvider = new DefaultFontProvider(false, false, false);
+
+            fontProvider.AddFont(ExtractFontResource("times.ttf"));
+            fontProvider.AddFont(ExtractFontResource("timesbd.ttf"));
+            fontProvider.AddFont(ExtractFontResource("timesbi.ttf"));
+            fontProvider.AddFont(ExtractFontResource("timesi.ttf"));
+
             converterProperties.SetFontProvider(fontProvider);
             HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
             return stream;
         }
 
-        public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1, int left = 20, int fontSize = 9)
-        {
+        public static MemoryStream NumerarPDF(this MemoryStream sourceFile, int numeracaoInicial = 1, int left = 20, int fontSize = 9) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 var fs = sourceFile.GerarFileStream();
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
@@ -56,8 +63,7 @@ namespace Assinador
                 using PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream), writer);
                 Document document = new Document(pdfDoc);
 
-                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
-                {
+                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++) {
                     // Adiciona o número da página no canto superior direito
                     Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
                         .SetTextAlignment(TextAlignment.RIGHT)
@@ -74,30 +80,22 @@ namespace Assinador
                 pdfDoc.Close();
 
                 return outputStream;
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -105,16 +103,14 @@ namespace Assinador
             return sourceFile;
         }
 
-        public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1, int left = 450, int fontSize = 9)
-        {
+        public static MemoryStream NumerarPDF(this string sourceFile, int numeracaoInicial = 1, int left = 450, int fontSize = 9) {
             using var outputStream = new MemoryStream();
             using PdfWriter writer = new PdfWriter(outputStream);
             PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
 
             Document document = new Document(pdfDoc);
 
-            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
-            {
+            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++) {
                 // Adiciona o número da página no canto superior direito
                 Paragraph pageNumber = new Paragraph($"Página {numeracaoInicial}")
                     .SetTextAlignment(TextAlignment.RIGHT)
@@ -133,8 +129,7 @@ namespace Assinador
             return outputStream;
         }
 
-        private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source)
-        {
+        private static (FileStream FileStream, string FileName) GerarFileStream(this MemoryStream source) {
             var fileName = System.IO.Path.GetTempFileName() + ".pdf";
             File.WriteAllBytes(fileName, source.ToArray());
             var fs = File.OpenRead(fileName);
@@ -142,13 +137,11 @@ namespace Assinador
             return (fs, fileName);
         }
 
-        public static MemoryStream RetornarApenasUmaPaginaPDF(this MemoryStream sourceFile, int pagina = 1)
-        {
+        public static MemoryStream RetornarApenasUmaPaginaPDF(this MemoryStream sourceFile, int pagina = 1) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 var fs = sourceFile.GerarFileStream();
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
@@ -164,30 +157,22 @@ namespace Assinador
                 newPdfDoc.Close();
 
                 return outputStream;
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -195,8 +180,7 @@ namespace Assinador
             return sourceFile;
         }
 
-        public static MemoryStream RetornarApenasUmaPaginaPDF(this string sourceFile, int pagina = 1)
-        {
+        public static MemoryStream RetornarApenasUmaPaginaPDF(this string sourceFile, int pagina = 1) {
             using var outputStream = new MemoryStream();
             using PdfWriter writer = new PdfWriter(outputStream);
             using PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
@@ -209,43 +193,33 @@ namespace Assinador
             return outputStream;
         }
 
-        public static int QuantidadePaginasPDF(this MemoryStream sourceFile)
-        {
+        public static int QuantidadePaginasPDF(this MemoryStream sourceFile) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 var fs = sourceFile.GerarFileStream();
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
 
                 PdfDocument pdfDoc = new PdfDocument(new PdfReader(fs.FileStream));
                 return pdfDoc.GetNumberOfPages();
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -253,14 +227,12 @@ namespace Assinador
             return 0;
         }
 
-        public static int QuantidadePaginasPDF(this string file)
-        {
+        public static int QuantidadePaginasPDF(this string file) {
             PdfDocument pdfDoc = new PdfDocument(new PdfReader(file));
             return pdfDoc.GetNumberOfPages();
         }
 
-        public static MemoryStream TornarSemEfeito(this string file)
-        {
+        public static MemoryStream TornarSemEfeito(this string file) {
             using var ms = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(file);
             using PdfWriter pdfWriter = new PdfWriter(ms);
@@ -278,8 +250,7 @@ namespace Assinador
             float fontSize = 80f;
 
             // Percorra todas as páginas do documento
-            for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
-            {
+            for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++) {
                 PdfPage page = pdfDocument.GetPage(pageNumber);
                 PdfCanvas canvas = new PdfCanvas(page);
 
@@ -304,13 +275,11 @@ namespace Assinador
             return ms;
         }
 
-        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile)
-        {
+        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 var fs = sourceFile.GerarFileStream();
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
@@ -332,8 +301,7 @@ namespace Assinador
                 float fontSize = 80f;
 
                 // Percorra todas as páginas do documento
-                for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++)
-                {
+                for (int pageNumber = 1; pageNumber <= pdfDocument.GetNumberOfPages(); pageNumber++) {
                     PdfPage page = pdfDocument.GetPage(pageNumber);
                     PdfCanvas canvas = new PdfCanvas(page);
 
@@ -356,30 +324,22 @@ namespace Assinador
                 // Feche o documento
                 doc.Close();
                 return ms;
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -387,13 +347,11 @@ namespace Assinador
             return null;
         }
 
-        public static MemoryStream AdicionarRodape(this MemoryStream sourceFile, string texto, int left = 20, int fontSize = 9)
-        {
+        public static MemoryStream AdicionarRodape(this MemoryStream sourceFile, string texto, int left = 20, int fontSize = 9) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 var fs = sourceFile.GerarFileStream();
                 fileStreams.Add(fs.FileStream);
                 fileNames.Add(fs.FileName);
@@ -404,8 +362,7 @@ namespace Assinador
 
                 Document document = new Document(pdfDoc);
 
-                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
-                {
+                for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++) {
                     // Adiciona o número da página no canto superior direito
                     Paragraph pageNumber = new Paragraph(texto)
                         .SetMargin(0)
@@ -419,30 +376,22 @@ namespace Assinador
                 pdfDoc.Close();
 
                 return outputStream;
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -450,16 +399,14 @@ namespace Assinador
             return sourceFile;
         }
 
-        public static MemoryStream AdicionarRodape(this string sourceFile, string texto, int left = 20, int fontSize = 9)
-        {
+        public static MemoryStream AdicionarRodape(this string sourceFile, string texto, int left = 20, int fontSize = 9) {
             using var outputStream = new MemoryStream();
             using PdfWriter writer = new PdfWriter(outputStream);
             using PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile), writer);
 
             Document document = new Document(pdfDoc);
 
-            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++)
-            {
+            for (var numPage = 1; numPage <= pdfDoc.GetNumberOfPages(); numPage++) {
                 // Adiciona o número da página no canto superior direito
                 Paragraph pageNumber = new Paragraph(texto)
                         .SetMargin(0)
@@ -475,18 +422,15 @@ namespace Assinador
             return outputStream;
         }
 
-        public static MemoryStream JuntarArquivosPDF(this List<MemoryStream> sourceFiles)
-        {
+        public static MemoryStream JuntarArquivosPDF(this List<MemoryStream> sourceFiles) {
             List<string> fileNames = new List<string>();
             List<FileStream> fileStreams = new List<FileStream>();
 
-            try
-            {
+            try {
                 using var outputStream = new MemoryStream();
                 using PdfWriter writer = new PdfWriter(outputStream);
                 using PdfDocument newPdfDoc = new PdfDocument(writer);
-                foreach (var sourceFile in sourceFiles)
-                {
+                foreach (var sourceFile in sourceFiles) {
                     var fs = sourceFile.GerarFileStream();
                     fileStreams.Add(fs.FileStream);
                     fileNames.Add(fs.FileName);
@@ -498,30 +442,22 @@ namespace Assinador
 
                 newPdfDoc.Close();
                 return outputStream;
-            }
-            catch (Exception)
-            {
-                foreach (var fs in fileStreams)
-                {
+            } catch (Exception) {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
-            }
-            finally
-            {
-                foreach (var fs in fileStreams)
-                {
+            } finally {
+                foreach (var fs in fileStreams) {
                     fs.Close();
                     fs.Dispose();
                 }
 
-                foreach (var fileName in fileNames)
-                {
+                foreach (var fileName in fileNames) {
                     File.Delete(fileName);
                 }
             }
@@ -529,14 +465,12 @@ namespace Assinador
             return null;
         }
 
-        public static MemoryStream JuntarArquivosPDF(this List<string> sourceFiles)
-        {
+        public static MemoryStream JuntarArquivosPDF(this List<string> sourceFiles) {
             using var outputStream = new MemoryStream();
             using PdfWriter writer = new PdfWriter(outputStream);
             using PdfDocument newPdfDoc = new PdfDocument(writer);
 
-            foreach (var sourceFile in sourceFiles)
-            {
+            foreach (var sourceFile in sourceFiles) {
                 PdfDocument pdfDoc = new PdfDocument(new PdfReader(sourceFile));
                 pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
                 pdfDoc.Close();

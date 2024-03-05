@@ -1,4 +1,4 @@
-﻿using Assinador;
+﻿using CMP.ManipuladorPDF;
 using iText.Kernel.Pdf;
 using Org.BouncyCastle.Cms;
 using Org.BouncyCastle.X509.Store;

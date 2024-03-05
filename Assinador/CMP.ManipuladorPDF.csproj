@@ -7,20 +7,34 @@
 		<Company>Câmara Municipal de Piracicaba</Company>
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
-		<PackageReleaseNotes>Está é a versão 1.0.1.8 Assinando com token A3 e A1 local</PackageReleaseNotes>
-		<Version>1.0.1.9</Version>
-		<AssemblyVersion>1.0.1.9</AssemblyVersion>
-		<FileVersion>1.0.1.9</FileVersion>
+		<PackageReleaseNotes>Está é a versão 1.0.0.0 Assinando com token A3 e A1 local</PackageReleaseNotes>
+		<Version>1.0.0.0</Version>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
+	  <None Remove="Resources\Roboto-Bold.ttf" />
+	  <None Remove="Resources\Roboto-BoldItalic.ttf" />
+	  <None Remove="Resources\Roboto-Italic.ttf" />
 	  <None Remove="Resources\Roboto-Regular.ttf" />
 	  <None Remove="Resources\sRGB Color Space Profile.icm" />
+	  <None Remove="Resources\times.ttf" />
+	  <None Remove="Resources\timesbd.ttf" />
+	  <None Remove="Resources\timesbi.ttf" />
+	  <None Remove="Resources\timesi.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Roboto-Bold.ttf" />
+	  <EmbeddedResource Include="Resources\Roboto-BoldItalic.ttf" />
+	  <EmbeddedResource Include="Resources\Roboto-Italic.ttf" />
 	  <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
 	  <EmbeddedResource Include="Resources\sRGB Color Space Profile.icm" />
+	  <EmbeddedResource Include="Resources\times.ttf" />
+	  <EmbeddedResource Include="Resources\timesbd.ttf" />
+	  <EmbeddedResource Include="Resources\timesbi.ttf" />
+	  <EmbeddedResource Include="Resources\timesi.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
