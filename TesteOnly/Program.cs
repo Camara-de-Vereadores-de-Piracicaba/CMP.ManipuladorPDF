@@ -1,9 +1,4 @@
 ﻿using CMP.ManipuladorPDF;
-using iText.Kernel.Pdf;
-using Org.BouncyCastle.Cms;
-using Org.BouncyCastle.X509.Store;
-using System.Net.Http;
-using System.Net.Http.Headers;
 
 Console.WriteLine("Hello, World!");
 
@@ -221,12 +216,11 @@ th:empty {
 //var responseArquivoParaAssinar = await _httpClient.GetAsync(UrlDownloadDocumento);
 //var arquivoParaAssinar = await responseArquivoParaAssinar.Content.ReadAsByteArrayAsync();
 
-var file = File.ReadAllBytes("C:\\Users\\0308\\Desktop\\Outros\\AUXÍLIO SAÚDE MENSAL.pdf");
+var file = File.ReadAllBytes("D:\\Desktop\\Outros\\Mapa_Completo_Numerado_Colorido.pdf");
 //var file = File.ReadAllBytes("D:\\Desktop\\Outros\\relatorio_unfinished_v2.pdf");
 
 var msParaAssinar = new MemoryStream(file);
 
-var retorno = AssinarPDF.Sign("CN=MARCO ANTONIO PEREIRA JUNIOR:44875067860, OU=19116390000198, OU=Presencial, OU=AR CUNHA, OU=AC VALID RFB V5, OU=RFB e-CPF A3, OU=Secretaria da Receita Federal do Brasil - RFB, O=ICP-Brasil, C=BR",
-    null, msParaAssinar, y: 300, x: 205, page: 1, a3: true);
+var retorno = AssinarPDF.Sign("C:\\arquivos\\certificados\\0308.pfx", "xy234786", msParaAssinar, y: 300, x: 205, page: 1);
 
-File.WriteAllBytes("C:\\Users\\0308\\Desktop\\teste.pdf", retorno.ToArray());    
+File.WriteAllBytes("C:\\Users\\0308\\Desktop\\teste.pdf", retorno.PDFAssinado.ToArray());

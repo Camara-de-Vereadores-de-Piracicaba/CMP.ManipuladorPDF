@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CMP.ManipuladorPDF", "Assin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TesteOnly", "TesteOnly\TesteOnly.csproj", "{F703DD28-3371-4FCD-ADF1-5BD8DEA4A442}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{DFE20299-118A-4504-8656-2225DF5A0BB9}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{F703DD28-3371-4FCD-ADF1-5BD8DEA4A442}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F703DD28-3371-4FCD-ADF1-5BD8DEA4A442}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F703DD28-3371-4FCD-ADF1-5BD8DEA4A442}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DFE20299-118A-4504-8656-2225DF5A0BB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DFE20299-118A-4504-8656-2225DF5A0BB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DFE20299-118A-4504-8656-2225DF5A0BB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DFE20299-118A-4504-8656-2225DF5A0BB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
