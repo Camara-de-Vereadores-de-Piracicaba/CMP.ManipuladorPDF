@@ -19,7 +19,8 @@ namespace CMP.ManipuladorPDF {
     public static class HtmlToPDF {
 
         private static byte[] ExtractFontResource(string filename) {
-            using (Stream Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("CMP.GeradorPDF.Resources.Fonts." + filename)) {
+            string name = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(filename));
+            using (Stream Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name)) {
                 byte[] ByteArray = new byte[Stream.Length];
                 Stream.Read(ByteArray, 0, ByteArray.Length);
                 return ByteArray;
