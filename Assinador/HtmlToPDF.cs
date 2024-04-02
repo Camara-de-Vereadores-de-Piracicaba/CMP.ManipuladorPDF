@@ -31,9 +31,13 @@ namespace CMP.ManipuladorPDF
             }
         }
 
-        public static MemoryStream ConvertToPDF(this string html)
+        public static MemoryStream ConvertToPDF(this string html, bool removerPorcentagem=true)
         {
-            html = html.Replace("%", "");
+            if (removerPorcentagem) 
+            {
+                html = html.Replace("%", "");
+            }
+            
             ConverterProperties converterProperties = new ConverterProperties();
             using MemoryStream stream = new MemoryStream();
             var resourceRGBColorsName = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith("sRGB Color Space Profile.icm"));
@@ -49,6 +53,11 @@ namespace CMP.ManipuladorPDF
             fontProvider.AddFont(ExtractFontResource("timesbd.ttf"));
             fontProvider.AddFont(ExtractFontResource("timesbi.ttf"));
             fontProvider.AddFont(ExtractFontResource("timesi.ttf"));
+
+            fontProvider.AddFont(ExtractFontResource("CourierPrime-Regular.ttf"));
+            fontProvider.AddFont(ExtractFontResource("CourierPrime-Bold.ttf"));
+            fontProvider.AddFont(ExtractFontResource("CourierPrime-Italic.ttf"));
+            fontProvider.AddFont(ExtractFontResource("CourierPrime-BoldItalic.ttf"));
 
             converterProperties.SetFontProvider(fontProvider);
             HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);

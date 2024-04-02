@@ -8,9 +8,9 @@
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
 		<PackageReleaseNotes>Está é a versão 1.0.0.4 Assinando com token A3 e A1 local</PackageReleaseNotes>
-		<Version>1.0.0.4</Version>
-		<AssemblyVersion>1.0.0.4</AssemblyVersion>
-		<FileVersion>1.0.0.4</FileVersion>
+		<Version>1.0.0.5</Version>
+		<AssemblyVersion>1.0.0.5</AssemblyVersion>
+		<FileVersion>1.0.0.5</FileVersion>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -18,6 +18,10 @@
 	  <None Remove="Resources\Roboto-BoldItalic.ttf" />
 	  <None Remove="Resources\Roboto-Italic.ttf" />
 	  <None Remove="Resources\Roboto-Regular.ttf" />
+    <None Remove="Resources\CourierPrime-Bold.ttf" />
+    <None Remove="Resources\CourierPrime-BoldItalic.ttf" />
+    <None Remove="Resources\CourierPrime-Italic.ttf" />
+    <None Remove="Resources\CourierPrime-Regular.ttf" />
 	  <None Remove="Resources\sRGB Color Space Profile.icm" />
 	  <None Remove="Resources\times.ttf" />
 	  <None Remove="Resources\timesbd.ttf" />
@@ -30,6 +34,10 @@
 	  <EmbeddedResource Include="Resources\Roboto-BoldItalic.ttf" />
 	  <EmbeddedResource Include="Resources\Roboto-Italic.ttf" />
 	  <EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
+    <EmbeddedResource Include="Resources\CourierPrime-Bold.ttf" />
+    <EmbeddedResource Include="Resources\CourierPrime-BoldItalic.ttf" />
+    <EmbeddedResource Include="Resources\CourierPrime-Italic.ttf" />
+    <EmbeddedResource Include="Resources\CourierPrime-Regular.ttf" />
 	  <EmbeddedResource Include="Resources\sRGB Color Space Profile.icm" />
 	  <EmbeddedResource Include="Resources\times.ttf" />
 	  <EmbeddedResource Include="Resources\timesbd.ttf" />
