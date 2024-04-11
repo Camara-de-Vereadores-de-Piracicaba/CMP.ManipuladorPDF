@@ -2,6 +2,7 @@
 using iText.Bouncycastle.Crypto;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
+using iText.IO.Image;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
@@ -12,10 +13,17 @@ using iText.Signatures;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
+using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
@@ -124,7 +132,6 @@ namespace CMP.ManipuladorPDF
                 }
             }
         }
-
         public static AssinarPDFResponse Sign(string caminhoCertificado, string senha, MemoryStream sourceFile, int? page = null, int x = 30, int y = 30,
             DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
             float width = 200, float height = 50, int? rotate = null, string qrcode = null, bool a3 = false)
@@ -194,6 +201,9 @@ namespace CMP.ManipuladorPDF
             int? page = null, int x = 30, int y = 30, DateTime? dataAssinatura = null, string texto = null, float fontSize = 9,
             float width = 200, float height = 50, int? rotate = null, string qrData = null, bool a3 = false)
         {
+
+            Console.WriteLine(width);
+
             if (!dataAssinatura.HasValue)
             {
                 dataAssinatura = DateTime.Now;
@@ -225,6 +235,7 @@ namespace CMP.ManipuladorPDF
                 {
                     chain[k] = new X509CertificateBC(ce[k].Certificate);
                 }
+
                 pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
                 var dadosCertificado = pk12.GetCertificate(alias);
@@ -260,24 +271,30 @@ namespace CMP.ManipuladorPDF
 
             PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
 
+            int imageWidth = 200;
+            int imageHeight = (int)(imageWidth * 0.285);
+
             appearance
                 .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
                 .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
                 .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
                 .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
-                .SetPageRect(new Rectangle(x, y, width, height))
+                .SetPageRect(new iText.Kernel.Geom.Rectangle(x, y, imageWidth, imageHeight))
                 .SetLayer2FontSize(fontSize)
                 .SetPageNumber(page.Value)
-                .SetLayer2Font(ObterPdfFont.Obter());
+                .SetLayer2Font(PDFTrueTypeFont.GetFont());
 
             string signatureName = signer.GetNewSigFieldName();
 
+            Console.WriteLine(rotate);
+
             if (rotate.HasValue)
             {
+
                 appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
 
                 PdfFormXObject layer2Object = appearance.GetLayer2();
-                Rectangle rect = layer2Object.GetBBox().ToRectangle();
+                iText.Kernel.Geom.Rectangle rect = layer2Object.GetBBox().ToRectangle();
                 PdfCanvas pdfCanvas = new PdfCanvas(layer2Object, signer.GetDocument());
 
                 if (rotate == 90)
@@ -287,33 +304,85 @@ namespace CMP.ManipuladorPDF
                 else if (rotate == 270)
                     pdfCanvas.ConcatMatrix(0, -1, 1, 0, 0, rect.GetHeight());
 
-                Rectangle rotatedRect = 0 == rotate / 90 % 2 ? new Rectangle(rect.GetWidth(), rect.GetHeight()) : new Rectangle(rect.GetHeight(), rect.GetWidth());
+                iText.Kernel.Geom.Rectangle rotatedRect = 0 == rotate / 90 % 2 ? new iText.Kernel.Geom.Rectangle(rect.GetWidth(), rect.GetHeight()) : new iText.Kernel.Geom.Rectangle(rect.GetHeight(), rect.GetWidth());
                 Canvas appearanceCanvas = new Canvas(pdfCanvas, rotatedRect);
 
                 Paragraph text = new Paragraph();
                 text.SetFontSize(fontSize).Add(texto);
-                text.SetFont(ObterPdfFont.Obter());
+                text.SetFont(PDFTrueTypeFont.GetFont());
 
                 if (!string.IsNullOrEmpty(qrData))
                 {
                     text.SetFixedPosition(50, 5, height - 100);
                 }
+                
                 appearanceCanvas.Add(text);
 
                 if (!string.IsNullOrEmpty(qrData))
                 {
                     BarcodeQRCode qrCode = new BarcodeQRCode(qrData);
                     qrCode.Regenerate();
-                    Image qrImage = new Image(qrCode.CreateFormXObject(signer.GetDocument()));
+                    iText.Layout.Element.Image qrImage = new iText.Layout.Element.Image(qrCode.CreateFormXObject(signer.GetDocument()));
                     qrImage.SetFixedPosition(5, 5);
                     appearanceCanvas.Add(qrImage);
                 }
+
             }
             else
             {
-                appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
+
+                byte[] ImageBytes = GetResource("sign.png");
+                string _name = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith("Roboto-Regular.ttf"));
+                Stream Font = Assembly.GetExecutingAssembly().GetManifestResourceStream(_name);
+                string _nameb = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith("Roboto-Bold.ttf"));
+                Stream FontBold = Assembly.GetExecutingAssembly().GetManifestResourceStream(_nameb);
+
+                MemoryStream MemoryStream = new MemoryStream();
+                var _image = SixLabors.ImageSharp.Image.Load(ImageBytes);
+
+                FontCollection collection = new FontCollection();
+                FontFamily regular = collection.Add(Font);
+                FontFamily bold = collection.Add(FontBold);
+                Font fontRegular = regular.CreateFont(48,FontStyle.Regular);
+                Font fontBold = bold.CreateFont(54,FontStyle.Bold);
+
+                int px = 290;
+                int startY = 70;
+
+                _image.Mutate(x => x
+                    .DrawText(
+                        "Documento Assinado Digitalmente",
+                        fontRegular,
+                        SixLabors.ImageSharp.Color.Black,
+                        new SixLabors.ImageSharp.PointF(px, startY)
+                    )
+                    .DrawText(
+                        assinante.ToUpper(),
+                        fontBold,
+                        SixLabors.ImageSharp.Color.Black,
+                        new SixLabors.ImageSharp.PointF(px, startY+80)
+                    )
+                    .DrawText(
+                        DateTime.Now.ToString(),
+                        fontRegular,
+                        SixLabors.ImageSharp.Color.Black,
+                        new SixLabors.ImageSharp.PointF(px, startY+135)
+                    )
+                );
+
+                var _encoder = new PngEncoder() {
+                    ColorType = PngColorType.RgbWithAlpha,
+                    TransparentColorMode = PngTransparentColorMode.Preserve,
+                    BitDepth = PngBitDepth.Bit16
+                };
+                _image.Save(MemoryStream,_encoder);
+                
+                ImageData image = ImageDataFactory.Create(MemoryStream.ToArray());
+                appearance.SetSignatureGraphic(image);
+                
+                appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC);
                 appearance.SetLayer2Text(texto);
-                appearance.SetLayer2Font(ObterPdfFont.Obter());
+                appearance.SetLayer2Font(PDFTrueTypeFont.GetFont());
             }
 
             signer.SetFieldName(signatureName);
@@ -513,7 +582,6 @@ namespace CMP.ManipuladorPDF
 
                 using PdfReader reader = new PdfReader(fs);
 
-
                 return AssinarInternamente(certificado, senha, reader, mostrarCarimbo: false);
             }
             catch (Exception ex)
@@ -584,8 +652,8 @@ namespace CMP.ManipuladorPDF
             {
                 chain[k] = new X509CertificateBC(ce[k].Certificate);
             }
-            pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
+            pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
             using MemoryStream outputStream = new MemoryStream();
             PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
@@ -604,22 +672,24 @@ namespace CMP.ManipuladorPDF
 
                 PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
 
+                iText.Kernel.Geom.Rectangle pageRect = new iText.Kernel.Geom.Rectangle(x, y, width, height);
+
                 appearance
                     .SetLocation("Câmara Municipal de Piracicaba - São Paulo")
                     .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
                     .SetContact("desenvolvimento@camarapiracicaba.sp.gov.br")
                     .SetSignatureCreator("Biblioteca de Assinatura digital Câmara Municipal de Piracicaba")
-                    .SetPageRect(new Rectangle(x, y, width, height))
+                    .SetPageRect(pageRect)
                     .SetLayer2FontSize(fontSize)
                     .SetPageNumber(page.Value)
-                    .SetLayer2Font(ObterPdfFont.Obter());
+                    .SetLayer2Font(PDFTrueTypeFont.GetFont());
 
                 if (rotate.HasValue)
                 {
                     appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
 
                     PdfFormXObject layer2Object = appearance.GetLayer2();
-                    Rectangle rect = layer2Object.GetBBox().ToRectangle();
+                    iText.Kernel.Geom.Rectangle rect = layer2Object.GetBBox().ToRectangle();
                     PdfCanvas pdfCanvas = new PdfCanvas(layer2Object, signer.GetDocument());
 
                     if (rotate == 90)
@@ -629,24 +699,25 @@ namespace CMP.ManipuladorPDF
                     else if (rotate == 270)
                         pdfCanvas.ConcatMatrix(0, -1, 1, 0, 0, rect.GetHeight());
 
-                    Rectangle rotatedRect = 0 == rotate / 90 % 2 ? new Rectangle(rect.GetWidth(), rect.GetHeight()) : new Rectangle(rect.GetHeight(), rect.GetWidth());
+                    iText.Kernel.Geom.Rectangle rotatedRect = 0 == rotate / 90 % 2 ? new iText.Kernel.Geom.Rectangle(rect.GetWidth(), rect.GetHeight()) : new iText.Kernel.Geom.Rectangle(rect.GetHeight(), rect.GetWidth());
                     Canvas appearanceCanvas = new Canvas(pdfCanvas, rotatedRect);
 
                     Paragraph text = new Paragraph();
                     text.SetFontSize(fontSize).Add(texto);
-                    text.SetFont(ObterPdfFont.Obter());
+                    text.SetFont(PDFTrueTypeFont.GetFont());
 
                     if (!string.IsNullOrEmpty(qrData))
                     {
                         text.SetFixedPosition(50, 5, height - 100);
                     }
+
                     appearanceCanvas.Add(text);
 
                     if (!string.IsNullOrEmpty(qrData))
                     {
                         BarcodeQRCode qrCode = new BarcodeQRCode(qrData);
                         qrCode.Regenerate();
-                        Image qrImage = new Image(qrCode.CreateFormXObject(signer.GetDocument()));
+                        iText.Layout.Element.Image qrImage = new iText.Layout.Element.Image(qrCode.CreateFormXObject(signer.GetDocument()));
                         qrImage.SetFixedPosition(5, 5);
                         appearanceCanvas.Add(qrImage);
                     }
@@ -655,9 +726,10 @@ namespace CMP.ManipuladorPDF
                 {
                     appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
                     appearance.SetLayer2Text(texto);
-                    appearance.SetLayer2Font(ObterPdfFont.Obter());
+                    appearance.SetLayer2Font(PDFTrueTypeFont.GetFont());
                 }
             }
+
             string signatureName = signer.GetNewSigFieldName();
             signer.SetFieldName(signatureName);
             signer.SetSignDate(dataAssinatura.Value);
@@ -670,6 +742,15 @@ namespace CMP.ManipuladorPDF
                 PDFAssinado = outputStream
             };
         }
+
+        private static byte[] GetResource(string filename) {
+            string name = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(filename));
+            using Stream Stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
+            byte[] ByteArray = new byte[Stream.Length];
+            Stream.Read(ByteArray, 0, ByteArray.Length);
+            return ByteArray;
+        }
+
         #endregion
     }
 
@@ -705,15 +786,17 @@ namespace CMP.ManipuladorPDF
         {
             using RSA rsa = certificate.GetRSAPrivateKey();
             return rsa.SignData(message, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
-        }
-
+        } 
         X509Certificate2 certificate;
     }
 
+    
     public class AssinarPDFResponse
     {
         public MemoryStream PDFAssinado { get; set; }
         public bool Sucesso { get; set; }
         public string Mensagem { get; set; }
     }
+
+
 }

@@ -7,10 +7,10 @@
 		<Company>Câmara Municipal de Piracicaba</Company>
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
-		<PackageReleaseNotes>Está é a versão 1.0.0.4 Assinando com token A3 e A1 local</PackageReleaseNotes>
-		<Version>1.0.0.5</Version>
-		<AssemblyVersion>1.0.0.5</AssemblyVersion>
-		<FileVersion>1.0.0.5</FileVersion>
+		<PackageReleaseNotes>Está é a versão 1.0.0.6</PackageReleaseNotes>
+		<Version>1.0.0.7</Version>
+		<AssemblyVersion>1.0.0.7</AssemblyVersion>
+		<FileVersion>1.0.0.7</FileVersion>
 	</PropertyGroup>
 	
 	<ItemGroup>
@@ -27,6 +27,7 @@
 	  <None Remove="Resources\timesbd.ttf" />
 	  <None Remove="Resources\timesbi.ttf" />
 	  <None Remove="Resources\timesi.ttf" />
+    <None Remove="Resources\sign.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -43,6 +44,7 @@
 	  <EmbeddedResource Include="Resources\timesbd.ttf" />
 	  <EmbeddedResource Include="Resources\timesbi.ttf" />
 	  <EmbeddedResource Include="Resources\timesi.ttf" />
+    <EmbeddedResource Include="Resources\sign.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -50,6 +52,8 @@
 		<PackageReference Include="itext7.bouncy-castle-adapter" Version="8.0.1" />
 		<PackageReference Include="itext7.pdfhtml" Version="5.0.1" />
 		<PackageReference Include="Portable.BouncyCastle" Version="1.9.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.8" />
+		<PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
 		<PackageReference Include="System.Linq" Version="4.3.0" />
 		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
 	</ItemGroup>
