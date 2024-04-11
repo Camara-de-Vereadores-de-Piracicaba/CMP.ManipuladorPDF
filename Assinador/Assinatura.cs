@@ -13,8 +13,6 @@ using iText.Kernel.Font;
 using iText.Barcodes;
 using static CMP.ManipuladorPDF.ManipuladorPDF;
 using iText.Layout.Properties;
-using iText.Layout.Borders;
-using iText.Kernel.Colors;
 
 namespace CMP.ManipuladorPDF
 {
@@ -34,19 +32,16 @@ namespace CMP.ManipuladorPDF
             Assinatura assinatura
         )
         {
-            
             using MemoryStream outputStream = new MemoryStream();   
             PdfSigner pdfSigner = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
             TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle("https://freetsa.org/tsr", null, null, 8192, DigestAlgorithms.SHA256);
             OcspClientBouncyCastle ocspClient = new OcspClientBouncyCastle(null);
             var crlClient = new CrlClientOnline("https://crl.cacert.org/revoke.crl");
             List<ICrlClient> crlList = new List<ICrlClient>() { crlClient };
-
             PdfSignatureAppearance appearance = pdfSigner.GetSignatureAppearance();
             Rectangle mediaBox = pdfSigner.GetDocument().GetPage(1).GetMediaBox();
             float documentWidth = mediaBox.GetWidth();
             float documentHeight = mediaBox.GetHeight();
-            
             appearance
                 .SetLocation(assinatura.Local)
                 .SetReason(assinatura.Razao)
@@ -54,25 +49,22 @@ namespace CMP.ManipuladorPDF
                 .SetSignatureCreator(assinatura.Criador)
                 .SetPageNumber(1);
             appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
-
-            Console.Write(assinatura.Dados);
-
+            int alturaAssinaturaHorizontal = 40;
             if (assinatura.Dados.Posicao == PosicaoAssinatura.FIXA_LATERAL_DIREITA)
             {
-                appearance.SetPageRect(new Rectangle(documentWidth - 60, 0, 60, documentHeight));
-                SetFreeSignature(pdfSigner, assinatura.Dados);
+                appearance.SetPageRect(new Rectangle(documentWidth - alturaAssinaturaHorizontal, 0, alturaAssinaturaHorizontal, documentHeight));
+                SetBorderSignature(pdfSigner, assinatura.Dados);
             }
             else if (assinatura.Dados.Posicao == PosicaoAssinatura.FIXA_LATERAL_ESQUERDA)
             {
-                appearance.SetPageRect(new Rectangle(60, 0, 60, documentHeight));
-                SetFreeSignature(pdfSigner, assinatura.Dados);
+                appearance.SetPageRect(new Rectangle(alturaAssinaturaHorizontal, 0, alturaAssinaturaHorizontal, documentHeight));
+                SetBorderSignature(pdfSigner, assinatura.Dados);
             }
             else if (assinatura.Dados.Posicao == PosicaoAssinatura.LIVRE)
             {
-                appearance.SetPageRect(new Rectangle(assinatura.Dados.X, assinatura.Dados.Y, 200, 50));
+                appearance.SetPageRect(new Rectangle(assinatura.Dados.X, assinatura.Dados.Y, 200, 37));
                 SetFreeSignature(pdfSigner, assinatura.Dados);
             }
-
             pdfSigner.SignDetached(
                 externalSignature: certificado.PKS,
                 chain: certificado.Chain,
@@ -82,9 +74,7 @@ namespace CMP.ManipuladorPDF
                 ocspClient: ocspClient,
                 tsaClient: tsaClient
             );
-
             return outputStream;
-
         }
 
         private static void SetBorderSignature(PdfSigner pdfSigner, DadosAssinatura dados)
@@ -95,7 +85,7 @@ namespace CMP.ManipuladorPDF
             PdfCanvas canvas = new PdfCanvas(layer2, pdfSigner.GetDocument());
             PdfFont font = PdfFontFactory.CreateFont();
             Canvas signature = new Canvas(canvas, new Rectangle(0, 0, 20, documentHeight));
-            int lineFloor = 42;
+            int lineFloor = 25;
             int fontSpace = 50;
             int fontSize = 6;
             void addTextLine(string _text, int _line)
@@ -113,17 +103,16 @@ namespace CMP.ManipuladorPDF
                     radAngle: (float)Conversion.ToRadians(90)
                 );
             }
-
-            for(int i = 1; i <= dados.Texto.Count; i++)
+            DateTime data = DateTime.Now;
+            addTextLine($"Assinado digitalmente por {dados.Nome} e protocolado na Câmara Municipal de Piracicaba em {data}, sob o nº {dados.Protocolo}.", dados.EnderecoValidacao ? 1 : 0);
+            if (dados.EnderecoValidacao)
             {
-                addTextLine(dados.Texto[i-1], i);
+                addTextLine($"Para autenticar este documento, utilize o qrcode impresso ou entre em https://validar.camarapiracicaba.sp.gov.br.", 0);
             }
-
-            BarcodeQRCode qrcode = new BarcodeQRCode("https://sistemas.camarapiracicaba.sp.gov.br/digital/validar/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+            BarcodeQRCode qrcode = new BarcodeQRCode($"https://validar.camarapiracicaba.sp.gov.br/{dados.Protocolo}");
             Image qrImage = new Image(qrcode.CreateFormXObject(pdfSigner.GetDocument()));
-            qrImage.SetFixedPosition(0, 5);
+            qrImage.SetFixedPosition(0, 12);
             signature.Add(qrImage);
-
         }
 
         private static void SetFreeSignature(PdfSigner pdfSigner, DadosAssinatura dados)
@@ -133,19 +122,19 @@ namespace CMP.ManipuladorPDF
             var layer2 = appearance.GetLayer2();
             PdfCanvas canvas = new PdfCanvas(layer2, pdfSigner.GetDocument());
             PdfFont font = PdfFontFactory.CreateFont();
-            Canvas signature = new Canvas(canvas, new Rectangle(dados.X, dados.Y, 200, 50));
+            Canvas signature = new Canvas(canvas, new Rectangle(dados.X, dados.Y, 200, 40));
             void addTextLine(string _text, int y, int size = 8, int offset = 0, bool bold = false)
             {
                 Paragraph text = new Paragraph();
                 text.SetFontSize(size).Add(_text);
                 text.SetFont(PDFTrueTypeFont.GetFont(bold ? "Roboto-Bold" : "Roboto-Regular"));
-                signature.ShowTextAligned(text, 46, 6+(y*3)+offset, TextAlignment.LEFT);
+                signature.ShowTextAligned(text, 38, 4+(y*3)+offset, TextAlignment.LEFT);
             }
-            addTextLine("Documento assinado digitalmente por:", 4, 5, 15, false);
-            addTextLine(dados.Nome, 3, 6, 8, true);
-            addTextLine($"Assinado em", 2, 5, 4, false);
-            addTextLine("Verifique a autenticidade em:", 1, 4, 1, false);
-            addTextLine("validar.camarapiracicaba.sp.gov.br", 0, 4, 0, true);
+            DateTime data = DateTime.Now;
+            addTextLine("Documento assinado digitalmente por:", 3, 4, 12, false);
+            addTextLine(dados.Nome.ToUpper(), 2, 6, 7, true);
+            addTextLine($"Assinado em {data}", 1, 5, 4, false);
+            addTextLine("Verifique em validar.camarapiracicaba.sp.gov.br", 0 , 4, 0, true);
             BarcodeQRCode qrcode = new BarcodeQRCode($"https://validar.camarapiracicaba.sp.gov.br/{dados.Protocolo}");
             Image qrImage = new Image(qrcode.CreateFormXObject(pdfSigner.GetDocument()));
             qrImage.SetFixedPosition(0,0);
@@ -166,10 +155,10 @@ namespace CMP.ManipuladorPDF
             );
         }
 
-        private static List<DadosAssinaturaDTO> ObterAssinaturas(PdfReader pdfReader)
+        private static List<CertificadosAssinatura> ObterAssinaturas(PdfReader pdfReader)
         {
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
-            List<DadosAssinaturaDTO> signatures = new List<DadosAssinaturaDTO>();
+            List<CertificadosAssinatura> signatures = new List<CertificadosAssinatura>();
             var signatureUtil = new SignatureUtil(pdfDocument);
             var signatureNames = signatureUtil.GetSignatureNames();
             foreach (var signatureName in signatureNames) {
@@ -180,23 +169,27 @@ namespace CMP.ManipuladorPDF
                 var signedData = new SignedCms();
                 signedData.Decode(signatureBytes);
                 var signerInfos = signedData.SignerInfos;
-                var dados = new DadosAssinaturaDTO {
+
+                var dados = new CertificadosAssinatura
+                {
                     CadeiaCertificados = new List<X509Certificate2>(),
                     CertificadoAssinante = signerInfos[0].Certificate,
                     DataAssinatura = PdfDate.Decode(dataAssinatura),
                 };
+
                 foreach (var certificate in signedData.Certificates) {
                     dados.CadeiaCertificados.Add(certificate);
                 }
+
                 signatures.Add(dados);
             }
             return signatures;
         }
-        public static List<DadosAssinaturaDTO> ObterAssinaturasDigitais(this string filePath) 
+        public static List<CertificadosAssinatura> ObterAssinaturasDigitais(this string filePath) 
         {
             return ObterAssinaturas(new PdfReader(filePath));
         }
-        public static List<DadosAssinaturaDTO> ObterAssinaturasDigitais(this MemoryStream memoryStream)
+        public static List<CertificadosAssinatura> ObterAssinaturasDigitais(this MemoryStream memoryStream)
         {
             return ObterAssinaturas(new PdfReader(memoryStream));
         }
@@ -214,36 +207,18 @@ namespace CMP.ManipuladorPDF
     {
         public string Nome { get; set; }
         public string Protocolo { get; set; }
-        public List<string> Texto { get; set; };
+        public List<string> Texto { get; set; }
         public PosicaoAssinatura Posicao { get; set; } = PosicaoAssinatura.FIXA_LATERAL_DIREITA;
         public float X { get; set; } = 0;
         public float Y { get; set; } = 0;
+        public bool EnderecoValidacao { get; set; } = false;
     }
-
     
-
-
-
-
-
-
-
-
-
-
-
-
-    public class DadosAssinaturaDTO
+    public class CertificadosAssinatura
     {
         public DateTime DataAssinatura { get; set; }
         public X509Certificate2 CertificadoAssinante { get; set; }
         public List<X509Certificate2> CadeiaCertificados { get; set; }
-    }
-    public class AssinarPDFResponse2
-    {
-        public MemoryStream PDFAssinado { get; set; }
-        public bool Sucesso { get; set; }
-        public string Mensagem { get; set; }
     }
 
 }

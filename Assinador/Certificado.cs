@@ -7,13 +7,12 @@ using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
 using _S = System.Security.Cryptography.X509Certificates;
-using _I = iText.Commons.Bouncycastle.Cert;
 using iText.Bouncycastle.X509;
 using System.Security.Cryptography;
 using System.Security;
 using System;
 using static System.Security.Cryptography.X509Certificates.RSACertificateExtensions;
-using SixLabors.ImageSharp.ColorSpaces;
+using iText.Commons.Bouncycastle.Cert;
 
 namespace CMP.ManipuladorPDF
 {
@@ -44,7 +43,8 @@ namespace CMP.ManipuladorPDF
             {
                 _chain.Add(new X509CertificateBC(certificateEntry.Certificate));
             }
-            _I.IX509Certificate[] chain = _chain.ToArray();
+
+            IX509Certificate[] chain = _chain.ToArray();
 
             X509Certificate dadosCertificado = store.GetCertificate(alias).Certificate;
             string assinante = dadosCertificado.ObterAssinante();
@@ -65,7 +65,7 @@ namespace CMP.ManipuladorPDF
 
             X509Certificate certificate = new X509CertificateParser().ReadCertificate(certificate2.GetRawCertData());
 
-            _I.IX509Certificate[] chain = new _I.IX509Certificate[1];
+            IX509Certificate[] chain = new IX509Certificate[1];
             chain[0] = new X509CertificateBC(certificate);
 
             return new Certificado
@@ -76,29 +76,22 @@ namespace CMP.ManipuladorPDF
             };
         }
 
-        private static byte[] GeraCertificado(
-            byte[] raiz,
-            string senhaRaiz,
-            string nome,
-            string email,
-            string senha
-        )
+        private static byte[] GeraCertificado(RequisicaoCertificado requisicao)
         {
-
-            _S.X509Certificate2 certificadoCamara = new _S.X509Certificate2(raiz, senhaRaiz);
+            _S.X509Certificate2 certificadoRaiz = new _S.X509Certificate2(requisicao.CertificadoRaiz, requisicao.SenhaRaiz);
             RSA rsaKey = RSA.Create();
 
             string dadosCertificado = $@"
                     L=Piracicaba,
                     ST=SP,
                     C=BR,
-                    E={email},
+                    E={requisicao.Email},
                     DC=camarapiracicaba,
                     DC=sp,
                     DC=gov,
                     DC=br,
                     O=CV Piracicaba,
-                    CN={nome}
+                    CN={requisicao.Nome}
             ";
 
             _S.CertificateRequest certificateRequest = new _S.CertificateRequest(dadosCertificado,rsaKey,HashAlgorithmName.SHA256,RSASignaturePadding.Pkcs1);
@@ -110,11 +103,11 @@ namespace CMP.ManipuladorPDF
             var notBefore = DateTimeOffset.UtcNow;
             var notAfter = notBefore.AddYears(1);
 
-            _S.X509Certificate2 certificado = certificateRequest.Create(certificadoCamara, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
+            _S.X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
 
             SecureString secureString = new SecureString();
 
-            foreach (Char _char in senha)
+            foreach (Char _char in requisicao.Senha)
             {
                 secureString.AppendChar(_char);
             }
@@ -134,23 +127,26 @@ namespace CMP.ManipuladorPDF
             return AbrirCertificado(new FileStream(certificado, FileMode.Open, FileAccess.Read),senha);
         }
 
-        public static byte[] GerarCertificado()
+        public static byte[] GerarCertificado(RequisicaoCertificado requisicao)
         {
-            return GeraCertificado(
-                File.ReadAllBytes("C:\\testepdf\\camara.pfx"),
-                "C@m@r@1025",
-                "Fabio Cardoso",
-                "fabio.cardoso@camarapiracicaba.sp.gov.br",
-                "teste123"
-            );
+            return GeraCertificado(requisicao);
         }
 
+    }
+
+    public class RequisicaoCertificado
+    {
+        public byte[] CertificadoRaiz { get; set; }
+        public string SenhaRaiz { get; set; }
+        public string Nome { get; set; }
+        public string Senha { get; set; }
+        public string Email { get; set; }
     }
 
     public class Certificado
     {
         public string Assinante { get; set; }
         public IExternalSignature PKS { get; set; }
-        public _I.IX509Certificate[] Chain { get; set; }
+        public IX509Certificate[] Chain { get; set; }
     }
 }

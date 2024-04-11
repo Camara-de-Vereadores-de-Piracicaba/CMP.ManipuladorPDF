@@ -83,9 +83,10 @@ var sms = ManipuladorPDF.AssinarPDF(
     {
         Dados = new DadosAssinatura()
         {
-            Nome = "Fabio Cardoso",
+            Nome = "Keila Cristina de Oliveira Barbosa Rodrigues",
             Protocolo = "289FE2E6",
             Posicao = PosicaoAssinatura.LIVRE,
+            EnderecoValidacao = true,
             X = 70,
             Y = 770
         }
