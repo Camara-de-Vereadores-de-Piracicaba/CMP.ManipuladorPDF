@@ -100,8 +100,8 @@ namespace CMP.ManipuladorPDF
             Random random = new Random();
             random.NextBytes(serial);
             
-            var notBefore = DateTimeOffset.UtcNow;
-            var notAfter = notBefore.AddYears(1);
+            DateTimeOffset notBefore = DateTimeOffset.UtcNow;
+            DateTimeOffset notAfter = notBefore.AddYears(1);
 
             _S.X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
 

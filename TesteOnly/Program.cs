@@ -67,7 +67,7 @@ foreach (var process in acrobat)
 
 }
 
-var file = File.ReadAllBytes("C:\\testepdf\\sample.pdf");
+var file = File.ReadAllBytes("C:\\testepdf\\apresentacao.pdf");
 var ms = new MemoryStream(file);
 
 //var sms = ManipuladorPDF.AdicionarRodape(ms,"TEXTO NO RODAPÉ");
@@ -75,12 +75,27 @@ var ms = new MemoryStream(file);
 //var cms = new MemoryStream(ManipuladorPDF.GerarCertificado());
 //File.WriteAllBytes("C:\\testepdf\\certificadofabio.pfx", cms.ToArray());
 
-var sms = ManipuladorPDF.AssinarPDF(
-    ms,
+var lista = new List<Metadado>();
+
+lista.Add(new Metadado() { Nome = "Title", Valor = "NOVO TÍTULO" });
+lista.Add(new Metadado() { Nome = "Author", Valor = "NOVO AUTOR" });
+lista.Add(new Metadado() { Nome = "Subject", Valor = "NOVO ASSUNTO" });
+lista.Add(new Metadado() { Nome = "Keywords", Valor = "lista, de, keywords compostas, separadas, por, vírgula" });
+lista.Add(new Metadado() { Nome = "Producer", Valor = "Câmara Municipal de Piracicaba" });
+lista.Add(new Metadado() { Nome = "Creator", Valor = "CMP" });
+lista.Add(new Metadado() { Nome = "CUSTOM", Valor = "çççççç'\"aááááááaáááá" });
+
+var md = AdicionarMetadados(ms, lista);
+var nms = new MemoryStream(md.ToArray());
+
+var sms = AssinarPDF(
+    nms,
     "C:\\testepdf\\certificadofabio.pfx",
     "teste123",
     new Assinatura()
     {
+        Pagina = 1,
+        CarimboLateral = true,
         Dados = new DadosAssinatura()
         {
             Nome = "Keila Cristina de Oliveira Barbosa Rodrigues",
@@ -88,18 +103,47 @@ var sms = ManipuladorPDF.AssinarPDF(
             Posicao = PosicaoAssinatura.LIVRE,
             EnderecoValidacao = true,
             X = 70,
-            Y = 770
+            Y = 300
         }
     }
 );
+
 File.WriteAllBytes("C:\\testepdf\\testeassinado.pdf", sms.ToArray());
+Process.Start("C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe", "C:\\testepdf\\testeassinado.pdf");
+
+/*
+
+var xms = new MemoryStream(sms.ToArray());
+
+var mdd = ObterMetadados(xms);
+
+foreach (var m in mdd)
+{
+    Console.WriteLine(m.Nome + "->" + m.Valor);
+}
+
+File.WriteAllBytes("C:\\testepdf\\testeassinado.pdf", xms.ToArray());
+
+var file2 = File.ReadAllBytes("C:\\testepdf\\testeassinado.pdf");
+var ms2 = new MemoryStream(file2);
+
+var lista2 = new List<Metadado>();
+
+lista2.Add(new Metadado() { Nome = "Title", Valor = "NOVO TÍTULO DEPOIS ASSINAR" });
+lista2.Add(new Metadado() { Nome = "CUSTOM", Valor = "TESTE INVALIDO" });
+lista2.Add(new Metadado() { Nome = "CUSTOM2", Valor = "TESTE INVALIDO 2" });
+
+//var md2 = AdicionarMetadados(ms2, lista2);
+
+File.WriteAllBytes("C:\\testepdf\\metadadodepois.pdf", ms2.ToArray());
 
 //var sms = ManipuladorPDF.Numerar(ms, ManipuladorPDFNumberPosition.TOP_RIGHT);
 //var sms = ManipuladorPDF.TornarSemEfeito(ms,"INVÁLIDO");
 
 //File.WriteAllBytes("C:\\testepdf\\semefeito.pdf", sms.ToArray());
 
-Process.Start("C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe", "C:\\testepdf\\testeassinado.pdf");
+//Process.Start("C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe", "C:\\testepdf\\testeassinado.pdf");
+Process.Start("C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe", "C:\\testepdf\\metadadodepois.pdf");
 
 /*
 var file = File.ReadAllBytes("C:\\testepdf\\assinado.pdf");

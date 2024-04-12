@@ -26,7 +26,7 @@ namespace CMP.ManipuladorPDF {
             string prefixo = "Página "
         )
             {
-            using var outputStream = new MemoryStream();
+            using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument pdfDoc = new PdfDocument(pdfReader, pdfWriter);
             Document document = new Document(pdfDoc);
