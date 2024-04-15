@@ -7,10 +7,10 @@
 		<Company>Câmara Municipal de Piracicaba</Company>
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
-		<PackageReleaseNotes>Está é a versão 1.0.0.6</PackageReleaseNotes>
-		<Version>1.0.0.7</Version>
-		<AssemblyVersion>1.0.0.7</AssemblyVersion>
-		<FileVersion>1.0.0.7</FileVersion>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<Version>1.1.0.0</Version>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
 	</PropertyGroup>
 	
 	<ItemGroup>

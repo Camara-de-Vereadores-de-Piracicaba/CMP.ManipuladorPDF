@@ -13,6 +13,7 @@ using iText.Kernel.Font;
 using iText.Barcodes;
 using static CMP.ManipuladorPDF.ManipuladorPDF;
 using iText.Layout.Properties;
+using iText.IO.Source;
 
 namespace CMP.ManipuladorPDF
 {
@@ -125,6 +126,7 @@ namespace CMP.ManipuladorPDF
             pdfSigner.SetFieldName(signatureName);
             pdfSigner.SignDetached(certificado.PKS, certificado.Chain, crlList, ocspClient, tsaClient, 0, PdfSigner.CryptoStandard.CMS);
 
+            outputStream.Position = 0;
             return outputStream;
         }
 
@@ -158,14 +160,8 @@ namespace CMP.ManipuladorPDF
             }
 
             ltvVerification.Merge();
-
-            //Console.WriteLine(ltvPdfSigner.GetDocument().GetCatalog().GetPdfObject().Get(PdfName.DSS));
-
-
             ltvPdfSigner.Timestamp(tsaClient, "Signature2");
-
-
-
+            outputStream.Position = 0;
             return outputStream;
         }
 
