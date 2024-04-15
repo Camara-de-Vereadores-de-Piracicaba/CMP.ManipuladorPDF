@@ -281,14 +281,13 @@ namespace CMP.ManipuladorPDF
 
         public static MemoryStream AssinarPDF(
            MemoryStream sourceFile,
-           string certificado,
-           string senha,
+           Certificado certificado,
            Assinatura assinatura
         )
         {
             MemoryStream stream = Assinar(
                 new PdfReader(sourceFile),
-                ObterCertificado(certificado, senha),
+                certificado,
                 assinatura
             );
             return AdicionaLTV(stream);
@@ -296,14 +295,13 @@ namespace CMP.ManipuladorPDF
 
         public static MemoryStream AssinarPDF(
            string sourceFile,
-           string certificado,
-           string senha,
+           Certificado certificado,
            Assinatura assinatura
         )
         {
             MemoryStream stream = Assinar(
                new PdfReader(sourceFile),
-               ObterCertificado(certificado, senha),
+               certificado,
                assinatura
            );
            return AdicionaLTV(stream);

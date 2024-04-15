@@ -13,6 +13,7 @@ using System.Security;
 using System;
 using static System.Security.Cryptography.X509Certificates.RSACertificateExtensions;
 using iText.Commons.Bouncycastle.Cert;
+using System.Collections;
 
 namespace CMP.ManipuladorPDF
 {
@@ -125,6 +126,12 @@ namespace CMP.ManipuladorPDF
         public static Certificado ObterCertificado(string certificado, string senha)
         {
             return AbrirCertificado(new FileStream(certificado, FileMode.Open, FileAccess.Read),senha);
+        }
+
+        public static Certificado ObterCertificado(byte[] certificado, string senha)
+        {
+
+            return AbrirCertificado(new MemoryStream(certificado), senha);
         }
 
         public static byte[] GerarCertificado(RequisicaoCertificado requisicao)
