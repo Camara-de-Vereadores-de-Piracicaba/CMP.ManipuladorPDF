@@ -12,6 +12,10 @@ namespace CMP.ManipuladorPDF
 
         private static readonly string[] FontList = 
         {
+            "calibri",
+            "calibrib",
+            "calibrii",
+            "calibriz",
             "times",
             "timesbd",
             "timesbi",
