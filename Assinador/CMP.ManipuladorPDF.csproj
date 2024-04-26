@@ -8,9 +8,6 @@
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
 		<PackageReleaseNotes></PackageReleaseNotes>
-		<Version>1.1.0.5</Version>
-		<AssemblyVersion>1.1.0.5</AssemblyVersion>
-		<FileVersion>1.1.0.5</FileVersion>
 	</PropertyGroup>
 	
 	<ItemGroup>

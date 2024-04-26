@@ -13,12 +13,16 @@ jobs:
       - name: version
         run: echo "MAJOR=$(date +'%Y%m%d')" >> $GITHUB_ENV | echo "MINOR=$(date +'%H%M%S')" >> $GITHUB_ENV
       - name: restore
+        working-directory: ./Assinador
         run: dotnet restore
       - name: build
+        working-directory: ./Assinador
         run: dotnet build --configuration Release --no-restore
       - name: pack
+        working-directory: ./Assinador
         run: dotnet pack --configuration Release /p:Version=1.1.${MAJOR}.${MINOR} --no-build --no-restore --output .
       - name: publish
+        working-directory: ./Assinador
         run: dotnet nuget push CMP.ManipuladorPDF.1.1.${MAJOR}.${MINOR}.nupkg --source https://nuget.pkg.github.com/Camara-de-Vereadores-de-Piracicaba/index.json --api-key ${NUGET_TOKEN}
         env:
           NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
