@@ -28,6 +28,7 @@ namespace CMP.ManipuladorPDF
 
         public static MemoryStream ObterPagina(this MemoryStream sourceFile, int pagina = 1)
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return Pagina(new PdfReader(sourceFile), pagina);
         }
 
@@ -38,6 +39,7 @@ namespace CMP.ManipuladorPDF
 
         public static int ObterQuantidadeDePaginas(this MemoryStream sourceFile)
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return QuantidadeDePaginas(new PdfReader(sourceFile));
         }
 

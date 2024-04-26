@@ -40,6 +40,7 @@ namespace CMP.ManipuladorPDF
             List<PdfReader> parameter = new List<PdfReader>();
             foreach (MemoryStream sourceFile in sourceFiles)
             {
+                sourceFile.Seek(0, SeekOrigin.Begin);
                 parameter.Add(new PdfReader(sourceFile));
             }
 

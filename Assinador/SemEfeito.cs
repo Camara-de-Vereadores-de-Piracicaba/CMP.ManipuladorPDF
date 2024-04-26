@@ -49,12 +49,12 @@ namespace CMP.ManipuladorPDF
             return outputStream;
         }
 
-        public static MemoryStream TornarSemEfeito(this string sourceFile, string texto = "SEM EFEITO", int tamanho = 120)
+        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile, string texto = "SEM EFEITO", int tamanho = 120)
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return SemEfeito(new PdfReader(sourceFile), texto, tamanho);
         }
-
-        public static MemoryStream TornarSemEfeito(this MemoryStream sourceFile, string texto = "SEM EFEITO", int tamanho = 120)
+        public static MemoryStream TornarSemEfeito(this string sourceFile, string texto = "SEM EFEITO", int tamanho = 120)
         {
             return SemEfeito(new PdfReader(sourceFile), texto, tamanho);
         }

@@ -78,6 +78,7 @@ namespace CMP.ManipuladorPDF {
             int tamanho=9, 
             string prefixo="Página "
         ) {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return IncluirNumeracao(new PdfReader(sourceFile), posicao, margem, numeracaoInicial, tamanho, prefixo);
         }
 

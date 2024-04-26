@@ -98,6 +98,7 @@ namespace CMP.ManipuladorPDF
 
         public static MemoryStream AdicionarMetadados(MemoryStream sourceFile, List<Metadado> metadados)
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return InserirMetadados(new PdfReader(sourceFile), metadados);
         }
         public static MemoryStream AdicionarMetadados(string sourceFile, List<Metadado> metadados)
@@ -107,6 +108,7 @@ namespace CMP.ManipuladorPDF
 
         public static List<Metadado> ObterMetadados(MemoryStream sourceFile)
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return LerMetadados(new PdfReader(sourceFile));
         }
         public static List<Metadado> ObterMetadados(string sourceFile)

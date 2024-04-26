@@ -13,7 +13,6 @@ using iText.Kernel.Font;
 using iText.Barcodes;
 using static CMP.ManipuladorPDF.ManipuladorPDF;
 using iText.Layout.Properties;
-using iText.IO.Source;
 
 namespace CMP.ManipuladorPDF
 {
@@ -126,7 +125,6 @@ namespace CMP.ManipuladorPDF
             pdfSigner.SetFieldName(signatureName);
             pdfSigner.SignDetached(certificado.PKS, certificado.Chain, crlList, ocspClient, tsaClient, 0, PdfSigner.CryptoStandard.CMS);
 
-            outputStream.Position = 0;
             return outputStream;
         }
 
@@ -161,7 +159,6 @@ namespace CMP.ManipuladorPDF
 
             ltvVerification.Merge();
             ltvPdfSigner.Timestamp(tsaClient, "Signature2");
-            outputStream.Position = 0;
             return outputStream;
         }
 
@@ -187,11 +184,23 @@ namespace CMP.ManipuladorPDF
             }
 
             DateTime data = DateTime.Now;
-            addTextLine($"Assinado digitalmente por {dados.Nome} e protocolado na Câmara Municipal de Piracicaba em {data}, sob o nº {dados.Protocolo}.", dados.EnderecoValidacao ? 1 : 0);
-            if (dados.EnderecoValidacao)
+            if (dados.SomenteProtocolo)
             {
-                addTextLine($"Para autenticar este documento, utilize o qrcode impresso ou entre em https://validar.camarapiracicaba.sp.gov.br.", 0);
+                addTextLine($"Protocolado na Câmara Municipal de Piracicaba em {data}, sob o nº {dados.Protocolo}.", dados.EnderecoValidacao ? 1 : 0);
+                if (dados.EnderecoValidacao)
+                {
+                    addTextLine($"Para autenticar este documento, utilize o qrcode impresso ou entre em https://validar.camarapiracicaba.sp.gov.br.", 0);
+                }
             }
+            else
+            {
+                addTextLine($"Assinado digitalmente por {dados.Nome} e protocolado na Câmara Municipal de Piracicaba em {data}, sob o nº {dados.Protocolo}.", dados.EnderecoValidacao ? 1 : 0);
+                if (dados.EnderecoValidacao)
+                {
+                    addTextLine($"Para autenticar este documento, utilize o qrcode impresso ou entre em https://validar.camarapiracicaba.sp.gov.br.", 0);
+                }
+            }
+            
 
             BarcodeQRCode qrcode = new BarcodeQRCode($"https://validar.camarapiracicaba.sp.gov.br/{dados.Protocolo}");
             Image qrImage = new Image(qrcode.CreateFormXObject(pdfDocument));
@@ -249,9 +258,9 @@ namespace CMP.ManipuladorPDF
                 var conteudo = signature.GetContents();
                 var dataAssinatura = signature.GetDate().GetValue();
                 byte[] signatureBytes = conteudo.GetValueBytes();
-                var signedData = new SignedCms();
+                SignedCms signedData = new SignedCms();
                 signedData.Decode(signatureBytes);
-                var signerInfos = signedData.SignerInfos;
+                SignerInfoCollection signerInfos = signedData.SignerInfos;
 
                 var dados = new CertificadosAssinatura
                 {
@@ -285,6 +294,7 @@ namespace CMP.ManipuladorPDF
            Assinatura assinatura
         )
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             MemoryStream stream = Assinar(
                 new PdfReader(sourceFile),
                 certificado,
@@ -328,6 +338,7 @@ namespace CMP.ManipuladorPDF
         public float X { get; set; } = 0;
         public float Y { get; set; } = 0;
         public bool EnderecoValidacao { get; set; } = false;
+        public bool SomenteProtocolo { get; set; } = true;
     }
     
     public class CertificadosAssinatura

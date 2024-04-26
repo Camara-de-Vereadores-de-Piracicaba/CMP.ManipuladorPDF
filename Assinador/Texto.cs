@@ -89,6 +89,7 @@ namespace CMP.ManipuladorPDF
             int margem = 20
         )
         {
+            sourceFile.Seek(0, SeekOrigin.Begin);
             return AdicionarTexto(new PdfReader(sourceFile), texto, PosicionamentoTexto.RODAPE, pagina, fonte, alinhamento, tamanho, margem);
         }
 

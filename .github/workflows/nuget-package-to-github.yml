@@ -1,0 +1,24 @@
+name: nuget-package-to-github
+
+on:
+  push:
+    branches: [refactoring]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: version
+        run: echo "MAJOR=$(date +'%Y%m%d')" >> $GITHUB_ENV | echo "MINOR=$(date +'%H%M%S')" >> $GITHUB_ENV
+      - name: restore
+        run: dotnet restore
+      - name: build
+        run: dotnet build --configuration Release --no-restore
+      - name: pack
+        run: dotnet pack --configuration Release /p:Version=1.1.${MAJOR}.${MINOR} --no-build --no-restore --output .
+      - name: publish
+        run: dotnet nuget push CMP.ManipuladorPDF.1.1.${MAJOR}.${MINOR}.nupkg --source https://nuget.pkg.github.com/Camara-de-Vereadores-de-Piracicaba/index.json --api-key ${NUGET_TOKEN}
+        env:
+          NUGET_TOKEN: ${{ secrets.NUGET_TOKEN }}
