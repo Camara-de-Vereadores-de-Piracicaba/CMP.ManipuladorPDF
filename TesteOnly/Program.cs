@@ -1,3 +1,3 @@
-﻿using CMP.ManipuladorPDF;
-using System.Diagnostics;
-using static CMP.ManipuladorPDF.ManipuladorPDF;
+﻿using static CMP.ManipuladorPDF.ManipuladorPDF;
+
+Console.WriteLine("Hello, World!");
