@@ -1,97 +1,126 @@
 ﻿using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.Layout.Properties;
 using System.IO;
+using iText.Layout.Element;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf.Canvas;
+using iText.Layout;
+using iText.Layout.Properties;
+using Rectangle = iText.Kernel.Geom.Rectangle;
 
-namespace CMP.ManipuladorPDF {
-
-    public enum PosicionamentoNumeracao
-    {
-        TOP_RIGHT,
-        BOTTOM_RIGHT,
-        BOTTOM_LEFT,
-        TOP_LEFT
-    }
-
-    public static partial class ManipuladorPDF 
+namespace CMP.ManipuladorPDF
+{
+    public static partial class ExtensionMethods
     {
 
-        private static MemoryStream IncluirNumeracao(
-            PdfReader pdfReader, 
-            PosicionamentoNumeracao posicao = PosicionamentoNumeracao.TOP_RIGHT,
-            int margem = 20, 
-            int numeracaoInicial = 1,
-            int tamanho= 9,
-            string prefixo = "Página "
+        public enum PosicaoNumero
+        {
+            TOPO_ESQUERDA,
+            TOPO_DIREITA,
+            RODAPE_ESQUERDA,
+            RODAPE_DIREITA
+        }
+
+        private static DocumentoPDF NumerarDocumento(
+            this DocumentoPDF documento,
+            PosicaoNumero posicao,
+            int tamanhoFonte,
+            int paginaInicial,
+            int primeiroNumero,
+            int margem,
+            string prefixo
         )
-            {
+        {
+
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfDocument pdfDoc = new PdfDocument(pdfReader, pdfWriter);
-            Document document = new Document(pdfDoc);
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+            int totalPaginas = pdfDocument.GetNumberOfPages();
+            PdfFont font = PDFTrueTypeFont.GetFont("calibri");
 
-            float documentWidth = pdfDoc.GetFirstPage().GetMediaBox().GetWidth();
-            float documentHeight = pdfDoc.GetFirstPage().GetMediaBox().GetHeight();
+            int numero = primeiroNumero;
 
-            for (var pagina = numeracaoInicial; pagina <= pdfDoc.GetNumberOfPages()+(numeracaoInicial-1); pagina++)
+            if(paginaInicial > totalPaginas)
+            {
+                paginaInicial = totalPaginas;
+            }
+
+            if(paginaInicial < 1) 
+            {
+                paginaInicial = 1;
+            }
+
+            for (int pagina = paginaInicial; pagina <= totalPaginas; pagina++)
             {
 
-                TextAlignment align = TextAlignment.RIGHT;
-                float bottom = documentHeight-margem;
-                if (posicao == PosicionamentoNumeracao.BOTTOM_RIGHT) 
+                PdfPage page = pdfDocument.GetPage(pagina);
+                var mediaBox = page.GetCropBox();
+                float pageWidth = mediaBox.GetWidth();
+                float pageHeight = mediaBox.GetHeight();
+                PdfCanvas pdfCanvas = new PdfCanvas(page);
+                Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
+
+                Paragraph text = new Paragraph();
+                text.SetFontSize(tamanhoFonte).Add($"{prefixo}{numero}");
+                text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
+
+                float x = margem;
+                float y = margem;
+                TextAlignment alignment = TextAlignment.LEFT;
+
+                if (posicao == PosicaoNumero.RODAPE_DIREITA)
                 {
-                    bottom = margem;
+                    x = pageWidth - margem;
+                    alignment = TextAlignment.RIGHT;
                 }
-                else if (posicao == PosicionamentoNumeracao.BOTTOM_LEFT)
+                else if (posicao == PosicaoNumero.TOPO_ESQUERDA)
                 {
-                    bottom = margem;
-                    align = TextAlignment.LEFT;
-                } 
-                else if (posicao == PosicionamentoNumeracao.TOP_LEFT)
+                    y = pageHeight - margem;
+                }
+                else if (posicao == PosicaoNumero.TOPO_DIREITA)
                 {
-                    align = TextAlignment.LEFT;
+                    x = pageWidth - margem;
+                    y = pageHeight - margem;
+                    alignment = TextAlignment.RIGHT;
                 }
 
-                Paragraph paragraph = new Paragraph($"{prefixo}{pagina}")
-                    .SetTextAlignment(align)
-                    .SetMargin(0)
-                    .SetFontSize(tamanho)
-                    .SetFixedPosition(margem, bottom, documentWidth-(margem*2));
+                canvas.ShowTextAligned(text, x, y, alignment, VerticalAlignment.MIDDLE);
 
-                document.Add(paragraph);
+                numero++;
 
             }
 
-            document.Close();
-            pdfDoc.Close();
+            pdfDocument.Close();
 
-            return outputStream;
+            return new DocumentoPDF(outputStream);
 
         }
 
-        public static MemoryStream Numerar(
-            this MemoryStream sourceFile, 
-            PosicionamentoNumeracao posicao=PosicionamentoNumeracao.TOP_RIGHT, 
-            int margem=20, 
-            int numeracaoInicial=1, 
-            int tamanho=9, 
-            string prefixo="Página "
-        ) {
-            sourceFile.Seek(0, SeekOrigin.Begin);
-            return IncluirNumeracao(new PdfReader(sourceFile), posicao, margem, numeracaoInicial, tamanho, prefixo);
-        }
+        /// <summary>
+        /// Numera as páginas de um documento PDF.
+        /// </summary>
+        /// <param name="documento">O documento PDF que será numerado.</param>
+        /// <param name="posicao">A posição na página.</param>
+        /// <param name="tamanhoFonte">Tamanho da fonte</param>
+        /// <param name="paginaInicial">Página cuja numeração se iniciará.</param>
+        /// <param name="primeiroNumero">Primeiro número cuja numeração se iniciará.</param>
+        /// <param name="margem">A distância de margem dos números.</param>
+        /// <param name="prefixo">Prefixo a ser adicionado a todo número. Por exemplo, "Página ".</param>
+        /// <returns>DocumentoPDF</returns>
 
-        public static MemoryStream Numerar(
-            this string sourceFile, 
-            PosicionamentoNumeracao posicao = PosicionamentoNumeracao.TOP_RIGHT, 
-            int margem = 20, 
-            int numeracaoInicial = 1, 
-            int tamanho = 9, 
-            string prefixo = "Página "
-        ) {
-            return IncluirNumeracao(new PdfReader(sourceFile), posicao, margem, numeracaoInicial, tamanho, prefixo);
+        public static DocumentoPDF Numerar(
+            this DocumentoPDF documento,
+            PosicaoNumero posicao = PosicaoNumero.TOPO_DIREITA,
+            int tamanhoFonte = 9,
+            int paginaInicial = 1,
+            int primeiroNumero = 1,
+            int margem = 20,
+            string prefixo = ""
+        )
+        {
+            return NumerarDocumento(documento,posicao,tamanhoFonte,paginaInicial,primeiroNumero,margem,prefixo);
         }
 
     }
+
 }

@@ -2,20 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System;
 
 namespace CMP.ManipuladorPDF
 {
-    public static partial class ManipuladorPDF
+    public static partial class ExtensionMethods
     {
-        private static MemoryStream InserirMetadados(
-            PdfReader pdfReader,
-            List<Metadado> metadados
-        )
+
+        private static DocumentoPDF InserirMetadados(this DocumentoPDF documento, List<Metadado> metadados)
         {
             
-            using var outputStream = new MemoryStream();
+            using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfDocument pdfDoc = new PdfDocument(pdfReader, pdfWriter);
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
 
             string[] unique =
             {
@@ -31,7 +31,7 @@ namespace CMP.ManipuladorPDF
                 "Trapped"
             };
 
-            PdfDocumentInfo info = pdfDoc.GetDocumentInfo();
+            PdfDocumentInfo info = pdfDocument.GetDocumentInfo();
 
             foreach (Metadado metadado in metadados)
             {
@@ -70,57 +70,93 @@ namespace CMP.ManipuladorPDF
 
             }
 
-            pdfDoc.Close();
+            pdfDocument.Close();
 
-            return outputStream;
+            return new DocumentoPDF(outputStream);
 
         }
 
-        private static List<Metadado> LerMetadados(PdfReader pdfReader)
+        /// <summary>
+        /// Adiciona metadados a um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento PDF no qual serão adicionados os metadados.</param>
+        /// <param name="metadados">Uma lista de metadados a serem adicionados.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF AdicionarMetadados(this DocumentoPDF documento, List<Metadado> metadados)
         {
-            
-            PdfDocument pdfDocument = new PdfDocument(pdfReader);
-            PdfDictionary trailer = pdfDocument.GetTrailer();
-            PdfDictionary metadata = trailer.GetAsDictionary(PdfName.Info);
-            ICollection<PdfName> keys = metadata.KeySet();
+            return InserirMetadados(documento, metadados);
+        }
 
-            List<Metadado> metadados = new List<Metadado>();
+        /// <summary>
+        /// Adiciona metadados a um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento PDF no qual serão adicionados os metadados.</param>
+        /// <param name="metadados">Uma array de strings [nome,valor] a serem adicionados.</param>
+        /// <returns>DocumentoPDF</returns>
 
-            foreach (PdfName key in keys)
+        public static DocumentoPDF AdicionarMetadados(this DocumentoPDF documento, string[,] metadados)
+        {
+            List<Metadado> _metadados = new List<Metadado>();
+            for (int i = 0; i < metadados.GetLength(0); i++)
             {
-                string value = ((PdfString)metadata.Get(key)).GetValue();
-                metadados.Add(new Metadado { Nome = key.GetValue(), Valor = value});
+                _metadados.Add(new Metadado(metadados[i,0], metadados[i,1]));
             }
-
-            return metadados;
-
+            return InserirMetadados(documento, _metadados);
         }
 
-        public static MemoryStream AdicionarMetadados(MemoryStream sourceFile, List<Metadado> metadados)
+        /// <summary>
+        /// Adiciona metadados a um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento PDF no qual serão adicionados os metadados.</param>
+        /// <param name="metadado">Metadado a ser adicionado.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF AdicionarMetadado(this DocumentoPDF documento, Metadado metadado)
         {
-            sourceFile.Seek(0, SeekOrigin.Begin);
-            return InserirMetadados(new PdfReader(sourceFile), metadados);
-        }
-        public static MemoryStream AdicionarMetadados(string sourceFile, List<Metadado> metadados)
-        {
-            return InserirMetadados(new PdfReader(sourceFile), metadados);
+            List<Metadado> metadados = new List<Metadado>();
+            metadados.Add(metadado);
+            return InserirMetadados(documento, metadados);
         }
 
-        public static List<Metadado> ObterMetadados(MemoryStream sourceFile)
+        /// <summary>
+        /// Adiciona metadados a um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento PDF no qual serão adicionados os metadados.</param>
+        /// <param name="nome">Nome do metadado.</param>
+        /// <param name="valor">Valor do metadado.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF AdicionarMetadado(this DocumentoPDF documento, string nome, string valor)
         {
-            sourceFile.Seek(0, SeekOrigin.Begin);
-            return LerMetadados(new PdfReader(sourceFile));
-        }
-        public static List<Metadado> ObterMetadados(string sourceFile)
-        {
-            return LerMetadados(new PdfReader(sourceFile));
+            List<Metadado> metadados = new List<Metadado>();
+            metadados.Add(new Metadado(nome,valor));
+            return InserirMetadados(documento, metadados);
         }
 
-        public class Metadado
+        /// <summary>
+        /// Obtém metadados de um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento a se obter os metadados</param>
+        /// <returns>List<Metadado></returns>
+
+        public static List<Metadado> ObtemMetadados(this DocumentoPDF documento)
         {
-            public string Nome { get; set; }
-            public string Valor { get; set; }
+            return new List<Metadado>();
         }
 
     }
+
+    public class Metadado
+    {
+        public string Nome { get; set; }
+        public string Valor { get; set; }
+
+        public Metadado(string nome, string valor)
+        {
+            Nome = nome;
+            Valor = valor;
+        }
+    }
+
 }

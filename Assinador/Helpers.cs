@@ -2,12 +2,9 @@
 using iText.Signatures;
 using Org.BouncyCastle.Asn1.X509;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Org.BouncyCastle.X509;
-using System.Text;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;

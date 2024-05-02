@@ -1,51 +1,100 @@
-﻿using iText.Kernel.Pdf;
+﻿using iText.Kernel.Font;
+using iText.Kernel.Pdf;
+using iText.Kernel.Utils;
+using iText.Pdfa;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 
 namespace CMP.ManipuladorPDF
 {
-
-    public static partial class ManipuladorPDF
+    public static partial class ExtensionMethods
     {
 
-        private static MemoryStream JuntarArquivos(List<PdfReader> sourceFiles)
+        private static DocumentoPDF JuntarArquivos(
+            DocumentoPDF documento1,
+            DocumentoPDF documento2
+        )
         {
-            using var outputStream = new MemoryStream();
-            using PdfWriter writer = new PdfWriter(outputStream);
-            using PdfDocument newPdfDoc = new PdfDocument(writer);
-            foreach (PdfReader sourceFile in sourceFiles)
-            {
-                PdfDocument pdfDoc = new PdfDocument(sourceFile);
-                pdfDoc.CopyPagesTo(1, pdfDoc.GetNumberOfPages(), newPdfDoc);
-                pdfDoc.Close();
-            }
-
-            newPdfDoc.Close();
-            return outputStream;
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfWriter pdfWriter = new PdfWriter(outputStream);
+            using PdfDocument mergedPdfDocument = new PdfDocument(pdfWriter);
+            using PdfDocument pdfDocument1 = new PdfDocument(new PdfReader(new MemoryStream(documento1.ByteArray)));
+            using PdfDocument pdfDocument2 = new PdfDocument(new PdfReader(new MemoryStream(documento2.ByteArray)));
+            PdfMerger pdfMerger = new PdfMerger(mergedPdfDocument);
+            pdfMerger.Merge(pdfDocument1, 1, pdfDocument1.GetNumberOfPages());
+            pdfMerger.Merge(pdfDocument2, 1, pdfDocument2.GetNumberOfPages());
+            pdfDocument1.Close();
+            pdfDocument2.Close();
+            pdfMerger.Close();
+            mergedPdfDocument.Close();
+            return new DocumentoPDF(outputStream);
         }
 
-        public static MemoryStream Juntar(this List<string> sourceFiles) 
-        {
-            List<PdfReader> parameter = new List<PdfReader>();
-            foreach (string sourceFile in sourceFiles)
-            {
-                parameter.Add(new PdfReader(sourceFile));
-            }
+        /// <summary>
+        /// Junta dois documentos PDF.
+        /// </summary>
+        /// <param name="documento1">Primeiro documento.</param>
+        /// <param name="documento2">Segundo documento.</param>
+        /// <returns>DocumentoPDF</returns>
 
-            return JuntarArquivos(parameter);
+        public static DocumentoPDF Juntar(
+            this DocumentoPDF documento1, 
+            DocumentoPDF documento2
+        )
+        {
+            return JuntarArquivos(documento1, documento2);
         }
 
-        public static MemoryStream Juntar(this List<MemoryStream> sourceFiles)
-        {
-            List<PdfReader> parameter = new List<PdfReader>();
-            foreach (MemoryStream sourceFile in sourceFiles)
-            {
-                sourceFile.Seek(0, SeekOrigin.Begin);
-                parameter.Add(new PdfReader(sourceFile));
-            }
 
-            return JuntarArquivos(parameter);
+        /// <summary>
+        /// Junta dois documentos PDF.
+        /// </summary>
+        /// <param name="documento1">Primeiro documento.</param>
+        /// <param name="documento2">Caminho absoluto do segundo documento.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF Juntar(
+            this DocumentoPDF documento1,
+            string documento2
+        )
+        {
+            return JuntarArquivos(documento1, new DocumentoPDF(documento2));
+        }
+
+
+        /// <summary>
+        /// Junta dois documentos PDF.
+        /// </summary>
+        /// <param name="documento1">Primeiro documento.</param>
+        /// <param name="documento2">ByteArray do segundo documento.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF Juntar(
+            this DocumentoPDF documento1,
+            byte[] documento2
+        )
+        {
+            return JuntarArquivos(documento1, new DocumentoPDF(documento2));
+        }
+
+
+        /// <summary>
+        /// Junta dois documentos PDF.
+        /// </summary>
+        /// <param name="documento1">Primeiro documento.</param>
+        /// <param name="documento2">MemoryStream do segundo documento.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF Juntar(
+            this DocumentoPDF documento1,
+            MemoryStream documento2
+        )
+        {
+            return JuntarArquivos(documento1, new DocumentoPDF(documento2));
         }
 
     }
+
 }

@@ -24,7 +24,8 @@ namespace CMP.ManipuladorPDF
             SOMENTE_INTERNA,
             FIXA_LATERAL_DIREITA,
             FIXA_LATERAL_ESQUERDA,
-            LIVRE
+            LIVRE,
+            OCULTA
         }
 
         private const string CRL_URL = "https://crl.cacert.org/revoke.crl";
@@ -46,7 +47,7 @@ namespace CMP.ManipuladorPDF
 
         private static MemoryStream Assinar(
             PdfReader reader,
-            Certificado certificado,
+            Certificado2 certificado,
             Assinatura assinatura
         )
         {
@@ -62,7 +63,6 @@ namespace CMP.ManipuladorPDF
 
             string signatureName = pdfSigner.GetNewSigFieldName();
 
-            PdfSignatureAppearance appearance = pdfSigner.GetSignatureAppearance();
             Rectangle mediaBox = pdfSigner.GetDocument().GetPage(1).GetMediaBox();
             float documentWidth = mediaBox.GetWidth();
             float documentHeight = mediaBox.GetHeight();
@@ -76,32 +76,30 @@ namespace CMP.ManipuladorPDF
                 pagina = 1;
             }
 
-            appearance
+            pdfSigner
                 .SetLocation(assinatura.Local)
                 .SetReason(assinatura.Razao)
                 .SetContact(assinatura.EmailContato)
                 .SetSignatureCreator(assinatura.Criador)
                 .SetPageNumber(pagina);
 
-            appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
-
             int alturaAssinaturaHorizontal = 40;
             Rectangle lateralSignaturePosition = new Rectangle(new Rectangle(documentWidth - alturaAssinaturaHorizontal, 0, alturaAssinaturaHorizontal, documentHeight));
 
             if (assinatura.Dados.Posicao == PosicaoAssinatura.FIXA_LATERAL_DIREITA)
             {
-                appearance.SetPageRect(lateralSignaturePosition);
+                pdfSigner.SetPageRect(lateralSignaturePosition);
                 SetBorderSignature(pdfSigner, assinatura.Dados);
             }
             else if (assinatura.Dados.Posicao == PosicaoAssinatura.FIXA_LATERAL_ESQUERDA)
             {
                 lateralSignaturePosition = new Rectangle(alturaAssinaturaHorizontal, 0, alturaAssinaturaHorizontal, documentHeight);
-                appearance.SetPageRect(lateralSignaturePosition);
+                pdfSigner.SetPageRect(lateralSignaturePosition);
                 SetBorderSignature(pdfSigner, assinatura.Dados);
             }
             else if (assinatura.Dados.Posicao == PosicaoAssinatura.LIVRE)
             {
-                appearance.SetPageRect(new Rectangle(assinatura.Dados.X, assinatura.Dados.Y, 200, 37));
+                pdfSigner.SetPageRect(new Rectangle(assinatura.Dados.X, assinatura.Dados.Y, 200, 37));
                 SetFreeSignature(pdfSigner, assinatura.Dados);
             }
 
@@ -119,12 +117,9 @@ namespace CMP.ManipuladorPDF
                     Canvas canvas = new Canvas(_canvas, lateralSignaturePosition);
                     DrawBorderSignatureInCanvas(canvas, document, assinatura.Dados, (int)(documentWidth - alturaAssinaturaHorizontal));
                 }
-
             }
-
             pdfSigner.SetFieldName(signatureName);
             pdfSigner.SignDetached(certificado.PKS, certificado.Chain, crlList, ocspClient, tsaClient, 0, PdfSigner.CryptoStandard.CMS);
-
             return outputStream;
         }
 
@@ -164,9 +159,15 @@ namespace CMP.ManipuladorPDF
 
         private static Canvas DrawBorderSignatureInCanvas(Canvas signature, PdfDocument pdfDocument, DadosAssinatura dados, int right = 0)
         {
-            int lineFloor = 25;
+            int lineFloor = 28;
             int fontSpace = 50;
             int fontSize = 6;
+
+            if (!dados.QRCode)
+            {
+                fontSpace = 5;
+            }
+
             void addTextLine(string _text, int _line)
             {
                 Paragraph text = new Paragraph();
@@ -200,12 +201,15 @@ namespace CMP.ManipuladorPDF
                     addTextLine($"Para autenticar este documento, utilize o qrcode impresso ou entre em https://validar.camarapiracicaba.sp.gov.br.", 0);
                 }
             }
-            
 
-            BarcodeQRCode qrcode = new BarcodeQRCode($"https://validar.camarapiracicaba.sp.gov.br/{dados.Protocolo}");
-            Image qrImage = new Image(qrcode.CreateFormXObject(pdfDocument));
-            qrImage.SetFixedPosition(right, 12);
-            signature.Add(qrImage);
+            if (dados.QRCode) 
+            { 
+                BarcodeQRCode qrcode = new BarcodeQRCode($"https://validar.camarapiracicaba.sp.gov.br/{dados.Protocolo}");
+                Image qrImage = new Image(qrcode.CreateFormXObject(pdfDocument));
+                qrImage.SetFixedPosition(right, 12);
+                signature.Add(qrImage);
+            }
+
             return signature;
         }
 
@@ -290,7 +294,7 @@ namespace CMP.ManipuladorPDF
 
         public static MemoryStream AssinarPDF(
            MemoryStream sourceFile,
-           Certificado certificado,
+           Certificado2 certificado,
            Assinatura assinatura
         )
         {
@@ -300,12 +304,13 @@ namespace CMP.ManipuladorPDF
                 certificado,
                 assinatura
             );
-            return AdicionaLTV(stream);
+            MemoryStream _stream = AdicionaLTV(stream);
+            return new MemoryStream(_stream.ToArray());
         }
 
         public static MemoryStream AssinarPDF(
            string sourceFile,
-           Certificado certificado,
+           Certificado2 certificado,
            Assinatura assinatura
         )
         {
@@ -314,7 +319,8 @@ namespace CMP.ManipuladorPDF
                certificado,
                assinatura
            );
-           return AdicionaLTV(stream);
+           MemoryStream _stream = AdicionaLTV(stream);
+           return new MemoryStream(_stream.ToArray());
         }
 
     }
@@ -339,6 +345,7 @@ namespace CMP.ManipuladorPDF
         public float Y { get; set; } = 0;
         public bool EnderecoValidacao { get; set; } = false;
         public bool SomenteProtocolo { get; set; } = true;
+        public bool QRCode { get; set; } = false;
     }
     
     public class CertificadosAssinatura
