@@ -97,7 +97,7 @@ namespace CMP.ManipuladorPDF
                         y: altura,
                         textAlign: TextAlignment.LEFT,
                         vertAlign: VerticalAlignment.TOP,
-                        radAngle: (float)Conversion.ToRadians(90)
+                        radAngle: 1.5708f
                     );
                 }
                 for(int i = 0; i <= linhas.Count()-1; i++)

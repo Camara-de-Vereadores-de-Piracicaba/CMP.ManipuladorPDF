@@ -1,4 +1,7 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System;
+using System.IO;
+using iText.Kernel.Pdf;
 
 namespace CMP.ManipuladorPDF
 {
@@ -7,7 +10,6 @@ namespace CMP.ManipuladorPDF
     {
         public byte[] ByteArray { get; set; }
         public string ValidadorURL { get; set; } = "https://validar.camarapiracicaba.sp.gov.br";
-
 
         /// <summary>
         /// Cria uma referência a um documento PDF.
@@ -19,7 +21,6 @@ namespace CMP.ManipuladorPDF
             ByteArray = sourceStream.ToArray();
         }
 
-
         /// <summary>
         /// Cria uma referência a um documento PDF.
         /// </summary>
@@ -30,7 +31,6 @@ namespace CMP.ManipuladorPDF
             ByteArray = File.ReadAllBytes(filePath);
         }
 
-
         /// <summary>
         /// Cria uma referência a um documento PDF.
         /// </summary>
@@ -39,6 +39,24 @@ namespace CMP.ManipuladorPDF
         public DocumentoPDF(byte[] documentByteArray)
         {
             ByteArray = documentByteArray;
+        }
+
+    }
+
+    public static partial class ExtensionMethods
+    {
+
+        /// <summary>
+        /// Obtém a quantidade de páginas de um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento PDF cujas páginas se quer obter.</param>
+        /// <returns>int</returns>
+
+        public static int QuantidadeDePaginas(this DocumentoPDF documento)
+        {
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            using PdfDocument pdfDocument = new PdfDocument(pdfReader);
+            return pdfDocument.GetNumberOfPages();
         }
 
     }

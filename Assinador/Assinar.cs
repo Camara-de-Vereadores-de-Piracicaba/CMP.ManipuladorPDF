@@ -19,6 +19,7 @@ namespace CMP.ManipuladorPDF
     {
         private const string CRL_URL = "https://crl.cacert.org/revoke.crl";
 
+        [Obsolete]
         private static DocumentoPDF AssinarDocumento(
             this DocumentoPDF documento,
             Certificado certificado,
@@ -34,14 +35,20 @@ namespace CMP.ManipuladorPDF
             TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_GLOBALSIGN, null, null, 8192, DigestAlgorithms.SHA256);
             OCSPVerifier ocspVerifier = new OCSPVerifier(null, null);
             OcspClientBouncyCastle ocspClient = new OcspClientBouncyCastle(ocspVerifier);
-            var crlClient = new CrlClientOnline("https://crl.cacert.org/revoke.crl");
+            var crlClient = new CrlClientOnline(CRL_URL);
             List<ICrlClient> crlList = new List<ICrlClient>() { crlClient };
             PdfSigner pdfSigner = new PdfSigner(pdfReader, outputStream, new StampingProperties().UseAppendMode());
-            pdfSigner.SetLocation(local).SetReason(razao);
             Rectangle rectangle = new Rectangle(x, y, 200, 37);
             pdfSigner.SetPageRect(rectangle);
             float documentHeight = pdfSigner.GetDocument().GetPage(pagina).GetMediaBox().GetHeight();
-            PdfFormXObject layer = new PdfFormXObject(new Rectangle(0, 0, 200, 37));
+
+            //Obsoleto
+            PdfSignatureAppearance appearance = pdfSigner.GetSignatureAppearance();
+            PdfFormXObject layer = appearance.GetLayer2();
+
+            //Novo jeito, não obsoleto
+            //PdfFormXObject layer = new PdfFormXObject(new Rectangle(0, 0, 200, 37));
+
             PdfCanvas canvas = new PdfCanvas(layer, pdfSigner.GetDocument());
             PdfFont font = PdfFontFactory.CreateFont();
             Canvas signature = new Canvas(canvas, new Rectangle(0, 0, 200, 37));
@@ -67,9 +74,26 @@ namespace CMP.ManipuladorPDF
             signature.Add(image);
             if (pagina>0)
             {
-                pdfSigner.SetPageNumber(pagina);
+                pdfSigner
+                    .SetLocation(local)
+                    .SetReason(razao)
+                    .SetPageNumber(pagina);
+
+                /*
+                 * Não obsoleto
+                PdfSignatureFormField pdfSignatureFormField = new SignatureFormFieldBuilder(pdfSigner.GetDocument(),"signature")
+                    .SetWidgetRectangle(pdfSigner.GetPageRect())
+                    .SetPage(3)
+                    .CreateSignature();
+                PdfAcroForm acroForm = PdfAcroForm.GetAcroForm(pdfSigner.GetDocument(),true);
+                acroForm.AddField(pdfSignatureFormField);
+                pdfSignatureFormField.SetSignatureAppearanceLayer(layer);
+                pdfSigner.SetFieldName("signature");
                 pdfSigner.GetSignatureField().SetSignatureAppearanceLayer(layer);
+                */
+                
             }
+
             pdfSigner.SignDetached(certificado.PKS, certificado.Chain, crlList, ocspClient, tsaClient, 0, PdfSigner.CryptoStandard.CMS);
             return new DocumentoPDF(outputStream);
         }

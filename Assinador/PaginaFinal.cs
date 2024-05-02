@@ -152,9 +152,11 @@ namespace CMP.ManipuladorPDF
                     .signatures{{
                         width:17cm;
                         display:flex;
-                        flex-direction:column;
+                        flex-wrap:wrap;
+                        xflex-direction:column;
                     }}
                     .signature{{
+                        width:8cm;
                         display:flex;
                         margin-bottom:0.35cm;
                     }}
@@ -202,7 +204,7 @@ namespace CMP.ManipuladorPDF
                     </div>
                 </div>
             ";
-            MemoryStream _paginaFinal = html.ConverterParaPDF();
+            MemoryStream _paginaFinal = html.HtmlParaPdf().ConverterParaMemoryStream();
             MemoryStream _paginaFinalStream = new MemoryStream(_paginaFinal.ToArray());
             PdfDocument paginaFinal = new PdfDocument(new PdfReader(_paginaFinalStream));
             paginaFinal.CopyPagesTo(1, paginaFinal.GetNumberOfPages(), newPdfDocument);

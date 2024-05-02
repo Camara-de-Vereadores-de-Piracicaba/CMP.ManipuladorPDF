@@ -28,7 +28,6 @@
 		<None Remove="Resources\timesbd.ttf" />
 		<None Remove="Resources\timesbi.ttf" />
 		<None Remove="Resources\timesi.ttf" />
-		<None Remove="Resources\sign.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -49,17 +48,13 @@
 		<EmbeddedResource Include="Resources\timesbd.ttf" />
 		<EmbeddedResource Include="Resources\timesbi.ttf" />
 		<EmbeddedResource Include="Resources\timesi.ttf" />
-    <EmbeddedResource Include="Resources\sign.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BouncyCastle.Cryptography" Version="2.3.0" />
 		<PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.4" />
 		<PackageReference Include="itext7" Version="8.0.4" />
 		<PackageReference Include="itext7.pdfhtml" Version="5.0.4" />
 		<PackageReference Include="QRCoder" Version="1.4.1" />
-		<PackageReference Include="SixLabors.ImageSharp" Version="2.1.8" />
-		<PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0" />
 		<PackageReference Include="System.Linq" Version="4.3.0" />
 		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
 	</ItemGroup>
