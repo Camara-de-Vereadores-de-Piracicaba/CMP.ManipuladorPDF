@@ -2,7 +2,7 @@ name: nuget-package-to-github
 
 on:
   push:
-    branches: [refactoring]
+    branches: [master]
 
 jobs:
   package:
