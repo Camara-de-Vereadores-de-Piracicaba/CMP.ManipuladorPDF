@@ -11,7 +11,7 @@ namespace CMP.ManipuladorPDF
     public static partial class ExtensionMethods
     {
         
-        private static List<AssinantesDocumento> DevolverAssinantes(
+        private static List<AssinanteDocumento> DevolverAssinantes(
         this DocumentoPDF documento
         )
         {
@@ -19,7 +19,7 @@ namespace CMP.ManipuladorPDF
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
             SignatureUtil signatureUtil = new SignatureUtil(pdfDocument);
             IList<String> names = signatureUtil.GetSignatureNames();
-            List<AssinantesDocumento> assinantes = new List<AssinantesDocumento>();
+            List<AssinanteDocumento> assinantes = new List<AssinanteDocumento>();
             foreach (String signatureName in names)
             {
                 PdfPKCS7 signature = signatureUtil.ReadSignatureData(signatureName);
@@ -27,7 +27,7 @@ namespace CMP.ManipuladorPDF
                 {
                     IX509Certificate certificate = signature.GetCertificates()[0];
                     CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificate);
-                    assinantes.Add(new AssinantesDocumento()
+                    assinantes.Add(new AssinanteDocumento()
                     {
                         Certificado = certificate,
                         Nome = info.GetField("CN"),
@@ -45,7 +45,7 @@ namespace CMP.ManipuladorPDF
         /// </summary>
         /// <param name="documento">Documento cujos assinantes serão devolvidos.</param>
 
-        public static List<AssinantesDocumento> Assinantes(
+        public static List<AssinanteDocumento> Assinantes(
             this DocumentoPDF documento
         )
         {
@@ -54,7 +54,7 @@ namespace CMP.ManipuladorPDF
 
     }
 
-    public class AssinantesDocumento
+    public class AssinanteDocumento
     {
         public IX509Certificate Certificado { get; set; }
         public string Nome { get; set; }
