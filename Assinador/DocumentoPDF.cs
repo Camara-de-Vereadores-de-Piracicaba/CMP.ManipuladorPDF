@@ -83,7 +83,6 @@ namespace CMP.ManipuladorPDF
             return new DocumentoPDF(outputStream.ToArray());
         }
 
-
     }
 
 }

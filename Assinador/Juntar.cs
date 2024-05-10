@@ -33,6 +33,31 @@ namespace CMP.ManipuladorPDF
         }
 
         /// <summary>
+        /// Junta múltiplos documentos PDF.
+        /// </summary>
+        /// <param name="documentos">Lista de documentos para juntar.</param>
+        /// <returns>DocumentoPDF</returns>
+        private static DocumentoPDF Juntar(
+           this List<DocumentoPDF> documentos
+        )
+        {
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfWriter pdfWriter = new PdfWriter(outputStream);
+            using PdfDocument mergedPdfDocument = new PdfDocument(pdfWriter);
+            PdfMerger pdfMerger = new PdfMerger(mergedPdfDocument);
+            foreach (DocumentoPDF documento in documentos)
+            {
+                PdfDocument pdfDocument = new PdfDocument(new PdfReader(documento.ConverterParaMemoryStream()));
+                pdfMerger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
+                pdfDocument.Close();
+            }
+
+            pdfMerger.Close();
+            mergedPdfDocument.Close();
+            return new DocumentoPDF(outputStream);
+        }
+
+        /// <summary>
         /// Junta dois documentos PDF.
         /// </summary>
         /// <param name="documento1">Primeiro documento.</param>
@@ -46,7 +71,6 @@ namespace CMP.ManipuladorPDF
         {
             return JuntarArquivos(documento1, documento2);
         }
-
 
         /// <summary>
         /// Junta dois documentos PDF.
@@ -63,7 +87,6 @@ namespace CMP.ManipuladorPDF
             return JuntarArquivos(documento1, new DocumentoPDF(documento2));
         }
 
-
         /// <summary>
         /// Junta dois documentos PDF.
         /// </summary>
@@ -78,7 +101,6 @@ namespace CMP.ManipuladorPDF
         {
             return JuntarArquivos(documento1, new DocumentoPDF(documento2));
         }
-
 
         /// <summary>
         /// Junta dois documentos PDF.
