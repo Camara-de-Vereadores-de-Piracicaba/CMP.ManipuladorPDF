@@ -1,8 +1,8 @@
 ﻿using CMP.ManipuladorPDF;
 
-string path = "C:\\testepdf\\";
+string path = "C:\\arquivos\\";
 string output = "final.pdf";
-string certificate = "C:\\testepdf\\fabio.pfx";
+string certificate = "C:\\arquivos\\certificados\\fabio.pfx";
 string password = "1234ab";
 
 Adobe.Acrobat.FecharAcrobat();
