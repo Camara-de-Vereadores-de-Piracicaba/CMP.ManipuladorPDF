@@ -122,7 +122,6 @@ namespace CMP.ManipuladorPDF.Certificados
         ){
             Pkcs12Store store = new Pkcs12StoreBuilder().Build();
             store.Load(certificado, senha.ToCharArray());
-
             string alias = null;
             foreach (object _alias in store.Aliases)
             {

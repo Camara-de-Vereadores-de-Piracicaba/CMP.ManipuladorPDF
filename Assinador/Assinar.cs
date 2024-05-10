@@ -86,13 +86,43 @@ namespace CMP.ManipuladorPDF
 
             MemoryStream outputStream = new MemoryStream();
             var padesSigner = new PdfPadesSigner(pdfReader, outputStream);
+
             padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
 
-            if (pagina>0)
-            {
-
-            }
             return new DocumentoPDF(outputStream);
+        }
+
+        private static DocumentoPDF ProcessarAssinatura(
+            DocumentoPDF documento,
+            dynamic certificado,
+            string senha,
+            int pagina = 1,
+            int x = 0,
+            int y = 0
+        )
+        {
+            try
+            {
+                Certificado _certificado = new Certificado(certificado, senha);
+                return AssinarDocumento(documento, _certificado, x, y, pagina);
+            }
+            catch(Exception exception)
+            {
+                if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
+                {
+                    throw new AssinaturaException("Senha incorreta.");
+                }
+                else if (exception.Message.Contains("Could not find file"))
+                {
+                    throw new AssinaturaException("Certificado não encontrado.");
+                }
+                else if (exception.Message.Contains("unexpected end-of-contents marker"))
+                {
+                    throw new AssinaturaException("Certificado inválido.");
+                }
+                throw new AssinaturaException(exception.Message);
+            }
+            
         }
 
         /// <summary>
@@ -114,8 +144,7 @@ namespace CMP.ManipuladorPDF
             int y = 0
         )
         {
-            Certificado _certificado = new Certificado(certificado, senha);
-            return AssinarDocumento(documento, _certificado, x, y, pagina);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
         }
 
         /// <summary>
@@ -137,8 +166,7 @@ namespace CMP.ManipuladorPDF
             int y = 0
         )
         {
-            Certificado _certificado = new Certificado(certificado, senha);
-            return AssinarDocumento(documento, _certificado, x, y, pagina);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
         }
 
         /// <summary>
@@ -160,8 +188,7 @@ namespace CMP.ManipuladorPDF
             int y = 0
         )
         {
-            Certificado _certificado = new Certificado(certificado, senha);
-            return AssinarDocumento(documento, _certificado, x, y, pagina);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
         }
 
     }
