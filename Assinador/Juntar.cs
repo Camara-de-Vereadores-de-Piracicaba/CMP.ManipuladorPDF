@@ -37,7 +37,7 @@ namespace CMP.ManipuladorPDF
         /// </summary>
         /// <param name="documentos">Lista de documentos para juntar.</param>
         /// <returns>DocumentoPDF</returns>
-        private static DocumentoPDF Juntar(
+        public static DocumentoPDF Juntar(
            this List<DocumentoPDF> documentos
         )
         {
