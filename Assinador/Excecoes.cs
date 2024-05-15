@@ -11,4 +11,20 @@ namespace CMP.ManipuladorPDF
         public AssinaturaException(string message) : base(message) {}
         public AssinaturaException(string message, Exception inner) : base(message, inner) {}
     }
+
+    public class CertificateWrongPasswordException : Exception
+    {
+        public CertificateWrongPasswordException() { }
+    }
+
+    public class CertificateNotFoundException : Exception
+    {
+        public CertificateNotFoundException() { }
+    }
+
+    public class CertificateInvalidException : Exception
+    {
+        public CertificateInvalidException() { }
+    }
+
 }

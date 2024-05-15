@@ -1,19 +1,14 @@
 ﻿using iText.Kernel.Pdf;
 using iText.Signatures;
-using System.Collections.Generic;
 using System.IO;
-using CMP.ManipuladorPDF.Certificados;
+using CMP.Certificados;
 using iText.Kernel.Geom;
 using iText.Layout.Element;
-using iText.Layout;
 using iText.IO.Image;
-using iText.Forms;
 using iText.Forms.Form.Element;
-using iText.Kernel.Colors;
-using Org.BouncyCastle.Asn1.Ocsp;
 using System;
-using iText.Layout.Properties;
 using iText.Layout.Renderer;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace CMP.ManipuladorPDF
 {
@@ -32,14 +27,20 @@ namespace CMP.ManipuladorPDF
             using MemoryStream signatureStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);
-            TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_GLOBALSIGN, null, null, 8192, DigestAlgorithms.SHA256);
-            OCSPVerifier ocspVerifier = new OCSPVerifier(null, null);
-            OcspClientBouncyCastle ocspClient = new OcspClientBouncyCastle(ocspVerifier);
-            var crlClient = new CrlClientOnline(CRL_URL);
-            List<ICrlClient> crlList = new List<ICrlClient>() { crlClient };
+            
             var info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
             string _name = info.GetField("CN");
+            if (_name == null)
+            {
+                _name = "";
+            }
+
             string _email = info.GetField("E");
+            if(_email == null)
+            {
+                _email = "";
+            }
+
             DateTime data = DateTime.Now;
 
             var font = PDFTrueTypeFont.GetFont("calibri");
@@ -51,7 +52,7 @@ namespace CMP.ManipuladorPDF
             root.SetNextRenderer(new FlexContainerRenderer(root));
 
             Div logo = new Div()
-                .SetWidth(38)
+                .SetWidth(40)
                 .SetRelativePosition(0,0,0,0)
                 .Add(
                     new Image(ImageDataFactory.Create("https://sistemas.camarapiracicaba.sp.gov.br/arquivos/imagens/brasao_camara.png"))
@@ -60,16 +61,20 @@ namespace CMP.ManipuladorPDF
                 );
 
             Div text = new Div()
-                .Add(new Paragraph("Documento assinado digitalmente por:").SetFont(font).SetFontSize(5).SetRelativePosition(0, 5, 0, 0).SetMargin(0))
-                .Add(new Paragraph(_name).SetFont(fontBold).SetFontSize(8).SetRelativePosition(0, 1, 0, 0).SetMargin(0))
-                .Add(new Paragraph(_email).SetFont(fontBold).SetFontSize(5).SetRelativePosition(0, -3, 0, 0).SetMargin(0))
-                .Add(new Paragraph($"Assinado em {data}").SetFont(font).SetFontSize(4).SetRelativePosition(0, 0, 0, 0).SetMargin(0))
-                .Add(new Paragraph("Verifique em validar.camarapiracicaba.sp.gov.br").SetFont(font).SetFontSize(4).SetRelativePosition(0, -3, 0, 0).SetMargin(0));
-            
+                .SetWidth(180)
+                .Add(new Paragraph("Documento assinado digitalmente").SetFont(font).SetFontSize(7).SetRelativePosition(0, 2, 0, 0).SetMargin(0))
+                .Add(new Paragraph(_name.ToUpper()).SetFont(fontBold).SetMultipliedLeading(0.8f).SetFontSize(9).SetRelativePosition(0, 1, 0, 0).SetMargin(0))
+                .Add(new Paragraph($"Assinado em {data}").SetFont(font).SetFontSize(6).SetRelativePosition(0, 0, 0, 0).SetMargin(0))
+                .Add(new Paragraph("Verifique em validar.camarapiracicaba.sp.gov.br").SetFont(font).SetFontSize(5).SetRelativePosition(0, -3, 0, 0).SetMargin(0));
+
             root.Add(logo);
             root.Add(text);
 
-            SignerProperties signerProperties = new SignerProperties().SetFieldName("Signature1");
+            string signatureName = "Signature_" + System.IO.Path.GetRandomFileName().Replace(".","").Substring(0,8);
+
+            SignerProperties signerProperties = new SignerProperties();
+            signerProperties.SetFieldName(signatureName);
+
             SignatureFieldAppearance appearance = new SignatureFieldAppearance(signerProperties.GetFieldName());
             appearance
                 .SetContent(root)
@@ -81,13 +86,19 @@ namespace CMP.ManipuladorPDF
                 .SetSignatureAppearance(appearance)
                 .SetLocation("Câmara Municipal de Piracicaba")
                 .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
-                .SetPageNumber(1)
                 .SetPageRect(new Rectangle(x,y,220,49));
 
-            MemoryStream outputStream = new MemoryStream();
-            var padesSigner = new PdfPadesSigner(pdfReader, outputStream);
+            if (pagina > 0)
+            {
+                signerProperties.SetPageNumber(pagina);
+            }
 
-            padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
+            MemoryStream outputStream = new MemoryStream();
+            PdfPadesSigner padesSigner = new PdfPadesSigner(pdfReader, outputStream);
+            TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_DEFAULT, null, null, 8192, DigestAlgorithms.SHA256);
+
+            //padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+            padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
 
             return new DocumentoPDF(outputStream);
         }
@@ -120,9 +131,30 @@ namespace CMP.ManipuladorPDF
                 {
                     throw new AssinaturaException("Certificado inválido.");
                 }
+
                 throw new AssinaturaException(exception.Message);
             }
             
+        }
+
+        /// <summary>
+        /// Assina um Documento PDF 
+        /// </summary>
+        /// <param name="documento">Documento para ser assinado.</param>
+        /// <param name="certificado">Certificado.</param>
+        /// <param name="pagina">Página onde a assinatura vai aparecer. Defina como zero (0) para uma assinatura invisível.</param>
+        /// <param name="x">Posição X da assinatura.</param>
+        /// <param name="y">Posição Y da assinatura. As coordenadas são de baixo para cima.</param>
+
+        public static DocumentoPDF Assinar(
+            this DocumentoPDF documento,
+            Certificado certificado,
+            int pagina = 1,
+            int x = 0,
+            int y = 0
+        )
+        {
+            return ProcessarAssinatura(documento, certificado.ByteArray, certificado.Senha, pagina, x, y);
         }
 
         /// <summary>

@@ -6,6 +6,7 @@ namespace CMP.ManipuladorPDF
 {
     public class TSAServers
     {
+        public static string TSA_DEFAULT { get; set; } = "https://rfc3161.ai.moda";
         public static string TSA_GLOBALSIGN { get; set; } = "http://rfc3161timestamp.globalsign.com/advanced";
         public static string TSA_GLOBALSIGN2 { get; set; } = "http://timestamp.globalsign.com/tsa/r6advanced1";
         public static string TSA_GLOBALSIGN3 { get; set; } = "http://aatl-timestamp.globalsign.com/tsa/aohfewat2389535fnasgnlg5m23";

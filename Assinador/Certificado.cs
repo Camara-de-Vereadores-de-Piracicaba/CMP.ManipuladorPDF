@@ -1,127 +1,51 @@
-﻿using iText.Bouncycastle.Crypto;
+﻿using CMP.ManipuladorPDF;
+using iText.Bouncycastle.Crypto;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
 using iText.Signatures;
 using Org.BouncyCastle.Pkcs;
+using SysadminsLV.Asn1Parser;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security;
-using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
-using X509Certificate2 = System.Security.Cryptography.X509Certificates.X509Certificate2;
-using X509ContentType = System.Security.Cryptography.X509Certificates.X509ContentType;
-using RSASignaturePadding = System.Security.Cryptography.RSASignaturePadding;
-using RSA = System.Security.Cryptography.RSA;
-using HashAlgorithmName = System.Security.Cryptography.HashAlgorithmName;
-using CertificateRequest = System.Security.Cryptography.X509Certificates.CertificateRequest;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
-namespace CMP.ManipuladorPDF.Certificados
+namespace CMP.Certificados
 {
-    public static partial class ExtensionMethods
-    {
-        private static byte[] GerarCertificado(
-            byte[] raiz,
-            string senhaRaiz,
-            string nome,
-            string email,
-            string senha
-        )
-        {
-            X509Certificate2 certificadoRaiz = new X509Certificate2(raiz, senhaRaiz);
-            RSA rsaKey = RSA.Create();
-            string dadosCertificado = $@"
-                    L=Piracicaba,
-                    ST=SP,
-                    C=BR,
-                    E={email},
-                    DC=camarapiracicaba,
-                    DC=sp,
-                    DC=gov,
-                    DC=br,
-                    O=CV Piracicaba,
-                    CN={nome}
-            ";
-
-            CertificateRequest certificateRequest = new CertificateRequest(dadosCertificado, rsaKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-
-            byte[] serial = new byte[20];
-            Random random = new Random();
-            random.NextBytes(serial);
-
-            DateTimeOffset notBefore = DateTimeOffset.UtcNow;
-            DateTimeOffset notAfter = notBefore.AddYears(15);
-
-            X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
-
-            SecureString secureString = new SecureString();
-            foreach (Char _char in senha)
-            {
-                secureString.AppendChar(_char);
-            }
-            return certificado.Export(X509ContentType.Pfx, secureString);
-        }
-
-        public static Certificado Gerar(
-           this Certificado certificado,
-           byte[] certificadoRaiz,
-           string senhaRaiz,
-           string nome,
-           string email,
-           string senha
-        )
-        {
-            byte[] _novoCertificado = GerarCertificado(
-                certificadoRaiz,
-                senhaRaiz,
-                nome,
-                email,
-                senha
-            );
-            CertificadoDTO _Certificado = Certificado.AbrirCertificado(new MemoryStream(_novoCertificado), senha);
-            certificado.PKS = _Certificado.PKS;
-            certificado.Chain = _Certificado.Chain;
-            return certificado;
-        }
-
-        public static Certificado Gerar(
-           this Certificado certificado,
-           string certificadoRaiz,
-           string senhaRaiz,
-           string nome,
-           string email,
-           string senha
-        )
-        {
-            byte[] _certificadoRaiz = File.ReadAllBytes(certificadoRaiz);
-            byte[] _novoCertificado = GerarCertificado(
-                _certificadoRaiz,
-                senhaRaiz,
-                nome,
-                email,
-                senha
-            );
-            CertificadoDTO _Certificado = Certificado.AbrirCertificado(new MemoryStream(_novoCertificado), senha);
-            certificado.PKS = _Certificado.PKS;
-            certificado.Chain = _Certificado.Chain;
-            return certificado;
-        }
-
-    }
 
     public class Certificado
     {
-        private CertificadoDTO _Certificado { get; set; }
-        public string Assinante { get; set; }
-        public IExternalSignature PKS { get; set; }
+        public byte[] ByteArray { get; set; }
+        public string Senha { get; set; }
+        public PrivateKeySignature PKS { get; set; }
         public IX509Certificate[] Chain { get; set; }
 
-        public static CertificadoDTO AbrirCertificado(
-           Stream certificado,
-           string senha
-        ){
+        private static Pkcs12Store GetStore(Certificado certificado)
+        {
+            Stream stream = new MemoryStream(certificado.ByteArray);
             Pkcs12Store store = new Pkcs12StoreBuilder().Build();
-            store.Load(certificado, senha.ToCharArray());
+            try
+            {
+                store.Load(stream, certificado.Senha.ToCharArray());
+            }
+            catch (Exception exception)
+            {
+                if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
+                {
+                    throw new CertificateWrongPasswordException();
+                }
+            }
+
+            return store;
+        }
+
+        private static string GetAlias(Pkcs12Store store)
+        {
             string alias = null;
             foreach (object _alias in store.Aliases)
             {
@@ -130,11 +54,28 @@ namespace CMP.ManipuladorPDF.Certificados
                     break;
             }
 
-            var pks = new PrivateKeySignature(
+            if(alias == null)
+            {
+                throw new CertificateInvalidException();
+            }
+
+            return alias;
+        }
+
+        private static PrivateKeySignature GetPKS(Certificado certificado)
+        {
+            Pkcs12Store store = GetStore(certificado);
+            string alias = GetAlias(store);
+            return new PrivateKeySignature(
                 new PrivateKeyBC(store.GetKey(alias).Key),
                 DigestAlgorithms.SHA256
             );
+        }
 
+        private static IX509Certificate[] GetChain(Certificado certificado)
+        {
+            Pkcs12Store store = GetStore(certificado);
+            string alias = GetAlias(store);
             X509CertificateEntry[] certificateEntries = store.GetCertificateChain(alias);
             List<X509CertificateBC> _chain = new List<X509CertificateBC>();
             foreach (X509CertificateEntry certificateEntry in certificateEntries)
@@ -143,73 +84,199 @@ namespace CMP.ManipuladorPDF.Certificados
             }
 
             IX509Certificate[] chain = _chain.ToArray();
+            return chain;
+        }
 
-            X509Certificate dadosCertificado = store.GetCertificate(alias).Certificate;
+        public static void ExpandChain(Certificado certificado)
+        {
+            Stream stream = new MemoryStream(File.ReadAllBytes(PadroesCertificado.CaminhoCA));
+            Pkcs12Store store = new Pkcs12StoreBuilder().Build();
+            store.Load(stream, PadroesCertificado.SenhaCA.ToCharArray());
+            string alias = GetAlias(store);
+            X509CertificateEntry[] certificateEntries = store.GetCertificateChain(alias);
+            List<X509CertificateBC> _rootChain = new List<X509CertificateBC>();
+            _rootChain.Add(new X509CertificateBC(certificateEntries[0].Certificate));
+            IX509Certificate[] cachain = _rootChain.ToArray();
+            List<IX509Certificate> _chain = new List<IX509Certificate>();
+            _chain.Add(certificado.Chain[0]);
+            _chain.Add(cachain[0]);
+            IX509Certificate[] chain = _chain.ToArray();
+            certificado.Chain = chain;
+        }
 
-            return new CertificadoDTO
+        internal byte[] GetSerial()
+        {
+            byte[] serial = new byte[20];
+            Random random = new Random();
+            random.NextBytes(serial);
+            return serial;
+        }
+
+        internal SecureString GetSecureString(string senha)
+        {
+            SecureString secureString = new SecureString();
+            foreach (Char _char in senha)
             {
-                PKS = pks,
-                Chain = chain
-            };
+                secureString.AppendChar(_char);
+            }
 
+            return secureString;
         }
 
-        /// <summary>
-        /// Cria uma referência a um certificado.
-        /// </summary>
-        public Certificado() { }
-
-
-
-        /// <summary>
-        /// Cria uma referência a um certificado.
-        /// </summary>
-        /// <param name="certificado">ByteArray do certificado.</param>
-        /// <param name="senha">Senha do certificado.</param>
-        
-        public Certificado(byte[] certificado, string senha)
+        internal string GetCertificateAttributes(
+            string CN,
+            string E,
+            string L = "Piracicaba",
+            string ST = "SP",
+            string C = "BR",
+            string O = "CV Piracicaba",
+            string DC = "camarapiracicaba.sp.gov.br"
+        )
         {
-            _Certificado = AbrirCertificado(new MemoryStream(certificado), senha);
-            PKS = _Certificado.PKS;
-            Chain = _Certificado.Chain;
+            string CA = $@"L={L},ST={ST},C={C},E={E},O={O},";
+            CA += string.Join(",", DC.Split('.').Select(w => String.Format("DC={0}", w)));
+            CA += $",CN={CN}";
+            return CA;
         }
 
-
-
-        /// <summary>
-        /// Cria uma referência a um certificado.
-        /// </summary>
-        /// <param name="certificado">Caminho absoluto do certificado.</param>
-        /// <param name="senha">Senha do certificado.</param>
-
-        public Certificado(string certificado, string senha)
+        internal void SetPKSAndChain(Certificado certificado)
         {
-            _Certificado = AbrirCertificado(new FileStream(certificado, FileMode.Open, FileAccess.Read), senha);
-            PKS = _Certificado.PKS;
-            Chain = _Certificado.Chain;
+            PKS = GetPKS(certificado);
+            Chain = GetChain(certificado);
+            ExpandChain(certificado);
         }
 
-
-
-        /// <summary>
-        /// Cria uma referência a um certificado.
-        /// </summary>
-        /// <param name="certificado">MemoryStream do certificado.</param>
-        /// <param name="senha">Senha do certificado.</param>
-
-        public Certificado(MemoryStream certificado, string senha)
+        private byte[] GerarCertificado(
+            Certificado raiz,
+            string nome,
+            string email,
+            string senha,
+            int tempoExpiracao = 9
+        )
         {
-            _Certificado = AbrirCertificado(certificado, senha);
-            PKS = _Certificado.PKS;
-            Chain = _Certificado.Chain;
+            X509Certificate2 certificadoRaiz = new X509Certificate2(raiz.ByteArray, raiz.Senha);
+            RSA rsaKey = RSA.Create();
+            string dadosCertificado = GetCertificateAttributes(nome, email);
+            CertificateRequest certificateRequest = new CertificateRequest(dadosCertificado, rsaKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            X509Extension ocspExtension = OCSPExtension(PadroesCertificado.OCSP);
+            X509Extension crlExtension = CRLExtension(PadroesCertificado.CRL);
+            certificateRequest.CertificateExtensions.Add(ocspExtension);
+            certificateRequest.CertificateExtensions.Add(crlExtension);
+            byte[] serial = GetSerial();
+            DateTimeOffset notBefore = DateTimeOffset.UtcNow;
+            DateTimeOffset notAfter = notBefore.AddYears(tempoExpiracao);
+            X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
+            SecureString secureString = GetSecureString(senha);
+            return certificado.Export(X509ContentType.Pfx, secureString);
+        }
+
+        private static X509Extension OCSPExtension(string url)
+        {
+            Byte[] encodedData = Asn1Builder.Create()
+                .AddSequence(x => x.AddObjectIdentifier(new Oid("1.3.6.1.5.5.7.48.1"))
+                .AddImplicit(6, Encoding.ASCII.GetBytes(url), true))
+                .GetEncoded();
+            return new X509Extension("1.3.6.1.5.5.7.1.1", encodedData, false);
+        }
+
+        private static X509Extension CRLExtension(string url)
+        {
+            byte[] encodedUrl = Encoding.ASCII.GetBytes(url);
+            byte[] payload = new byte[encodedUrl.Length + 10];
+            int offset = 0;
+            payload[offset++] = 0x30;
+            payload[offset++] = (byte)(encodedUrl.Length + 8);
+            payload[offset++] = 0x30;
+            payload[offset++] = (byte)(encodedUrl.Length + 6);
+            payload[offset++] = 0xA0;
+            payload[offset++] = (byte)(encodedUrl.Length + 4);
+            payload[offset++] = 0xA0;
+            payload[offset++] = (byte)(encodedUrl.Length + 2);
+            payload[offset++] = 0x86;
+            payload[offset++] = (byte)encodedUrl.Length;
+            Buffer.BlockCopy(encodedUrl, 0, payload, offset, encodedUrl.Length);
+            return new X509Extension("2.5.29.31", payload, critical: false);
+        }
+
+        public Certificado(
+            byte[] certificado,
+            string senha
+        ) 
+        { 
+            ByteArray = certificado;
+            Senha = senha;
+            SetPKSAndChain(this);
+        }
+
+        public Certificado(
+            string certificado,
+            string senha
+        )
+        {
+            try
+            {
+                ByteArray = File.ReadAllBytes(certificado);
+            }catch ( Exception exception) {
+                if (exception.Message.Contains("Could not find file"))
+                {
+                    throw new CertificateNotFoundException();
+                }
+            }
+
+            Senha = senha;
+            SetPKSAndChain(this);
+        }
+
+        public Certificado(
+            MemoryStream certificado,
+            string senha
+        )
+        {
+            ByteArray = certificado.ToArray();
+            Senha = senha;
+            SetPKSAndChain(this);
+        }
+
+        public Certificado(
+            Certificado raiz,
+            string nome,
+            string email,
+            string senha
+        )
+        {
+            ByteArray = GerarCertificado(raiz, nome, email, senha);
+            Senha = senha;
+            SetPKSAndChain(this);
         }
 
     }
 
-    public class CertificadoDTO
+
+    public static class PadroesCertificado
     {
-        public IExternalSignature PKS { get; set; }
-        public IX509Certificate[] Chain { get; set; }
+        public static string CaminhoCA { get; set; } = "C:\\arquivos\\certificados\\ca.pfx";
+        public static string SenhaCA { get; set; } = "C@m@r@1025";
+        public static string OCSP { get; set; } = "http://localhost:51576";
+        public static string CRL { get; set; } = "http://localhost:51576";
+    }
+
+    public static class CertificadoExtensionMethods
+    {
+        public static byte[] ToArray(this Certificado certificado)
+        {
+            return certificado.ByteArray;
+        }
+
+        public static MemoryStream ToMemoryStream(this Certificado certificado)
+        {
+            return new MemoryStream(certificado.ByteArray);
+        }
+
+        public static void SaveToDisk(this Certificado certificado, string caminho)
+        {
+            File.WriteAllBytes(caminho, certificado.ByteArray);
+        }
+
     }
 
 }

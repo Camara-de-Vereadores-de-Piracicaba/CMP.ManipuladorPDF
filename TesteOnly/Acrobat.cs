@@ -9,7 +9,7 @@ namespace Adobe
             var acrobat = Process.GetProcesses();
             foreach (var process in acrobat)
             {
-                if (process.ProcessName == "Acrobat")
+                if (process.ProcessName == "AcroRd32" || process.ProcessName == "Acrobat")
                 {
                     process.Kill();
                 }
@@ -21,8 +21,5 @@ namespace Adobe
             Process.Start("C:\\Program Files\\Adobe\\Acrobat DC\\Acrobat\\Acrobat.exe", arquivo);
         }
 
-
-
-        
     }
 }

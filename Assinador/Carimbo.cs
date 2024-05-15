@@ -33,7 +33,7 @@ namespace CMP.ManipuladorPDF
             this DocumentoPDF documento,
             List<string> linhas,
             PosicaoCarimbo posicao,
-            string? qrcode = null,
+            string qrcode = null,
             int altura = 10
         ){
             int tamanhoQRCode = 40;
@@ -69,12 +69,14 @@ namespace CMP.ManipuladorPDF
                     {
                         qx = 0;
                     }
+
                     _qrcode
                         .ScaleAbsolute(tamanhoQRCode, tamanhoQRCode)
                         .SetFixedPosition(qx, altura);
                     canvas.Add(_qrcode);
                     altura = altura + tamanhoQRCode + 5;
                 }
+
                 void Texto(string texto, int linha)
                 {
                     Paragraph text = new Paragraph();
@@ -90,6 +92,7 @@ namespace CMP.ManipuladorPDF
                     {
                         x = distanciaBorda - (linha * (tamanhoFonte + 1));
                     }
+
                     canvas.ShowTextAligned(
                         p: text,
                         pageNumber: pagina,
@@ -100,6 +103,7 @@ namespace CMP.ManipuladorPDF
                         radAngle: 1.5708f
                     );
                 }
+
                 for(int i = 0; i <= linhas.Count()-1; i++)
                 {
                     string _texto = linhas[i];
@@ -107,13 +111,14 @@ namespace CMP.ManipuladorPDF
                     {
                         _texto = $"Página {pagina} de {totalPaginas}. {_texto}";
                     }
+
                     Texto(_texto, i);
                 }
             }
+
             pdfDocument.Close();
             return new DocumentoPDF(outputStream);
         }
-
 
         /// <summary>
         /// Carimba um documento PDF com um texto na lateral.
