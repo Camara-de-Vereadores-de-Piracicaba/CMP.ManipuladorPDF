@@ -1,80 +1,73 @@
-﻿using iText.Kernel.Geom;
-using iText.Kernel.Pdf;
-using System.IO;
-using iText.Html2pdf;
-using iText.Pdfa;
+﻿using iText.Html2pdf;
 using iText.Html2pdf.Resolver.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout.Font;
+using iText.Pdfa;
+using System.IO;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
-        private static DocumentoPDF CriarDeStringHtml(
+        private static DocumentoPDF Html2PDF(
             this string html,
-            string[] fontList
+            string title = "Documento PDF",
+            string author = "Câmara Municipal de Piracicaba",
+            string subject = "Documento criado pelo sistema de documentos digitais da Câmara Municipal de Piracicaba",
+            string creator = "Câmara Municipal de Piracicaba",
+            string keywords = "Documento PDF, Câmara Municipal de Piracicaba"
         )
         {
-            ConverterProperties converterProperties = new ConverterProperties();
-            converterProperties.SetBaseUri("");
             using MemoryStream outputStream = new MemoryStream();
-            using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using Stream sRGBColorStream = EmbeddedResource.GetStream("sRGB Color Space Profile.icm");
-            PdfOutputIntent pdfOutputIntent = new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream);
-            PdfADocument pdfDocument = new PdfADocument(pdfWriter,PdfAConformanceLevel.PDF_A_3A,pdfOutputIntent);
+            PdfWriter pdfWriter = new PdfWriter(outputStream, new WriterProperties().SetPdfVersion(PdfVersion.PDF_2_0));
+            Stream sRGBColorStream = EmbeddedResource.GetStream("sRGB Color Space Profile.icm");
+            PdfADocument pdfDocument = new PdfADocument(
+                pdfWriter, 
+                PdfAConformanceLevel.PDF_A_4, 
+                new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream)
+            );
             pdfDocument.SetDefaultPageSize(PageSize.A4);
+            pdfDocument.GetCatalog().SetLang(new PdfString("pt-BR"));
             pdfDocument.SetTagged();
-            fontList ??= new string[]
-            {
-                "calibri",
-                "calibrib",
-                "calibrii",
-                "calibriz",
-                "times",
-                "timesbd",
-                "timesbi",
-                "timesi",
-                "CourierPrime-Regular",
-                "CourierPrime-Bold",
-                "CourierPrime-BoldItalic",
-                "CourierPrime-Italic",
-                "Roboto-Regular",
-                "Roboto-Bold",
-                "Roboto-BoldItalic",
-                "Roboto-Italic"
-            };
-            DefaultFontProvider fontProvider = new DefaultFontProvider(false, false, false);
+            PdfDocumentInfo info = pdfDocument.GetDocumentInfo();
+            info
+                .SetTitle(title)
+                .SetAuthor(author)
+                .SetSubject(subject)
+                .SetCreator(creator)
+                .SetKeywords(keywords)
+                .AddCreationDate();
+
+            ConverterProperties properties = new ConverterProperties();
+            FontProvider fontProvider = new DefaultFontProvider();
+            string[] fontList = PDFTrueTypeFont.Fonts;
             foreach (string font in fontList)
             {
                 fontProvider.AddFont(EmbeddedResource.GetByteArray($"{font}.ttf"));
             }
-            converterProperties.SetFontProvider(fontProvider);
-            HtmlConverter.ConvertToPdf(html, pdfDocument, converterProperties);
+
+            properties.SetFontProvider(fontProvider);
+            HtmlConverter.ConvertToPdf(html, pdfDocument, properties);
             return new DocumentoPDF(outputStream);
         }
 
         /// <summary>
-        /// Converte uma string com html dentro para um documento PDF.
+        /// Converte uma string com html para um documento PDF.
         /// </summary>
         /// <param name="html">String com o html dentro.</param>
-        /// <param name="fontes">Array opcional de fontes para usar. Se nulo, inclui todas as fontes.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF HtmlParaPdf(this string html, string[] fontes = null)
+        public static DocumentoPDF ConverterParaPdf(
+            this string html,
+            string titulo = "Documento PDF",
+            string autor = "Câmara Municipal de Piracicaba",
+            string assunto = "Documento criado pelo sistema de documentos digitais da Câmara Municipal de Piracicaba",
+            string criador = "Câmara Municipal de Piracicaba",
+            string palavrasChave = "Documento PDF, Câmara Municipal de Piracicaba"
+        )
         {
-            return CriarDeStringHtml(html,fontes);
-        }
-
-        /// <summary>
-        /// Converte uma string com html dentro para um documento PDF, retirando o caracter "%" da string.
-        /// </summary>
-        /// <param name="html">String com o html dentro.</param>
-        /// <param name="fontes">Array opcional de fontes para usar. Se nulo, inclui todas as fontes.</param>
-        /// <returns>DocumentoPDF</returns>
-
-        public static DocumentoPDF HtmlParaPdfSemPorcentagem(this string html, string[] fontes = null)
-        {
-            html = html.Replace("%", "");
-            return CriarDeStringHtml(html, fontes);
+            return Html2PDF(html, titulo, autor, assunto, criador, palavrasChave);
         }
 
     }

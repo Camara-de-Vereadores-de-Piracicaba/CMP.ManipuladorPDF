@@ -11,6 +11,16 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
+		<None Remove="Resources\aptos-black-italic.ttf" />
+		<None Remove="Resources\aptos-black.ttf" />
+		<None Remove="Resources\aptos-bold.ttf" />
+		<None Remove="Resources\aptos-extrabold-italic.ttf" />
+		<None Remove="Resources\aptos-extrabold.ttf" />
+		<None Remove="Resources\aptos-italic.ttf" />
+		<None Remove="Resources\aptos-light-italic.ttf" />
+		<None Remove="Resources\aptos-light.ttf" />
+		<None Remove="Resources\aptos-semibold.ttf" />
+		<None Remove="Resources\aptos.ttf" />
 		<None Remove="Resources\calibri.ttf" />
 		<None Remove="Resources\calibrib.ttf" />
 		<None Remove="Resources\calibrii.ttf" />
@@ -31,6 +41,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="Resources\aptos-black-italic.ttf" />
+		<EmbeddedResource Include="Resources\aptos-black.ttf" />
+		<EmbeddedResource Include="Resources\aptos-bold.ttf" />
+		<EmbeddedResource Include="Resources\aptos-extrabold-italic.ttf" />
+		<EmbeddedResource Include="Resources\aptos-extrabold.ttf" />
+		<EmbeddedResource Include="Resources\aptos-italic.ttf" />
+		<EmbeddedResource Include="Resources\aptos-light-italic.ttf" />
+		<EmbeddedResource Include="Resources\aptos-light.ttf" />
+		<EmbeddedResource Include="Resources\aptos-semibold.ttf" />
+		<EmbeddedResource Include="Resources\aptos.ttf" />
 		<EmbeddedResource Include="Resources\calibri.ttf" />
 		<EmbeddedResource Include="Resources\calibrib.ttf" />
 		<EmbeddedResource Include="Resources\calibrii.ttf" />

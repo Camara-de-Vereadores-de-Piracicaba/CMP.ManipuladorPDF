@@ -13,7 +13,6 @@ namespace CMP.ManipuladorPDF
 
     internal static class EmbeddedResource
     {
-
         public static Stream GetStream(string fileName)
         {
             string name = Assembly.GetExecutingAssembly().GetManifestResourceNames().Single(str => str.EndsWith(fileName));
@@ -27,14 +26,40 @@ namespace CMP.ManipuladorPDF
             Stream.Read(ByteArray, 0, ByteArray.Length);
             return ByteArray;
         }
-
     }
 
     internal static class PDFTrueTypeFont
     {
-        private const string DefaultFont = "Roboto-Regular";
+        public static string[] Fonts = {
+            "aptos",
+            "aptos-black",
+            "aptos-black-italic",
+            "aptos-bold",
+            "aptos-extrabold",
+            "aptos-extrabold-italic",
+            "aptos-italic",
+            "aptos-light",
+            "aptos-light-italic",
+            "aptos-semibold",
+            "calibri",
+            "calibrib",
+            "calibrii",
+            "calibriz",
+            "times",
+            "timesbd",
+            "timesbi",
+            "timesi",
+            "CourierPrime-Regular",
+            "CourierPrime-Bold",
+            "CourierPrime-BoldItalic",
+            "CourierPrime-Italic",
+            "Roboto-Regular",
+            "Roboto-Bold",
+            "Roboto-BoldItalic",
+            "Roboto-Italic"
+        };
 
-        public static PdfFont GetFont(string fontName = DefaultFont)
+    public static PdfFont GetFont(string fontName = "aptos")
         {
             byte[] byteArray = EmbeddedResource.GetByteArray($"{fontName}.ttf");
             return PdfFontFactory.CreateFont(byteArray, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);

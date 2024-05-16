@@ -14,8 +14,6 @@ namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
-        private const string CRL_URL = "https://crl.cacert.org/revoke.crl";
-
         private static DocumentoPDF AssinarDocumento(
             this DocumentoPDF documento,
             Certificado certificado,
@@ -96,10 +94,7 @@ namespace CMP.ManipuladorPDF
             MemoryStream outputStream = new MemoryStream();
             PdfPadesSigner padesSigner = new PdfPadesSigner(pdfReader, outputStream);
             TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_DEFAULT, null, null, 8192, DigestAlgorithms.SHA256);
-
-            //padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-            padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-
+            padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
             return new DocumentoPDF(outputStream);
         }
 

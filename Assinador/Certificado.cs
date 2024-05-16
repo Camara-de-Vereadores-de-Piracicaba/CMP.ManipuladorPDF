@@ -13,7 +13,6 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using static iText.StyledXmlParser.Jsoup.Select.Evaluator;
 
 namespace CMP.Certificados
 {
@@ -161,7 +160,7 @@ namespace CMP.Certificados
             X509Extension ocspExtension = OCSPExtension(PadroesCertificado.OCSP);
             X509Extension crlExtension = CRLExtension(PadroesCertificado.CRL);
             certificateRequest.CertificateExtensions.Add(ocspExtension);
-            certificateRequest.CertificateExtensions.Add(crlExtension);
+            //certificateRequest.CertificateExtensions.Add(crlExtension); //Não é necessário.
             byte[] serial = GetSerial();
             DateTimeOffset notBefore = DateTimeOffset.UtcNow;
             DateTimeOffset notAfter = notBefore.AddYears(tempoExpiracao);
@@ -251,13 +250,12 @@ namespace CMP.Certificados
 
     }
 
-
     public static class PadroesCertificado
     {
-        public static string CaminhoCA { get; set; } = "C:\\arquivos\\certificados\\ca.pfx";
-        public static string SenhaCA { get; set; } = "C@m@r@1025";
-        public static string OCSP { get; set; } = "http://localhost:51576";
-        public static string CRL { get; set; } = "http://localhost:51576";
+        public static string CaminhoCA { get; set; } = "C:\\Users\\0354\\Desktop\\x\\x2\\GeradorCertificados\\ca\\ca.pfx";
+        public static string SenhaCA { get; set; } = "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp";
+        public static string OCSP { get; set; } = "https://localhost:51575";
+        public static string CRL { get; set; } = "https://localhost:51575";
     }
 
     public static class CertificadoExtensionMethods

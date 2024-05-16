@@ -102,6 +102,7 @@ namespace CMP.ManipuladorPDF
             {
                 _metadados.Add(new Metadado(metadados[i,0], metadados[i,1]));
             }
+
             return InserirMetadados(documento, _metadados);
         }
 

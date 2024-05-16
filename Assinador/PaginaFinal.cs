@@ -85,7 +85,6 @@ namespace CMP.ManipuladorPDF
                 hasHash = $" e informe o código <b>{hash}</b>.";
             }
 
-
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
             QRCodeData qrCodeData = qrGenerator.CreateQrCode(validadorUrl, QRCodeGenerator.ECCLevel.Q);
             QRCode _qrCode = new QRCode(qrCodeData);
@@ -204,7 +203,7 @@ namespace CMP.ManipuladorPDF
                     </div>
                 </div>
             ";
-            MemoryStream _paginaFinal = html.HtmlParaPdf().ConverterParaMemoryStream();
+            MemoryStream _paginaFinal = html.ConverterParaPdf().ConverterParaMemoryStream();
             MemoryStream _paginaFinalStream = new MemoryStream(_paginaFinal.ToArray());
             PdfDocument paginaFinal = new PdfDocument(new PdfReader(_paginaFinalStream));
             paginaFinal.CopyPagesTo(1, paginaFinal.GetNumberOfPages(), newPdfDocument);
