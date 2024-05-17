@@ -8,7 +8,6 @@ using iText.IO.Image;
 using iText.Forms.Form.Element;
 using System;
 using iText.Layout.Renderer;
-using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace CMP.ManipuladorPDF
 {
@@ -94,7 +93,7 @@ namespace CMP.ManipuladorPDF
             MemoryStream outputStream = new MemoryStream();
             PdfPadesSigner padesSigner = new PdfPadesSigner(pdfReader, outputStream);
             TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_DEFAULT, null, null, 8192, DigestAlgorithms.SHA256);
-            padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+            padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
             return new DocumentoPDF(outputStream);
         }
 
