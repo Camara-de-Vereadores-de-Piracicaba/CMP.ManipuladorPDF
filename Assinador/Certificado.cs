@@ -14,6 +14,7 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace CMP.Certificados
 {
@@ -24,6 +25,7 @@ namespace CMP.Certificados
         public string Senha { get; set; }
         public string Serial { get; set; }
         public string Atributos { get; set; }
+        public DateTime Vencimento { get; set; }
         public PrivateKeySignature PKS { get; set; }
         public IX509Certificate[] Chain { get; set; }
 
@@ -56,7 +58,7 @@ namespace CMP.Certificados
                     break;
             }
 
-            if(alias == null)
+            if (alias == null)
             {
                 throw new CertificateInvalidException();
             }
@@ -119,22 +121,23 @@ namespace CMP.Certificados
 
         internal string GetAttributes(Certificado certificado)
         {
-            X509Certificate2 _certificado = new X509Certificate2(certificado.ByteArray, certificado.Senha);
-            X509CertificateBC bc = new X509CertificateBC(DotNetUtilities.FromX509Certificate(_certificado));
+            Pkcs12Store store = GetStore(certificado);
+            string alias = GetAlias(store);
+            X509CertificateEntry target = store.GetCertificateChain(alias)[0];
+            X509Certificate2 certificate = new X509Certificate2(DotNetUtilities.ToX509Certificate(target.Certificate));
+            X509CertificateBC bc = new X509CertificateBC(DotNetUtilities.FromX509Certificate(certificate));
             CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(bc);
-            string attributes = "/" +GetCertificateAttributes(
+            string attributes = "/" + GetCertificateAttributes(
                 info.GetField("CN"),
                 info.GetField("E")
             ).Replace(",", "/");
             return attributes;
+        }
 
-            /*
-                info.GetField("L"),
-                info.GetField("ST"),
-                info.GetField("C"),
-                info.GetField("O"),
-                info.GetField("DC")
-            */
+        internal DateTime GetNotAfter(Certificado certificado)
+        {
+            X509Certificate2 _certificado = new X509Certificate2(certificado.ByteArray, certificado.Senha);
+            return DateTime.Parse(_certificado.GetExpirationDateString());
         }
 
         internal string GetCertificateAttributes(
@@ -159,6 +162,7 @@ namespace CMP.Certificados
             Chain = GetChain(certificado);
             Serial = GetSerial(certificado);
             Atributos = GetAttributes(certificado);
+            Vencimento = GetNotAfter(certificado);
         }
 
         private (byte[] byteArray, string serial, string atributos) GerarCertificado(
@@ -185,7 +189,7 @@ namespace CMP.Certificados
             X509Certificate2Collection join = new X509Certificate2Collection();
             join.Add(certificadoRaiz);
             join.Add(certificado);
-            byte[] exportedChain = join.Export(X509ContentType.Pfx,senha);
+            byte[] exportedChain = join.Export(X509ContentType.Pfx, senha);
             return (
                 exportedChain,
                 certificado.GetSerialNumberString(),
@@ -224,8 +228,8 @@ namespace CMP.Certificados
         public Certificado(
             byte[] certificado,
             string senha
-        ) 
-        { 
+        )
+        {
             ByteArray = certificado;
             Senha = senha;
             SetAttributes(this);
@@ -239,7 +243,9 @@ namespace CMP.Certificados
             try
             {
                 ByteArray = File.ReadAllBytes(certificado);
-            }catch ( Exception exception) {
+            }
+            catch (Exception exception)
+            {
                 if (exception.Message.Contains("Could not find file"))
                 {
                     throw new CertificateNotFoundException();
@@ -277,8 +283,8 @@ namespace CMP.Certificados
 
     public static class PadroesCertificado
     {
-        public static string OCSP { get; set; } = "https://localhost:51575";
-        public static string CRL { get; set; } = "https://localhost:51575";
+        public static string OCSP { get; set; } = "https://ocsp.camarapiracicaba.sp.gov.br";
+        public static string CRL { get; set; } = "https://ocsp.camarapiracicaba.sp.gov.br";
     }
 
     public static class CertificadoExtensionMethods
@@ -298,6 +304,57 @@ namespace CMP.Certificados
             File.WriteAllBytes(caminho, certificado.ByteArray);
         }
 
-    }
+        public static async Task AdicionarOCSP(this Certificado certificado)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"status", "V" },
+                {"serial", certificado.Serial },
+                {"notAfter", certificado.Vencimento.ToString("yyMMddHHmmssZ") },
+                {"attributes", certificado.Atributos }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
 
+        public static async Task RemoverOCSP(this Certificado certificado)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", certificado.Serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+
+        public static async Task RevogarOCSP(this Certificado certificado)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", certificado.Serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+        public static async Task DesrevogarOCSP(this Certificado certificado)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", certificado.Serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+
+        public static async Task<bool> ValidarOCSP(this Certificado certificado)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", certificado.Serial }
+            };
+            string response = await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return response == "\"1\"";
+        }
+
+    }
 }
