@@ -1,11 +1,14 @@
 {
   "profiles": {
-    "TesteOnly": {
-      "commandName": "Project"
-    },
     "WSL": {
       "commandName": "WSL2",
       "distributionName": ""
+    },
+    "Teste": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

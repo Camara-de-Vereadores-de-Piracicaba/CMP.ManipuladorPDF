@@ -22,7 +22,7 @@ namespace CMP.ManipuladorPDF
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)),pdfWriter);
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
-            PdfFont font = PDFTrueTypeFont.GetFont("calibrib");
+            //PdfFont font = PDFTrueTypeFont.GetFont("calibrib");
             float fontSize = 140;
             for (int pagina = 1; pagina <= pdfDocument.GetNumberOfPages(); pagina++)
             {
@@ -33,11 +33,12 @@ namespace CMP.ManipuladorPDF
                 Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
                 Paragraph paragraph = new Paragraph(texto)
                     .SetMargin(0)
-                    .SetFont(font)
+                    //.SetFont(font)
                     .SetFontColor(new DeviceRgb(255, 50, 50))
                     .SetFontSize(fontSize);
                 canvas.ShowTextAligned(paragraph, pageWidth / 2, pageHeight / 2, pagina, TextAlignment.CENTER, VerticalAlignment.MIDDLE, 45f);
             }
+
             pdfDocument.Close();
             return new DocumentoPDF(outputStream);
         }

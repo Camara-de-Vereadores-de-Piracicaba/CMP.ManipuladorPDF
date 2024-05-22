@@ -36,7 +36,7 @@ namespace CMP.ManipuladorPDF
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
             int totalPaginas = pdfDocument.GetNumberOfPages();
-            PdfFont font = PDFTrueTypeFont.GetFont("calibri");
+            //PdfFont font = PDFTrueTypeFont.GetFont("calibri");
 
             int numero = primeiroNumero;
 
@@ -62,7 +62,7 @@ namespace CMP.ManipuladorPDF
 
                 Paragraph text = new Paragraph();
                 text.SetFontSize(tamanhoFonte).Add($"{prefixo}{numero}");
-                text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
+                //text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
 
                 float x = margem;
                 float y = margem;

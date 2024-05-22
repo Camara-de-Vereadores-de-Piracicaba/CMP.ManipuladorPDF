@@ -16,6 +16,10 @@ namespace CMP.ManipuladorPDF
         /// </summary>
         /// <param name="sourceStream">MemoryStream do arquivo PDF.</param>
 
+        public DocumentoPDF()
+        {
+            
+        }
         public DocumentoPDF(MemoryStream sourceStream)
         {
             ByteArray = sourceStream.ToArray();

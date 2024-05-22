@@ -8,17 +8,20 @@ using iText.IO.Image;
 using iText.Forms.Form.Element;
 using System;
 using iText.Layout.Renderer;
+using iText.Kernel.Font;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
+
         private static DocumentoPDF AssinarDocumento(
             this DocumentoPDF documento,
             Certificado certificado,
             int x,
             int y,
-            int pagina
+            int pagina,
+            string profile = "LTA"
         )
         {
             using MemoryStream signatureStream = new MemoryStream();
@@ -40,8 +43,14 @@ namespace CMP.ManipuladorPDF
 
             DateTime data = DateTime.Now;
 
-            var font = PDFTrueTypeFont.GetFont("calibri");
-            var fontBold = PDFTrueTypeFont.GetFont("calibrib");
+            PdfFont font = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
+            PdfFont fontBold = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
 
             Div root = new Div()
                 .SetWidth(220)
@@ -60,9 +69,9 @@ namespace CMP.ManipuladorPDF
             Div text = new Div()
                 .SetWidth(180)
                 .Add(new Paragraph("Documento assinado digitalmente").SetFont(font).SetFontSize(7).SetRelativePosition(0, 2, 0, 0).SetMargin(0))
-                .Add(new Paragraph(_name.ToUpper()).SetFont(fontBold).SetMultipliedLeading(0.8f).SetFontSize(9).SetRelativePosition(0, 1, 0, 0).SetMargin(0))
-                .Add(new Paragraph($"Assinado em {data}").SetFont(font).SetFontSize(6).SetRelativePosition(0, 0, 0, 0).SetMargin(0))
-                .Add(new Paragraph("Verifique em validar.camarapiracicaba.sp.gov.br").SetFont(font).SetFontSize(5).SetRelativePosition(0, -3, 0, 0).SetMargin(0));
+                .Add(new Paragraph(_name.ToUpper()).SetMultipliedLeading(0.8f).SetFont(fontBold).SetFontSize(9).SetRelativePosition(0, 1, 0, 0).SetMargin(0))
+                .Add(new Paragraph($"Assinado em {data}").SetFont(font).SetFontSize(7).SetRelativePosition(0, 2, 0, 0).SetMargin(0))
+                .Add(new Paragraph("Verifique em validar.camarapiracicaba.sp.gov.br").SetFont(font).SetFontSize(7).SetRelativePosition(0, -3, 0, 0).SetMargin(0));
 
             root.Add(logo);
             root.Add(text);
@@ -93,7 +102,24 @@ namespace CMP.ManipuladorPDF
             MemoryStream outputStream = new MemoryStream();
             PdfPadesSigner padesSigner = new PdfPadesSigner(pdfReader, outputStream);
             TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_DEFAULT, null, null, 8192, DigestAlgorithms.SHA256);
-            padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+
+            if (profile == "LT")
+            {
+                padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+            }
+            else if (profile == "T")
+            {
+                padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+            }
+            else if (profile == "B")
+            {
+                padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
+            }
+            else
+            {
+                padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+            }
+
             return new DocumentoPDF(outputStream);
         }
 
@@ -103,23 +129,36 @@ namespace CMP.ManipuladorPDF
             string senha,
             int pagina = 1,
             int x = 0,
-            int y = 0
+            int y = 0,
+            string profile = "LTA"
         )
         {
             try
             {
                 Certificado _certificado = new Certificado(certificado, senha);
-                return AssinarDocumento(documento, _certificado, x, y, pagina);
+                return AssinarDocumento(documento, _certificado, x, y, pagina, profile);
             }
             catch(Exception exception)
             {
+                
                 if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
                 {
-                    throw new AssinaturaException("Senha incorreta.");
+                    throw new CertificateWrongPasswordException();
                 }
                 else if (exception.Message.Contains("Could not find file"))
                 {
-                    throw new AssinaturaException("Certificado não encontrado.");
+                    if (exception.Message.Contains(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT)) 
+                    {
+                        throw new FontNotExistException(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT);
+                    }
+                    else if (exception.Message.Contains(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD))
+                    {
+                        throw new FontNotExistException(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD);
+                    }
+                    else
+                    {
+                        throw new AssinaturaException("Certificado não encontrado.");
+                    }
                 }
                 else if (exception.Message.Contains("unexpected end-of-contents marker"))
                 {
@@ -129,6 +168,14 @@ namespace CMP.ManipuladorPDF
                 throw new AssinaturaException(exception.Message);
             }
             
+        }
+
+        public static class SignatureType
+        {
+            public static string SIGNATURE_LTA { get; set; } = "LTA";
+            public static string SIGNATURE_LT { get; set; } = "LT";
+            public static string SIGNATURE_T { get; set; } = "T";
+            public static string SIGNATURE_B { get; set; } = "B";
         }
 
         /// <summary>
@@ -145,10 +192,11 @@ namespace CMP.ManipuladorPDF
             Certificado certificado,
             int pagina = 1,
             int x = 0,
-            int y = 0
+            int y = 0,
+            string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado.ByteArray, certificado.Senha, pagina, x, y);
+            return ProcessarAssinatura(documento, certificado.ByteArray, certificado.Senha, pagina, x, y, profile);
         }
 
         /// <summary>
@@ -167,10 +215,11 @@ namespace CMP.ManipuladorPDF
             string senha,
             int pagina = 1,
             int x = 0,
-            int y = 0
+            int y = 0,
+            string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
         }
 
         /// <summary>
@@ -189,10 +238,11 @@ namespace CMP.ManipuladorPDF
             string senha,
             int pagina = 1,
             int x = 0,
-            int y = 0
+            int y = 0,
+            string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
         }
 
         /// <summary>
@@ -211,10 +261,11 @@ namespace CMP.ManipuladorPDF
             string senha,
             int pagina = 1,
             int x = 0,
-            int y = 0
+            int y = 0,
+            string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y);
+            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
         }
 
     }

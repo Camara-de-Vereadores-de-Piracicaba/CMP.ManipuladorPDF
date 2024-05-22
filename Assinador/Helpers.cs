@@ -56,6 +56,7 @@ namespace CMP.ManipuladorPDF
         }
     }
 
+    /*
     internal static class PDFTrueTypeFont
     {
         public static string[] Fonts = {
@@ -84,7 +85,11 @@ namespace CMP.ManipuladorPDF
             "Roboto-Regular",
             "Roboto-Bold",
             "Roboto-BoldItalic",
-            "Roboto-Italic"
+            "Roboto-Italic",
+            "times-roman",
+            "times-bold",
+            "times-italic",
+            "times-bolditalic"
         };
 
     public static PdfFont GetFont(string fontName = "aptos")
@@ -92,7 +97,7 @@ namespace CMP.ManipuladorPDF
             byte[] byteArray = EmbeddedResource.GetByteArray($"{fontName}.ttf");
             return PdfFontFactory.CreateFont(byteArray, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
         }
-
     }
+    */
 
 }

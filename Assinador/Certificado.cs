@@ -287,6 +287,65 @@ namespace CMP.Certificados
         public static string CRL { get; set; } = "https://ocsp.camarapiracicaba.sp.gov.br";
     }
 
+    public static class CertificadoOCSP
+    {
+        public static async void AdicionarOCSP(
+            string serial,
+            DateTime vencimento,
+            string atributos
+        )
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"status", "V" },
+                {"serial", serial },
+                {"notAfter", vencimento.ToString("yyMMddHHmmssZ") },
+                {"attributes", atributos }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+
+        public static async void RevogarOCSP(string serial)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+
+        public static async void RemoverOCSP(string serial)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+        public static async void DesrevogarOCSP(string serial)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", serial }
+            };
+            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return;
+        }
+
+        public static async Task<bool> ValidarOCSP(string serial)
+        {
+            Dictionary<string, string> values = new Dictionary<string, string>()
+            {
+                {"serial", serial }
+            };
+            string response = await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            return response == "\"1\"";
+        }
+    }
+
     public static class CertificadoExtensionMethods
     {
         public static byte[] ToArray(this Certificado certificado)

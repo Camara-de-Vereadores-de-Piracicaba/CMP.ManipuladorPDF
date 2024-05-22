@@ -43,7 +43,9 @@ namespace CMP.ManipuladorPDF
             PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
             int totalPaginas = pdfDocument.GetNumberOfPages();
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
-            PdfFont font = PDFTrueTypeFont.GetFont("calibri");
+
+            //PdfFont font = PDFTrueTypeFont.GetFont("calibri");
+
             for (int pagina = 1; pagina <= totalPaginas; pagina++)
             {
                 int distanciaBorda = 6;
@@ -81,7 +83,9 @@ namespace CMP.ManipuladorPDF
                 {
                     Paragraph text = new Paragraph();
                     text.SetFontSize(tamanhoFonte).Add(texto);
-                    text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
+
+                    //text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
+
                     IRenderer renderer = text.CreateRendererSubTree();
                     LayoutResult result = renderer.SetParent(canvas.GetRenderer()).Layout(new LayoutContext(new LayoutArea(pagina, new Rectangle(pageWidth, pageHeight))));
                     Rectangle boundingBox = result.GetOccupiedArea().GetBBox();

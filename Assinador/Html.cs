@@ -4,6 +4,7 @@ using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout.Font;
 using iText.Pdfa;
+using System;
 using System.IO;
 
 namespace CMP.ManipuladorPDF
@@ -41,14 +42,29 @@ namespace CMP.ManipuladorPDF
 
             ConverterProperties properties = new ConverterProperties();
             FontProvider fontProvider = new DefaultFontProvider();
-            string[] fontList = PDFTrueTypeFont.Fonts;
-            foreach (string font in fontList)
+
+            int fontCount = fontProvider.AddDirectory(DocumentoPDFConfig.FONT_PATH);
+
+            if(fontCount == 0)
             {
-                fontProvider.AddFont(EmbeddedResource.GetByteArray($"{font}.ttf"));
+                throw new FontDirectoryEmptyException();
             }
 
             properties.SetFontProvider(fontProvider);
-            HtmlConverter.ConvertToPdf(html, pdfDocument, properties);
+            try
+            {
+                HtmlConverter.ConvertToPdf(html, pdfDocument, properties);
+            }
+            catch(Exception exception)
+            {
+                if(exception.Message.Contains("All the fonts must be embedded"))
+                {
+                    string message = exception.Message.Split(":")[1];
+                    throw new FontNotExistException(message);
+                }
+                
+            }
+
             return new DocumentoPDF(outputStream);
         }
 

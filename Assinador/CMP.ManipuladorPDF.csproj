@@ -11,63 +11,11 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<None Remove="Resources\aptos-black-italic.ttf" />
-		<None Remove="Resources\aptos-black.ttf" />
-		<None Remove="Resources\aptos-bold.ttf" />
-		<None Remove="Resources\aptos-extrabold-italic.ttf" />
-		<None Remove="Resources\aptos-extrabold.ttf" />
-		<None Remove="Resources\aptos-italic.ttf" />
-		<None Remove="Resources\aptos-light-italic.ttf" />
-		<None Remove="Resources\aptos-light.ttf" />
-		<None Remove="Resources\aptos-semibold.ttf" />
-		<None Remove="Resources\aptos.ttf" />
-		<None Remove="Resources\calibri.ttf" />
-		<None Remove="Resources\calibrib.ttf" />
-		<None Remove="Resources\calibrii.ttf" />
-		<None Remove="Resources\calibriz.ttf" />
-		<None Remove="Resources\Roboto-Bold.ttf" />
-		<None Remove="Resources\Roboto-BoldItalic.ttf" />
-		<None Remove="Resources\Roboto-Italic.ttf" />
-		<None Remove="Resources\Roboto-Regular.ttf" />
-		<None Remove="Resources\CourierPrime-Bold.ttf" />
-		<None Remove="Resources\CourierPrime-BoldItalic.ttf" />
-		<None Remove="Resources\CourierPrime-Italic.ttf" />
-		<None Remove="Resources\CourierPrime-Regular.ttf" />
 		<None Remove="Resources\sRGB Color Space Profile.icm" />
-		<None Remove="Resources\times.ttf" />
-		<None Remove="Resources\timesbd.ttf" />
-		<None Remove="Resources\timesbi.ttf" />
-		<None Remove="Resources\timesi.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Resources\aptos-black-italic.ttf" />
-		<EmbeddedResource Include="Resources\aptos-black.ttf" />
-		<EmbeddedResource Include="Resources\aptos-bold.ttf" />
-		<EmbeddedResource Include="Resources\aptos-extrabold-italic.ttf" />
-		<EmbeddedResource Include="Resources\aptos-extrabold.ttf" />
-		<EmbeddedResource Include="Resources\aptos-italic.ttf" />
-		<EmbeddedResource Include="Resources\aptos-light-italic.ttf" />
-		<EmbeddedResource Include="Resources\aptos-light.ttf" />
-		<EmbeddedResource Include="Resources\aptos-semibold.ttf" />
-		<EmbeddedResource Include="Resources\aptos.ttf" />
-		<EmbeddedResource Include="Resources\calibri.ttf" />
-		<EmbeddedResource Include="Resources\calibrib.ttf" />
-		<EmbeddedResource Include="Resources\calibrii.ttf" />
-		<EmbeddedResource Include="Resources\calibriz.ttf" />
-		<EmbeddedResource Include="Resources\Roboto-Bold.ttf" />
-		<EmbeddedResource Include="Resources\Roboto-BoldItalic.ttf" />
-		<EmbeddedResource Include="Resources\Roboto-Italic.ttf" />
-		<EmbeddedResource Include="Resources\Roboto-Regular.ttf" />
-		<EmbeddedResource Include="Resources\CourierPrime-Bold.ttf" />
-		<EmbeddedResource Include="Resources\CourierPrime-BoldItalic.ttf" />
-		<EmbeddedResource Include="Resources\CourierPrime-Italic.ttf" />
-		<EmbeddedResource Include="Resources\CourierPrime-Regular.ttf" />
 		<EmbeddedResource Include="Resources\sRGB Color Space Profile.icm" />
-		<EmbeddedResource Include="Resources\times.ttf" />
-		<EmbeddedResource Include="Resources\timesbd.ttf" />
-		<EmbeddedResource Include="Resources\timesbi.ttf" />
-		<EmbeddedResource Include="Resources\timesi.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
