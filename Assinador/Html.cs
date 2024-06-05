@@ -25,7 +25,7 @@ namespace CMP.ManipuladorPDF
             Stream sRGBColorStream = EmbeddedResource.GetStream("sRGB Color Space Profile.icm");
             PdfADocument pdfDocument = new PdfADocument(
                 pdfWriter, 
-                PdfAConformanceLevel.PDF_A_4, 
+                PdfAConformanceLevel.PDF_A_4,
                 new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream)
             );
             pdfDocument.SetDefaultPageSize(PageSize.A4);
@@ -62,7 +62,9 @@ namespace CMP.ManipuladorPDF
                     string message = exception.Message.Split(":")[1];
                     throw new FontNotExistException(message);
                 }
-                
+
+                throw new HtmlConverterException(exception.Message);
+
             }
 
             return new DocumentoPDF(outputStream);

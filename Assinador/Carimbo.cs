@@ -44,7 +44,14 @@ namespace CMP.ManipuladorPDF
             int totalPaginas = pdfDocument.GetNumberOfPages();
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
 
-            //PdfFont font = PDFTrueTypeFont.GetFont("calibri");
+            PdfFont font = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
+            PdfFont fontBold = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
 
             for (int pagina = 1; pagina <= totalPaginas; pagina++)
             {
@@ -59,7 +66,7 @@ namespace CMP.ManipuladorPDF
                 if(qrcode != null)
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
-                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrcode, QRCodeGenerator.ECCLevel.H);
+                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrcode, QRCodeGenerator.ECCLevel.L);
                     QRCode _qrCode = new QRCode(qrCodeData);
                     Bitmap qrCodeImage = _qrCode.GetGraphic(4,Color.Black,Color.White,false);
                     MemoryStream ms = new MemoryStream();
@@ -82,10 +89,10 @@ namespace CMP.ManipuladorPDF
                 void Texto(string texto, int linha)
                 {
                     Paragraph text = new Paragraph();
-                    text.SetFontSize(tamanhoFonte).Add(texto);
-
-                    //text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
-
+                    text
+                        .SetFont(font)
+                        .SetFontSize(tamanhoFonte)
+                        .Add(texto);
                     IRenderer renderer = text.CreateRendererSubTree();
                     LayoutResult result = renderer.SetParent(canvas.GetRenderer()).Layout(new LayoutContext(new LayoutArea(pagina, new Rectangle(pageWidth, pageHeight))));
                     Rectangle boundingBox = result.GetOccupiedArea().GetBBox();

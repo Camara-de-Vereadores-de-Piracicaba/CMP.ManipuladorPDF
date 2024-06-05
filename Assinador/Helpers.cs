@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace CMP.ManipuladorPDF
 {
@@ -56,48 +57,21 @@ namespace CMP.ManipuladorPDF
         }
     }
 
-    /*
-    internal static class PDFTrueTypeFont
+    public static class ExtendString
     {
-        public static string[] Fonts = {
-            "aptos",
-            "aptos-black",
-            "aptos-black-italic",
-            "aptos-bold",
-            "aptos-extrabold",
-            "aptos-extrabold-italic",
-            "aptos-italic",
-            "aptos-light",
-            "aptos-light-italic",
-            "aptos-semibold",
-            "calibri",
-            "calibrib",
-            "calibrii",
-            "calibriz",
-            "times",
-            "timesbd",
-            "timesbi",
-            "timesi",
-            "CourierPrime-Regular",
-            "CourierPrime-Bold",
-            "CourierPrime-BoldItalic",
-            "CourierPrime-Italic",
-            "Roboto-Regular",
-            "Roboto-Bold",
-            "Roboto-BoldItalic",
-            "Roboto-Italic",
-            "times-roman",
-            "times-bold",
-            "times-italic",
-            "times-bolditalic"
-        };
-
-    public static PdfFont GetFont(string fontName = "aptos")
+        public static string ToTitleCase(this string s)
         {
-            byte[] byteArray = EmbeddedResource.GetByteArray($"{fontName}.ttf");
-            return PdfFontFactory.CreateFont(byteArray, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            TextInfo textInfo = new CultureInfo("pt-BR", false).TextInfo;
+            s = textInfo.ToLower(s);
+            s = textInfo.ToTitleCase(s);
+            s = s.Replace(" De ", " de ");
+            s = s.Replace(" Da ", " da ");
+            s = s.Replace(" Do ", " do ");
+            s = s.Replace(" Dos ", " dos ");
+            s = s.Replace(" Das ", " das ");
+            s = s.Replace(" E ", " e ");
+            return s;
         }
     }
-    */
 
 }

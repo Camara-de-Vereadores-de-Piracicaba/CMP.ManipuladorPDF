@@ -1,29 +1,84 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
 
-        public static DocumentoPDF Protocolar(this DocumentoPDF documento, string protocolo, DateTime data, string hash = null, PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA, bool qrcode = true)
+        /// <summary>
+        /// Protocola um documento PDF, carimbando a lateral da página
+        /// </summary>
+        /// <param name="documento">Documento para ser assinado.</param>
+        /// <param name="hash">Hash do documento, para verificação</param>
+        /// <param name="numero">Número do documento</param>
+        /// <param name="posicao">Posição do carimbo. Tipo PosicaoCarimbo.</param>
+        /// <param name="qrcode">Link para o QRCode. O QRCode não é apresentado caso setado como 'null'.</param>
+
+        public static DocumentoPDF Protocolar(this DocumentoPDF documento, string hash = null, string data = null, List<AssinanteDocumento> assinantes = null, string numero = null, PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA, bool qrcode = true)
         {
-            string _data = data.ToString("G");
+            data ??= DateTime.Now.ToString("G");
+            
             List<string> linhas = new List<string>();
 
             string verificar = $"Para verificar a validade deste documento, use o QR Code abaixo ou acesse {documento.ValidadorURL}";
             string link = $"{documento.ValidadorURL}";
 
-            if(hash!= null) 
+            if(hash != null) 
             {
                 verificar += $" e use o código {hash}";
                 link += $"/{hash}";
             }
 
             verificar += ".";
-
             linhas.Add(verificar);
-            linhas.Add($"Documento assinado digitalmente e protocolado na Câmara Municipal de Piracicaba em {_data}, sob o nº {protocolo}.");
+
+            string protocolo = $"Documento assinado digitalmente";
+
+            
+            if (assinantes != null)
+            {
+                protocolo += $" por";
+
+                AssinanteDocumento ultimo = assinantes.LastOrDefault();
+
+                foreach(AssinanteDocumento assinante in assinantes)
+                {
+                    if (assinante.Equals(ultimo))
+                    {
+                        if(assinantes.Count > 1)
+                        {
+                            protocolo += " e";
+                        }
+
+                        protocolo += $" {assinante.Nome}";
+                    }
+                    else
+                    {
+                        protocolo += $" {assinante.Nome}, ";
+                    }
+                }
+
+
+            }
+
+            protocolo += $" e protocolado na Câmara Municipal de Piracicaba";
+
+            if (data != null)
+            {
+                protocolo += $" em {data}";
+            }
+
+            if(numero != null)
+            {
+                protocolo += $", sob o nº {numero}";
+            }
+
+            protocolo += ".";
+
+            linhas.Add(protocolo);
+
             return Carimbo(documento, linhas, posicao, link);
         }
 

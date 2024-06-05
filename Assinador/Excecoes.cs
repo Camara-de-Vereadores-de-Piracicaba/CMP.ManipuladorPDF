@@ -19,6 +19,13 @@ namespace CMP.ManipuladorPDF
         public FontNotExistException(string message, Exception inner) : base(message, inner) { }
     }
 
+    public class HtmlConverterException : Exception
+    {
+        public HtmlConverterException() { }
+        public HtmlConverterException(string message) : base(message) { }
+        public HtmlConverterException(string message, Exception inner) : base(message, inner) { }
+    }
+
     public class CertificateWrongPasswordException : Exception
     {
         public CertificateWrongPasswordException() { }

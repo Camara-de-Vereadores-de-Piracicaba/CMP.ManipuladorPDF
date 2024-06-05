@@ -89,13 +89,13 @@ namespace CMP.ManipuladorPDF
                 .SetInteractive(true);
 
             signerProperties
-                .SetSignatureAppearance(appearance)
                 .SetLocation("Câmara Municipal de Piracicaba")
-                .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.")
-                .SetPageRect(new Rectangle(x,y,220,49));
+                .SetReason("Documento assinado digitalmente nos termos do art. 4º, da Lei nº 14.063, de 23 de setembro de 2020.");
 
             if (pagina > 0)
             {
+                signerProperties.SetSignatureAppearance(appearance);
+                signerProperties.SetPageRect(new Rectangle(x, y, 220, 49));
                 signerProperties.SetPageNumber(pagina);
             }
 

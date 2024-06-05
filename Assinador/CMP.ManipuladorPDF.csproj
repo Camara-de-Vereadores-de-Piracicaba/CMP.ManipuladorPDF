@@ -19,6 +19,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="HtmlAgilityPack" Version="1.11.61" />
 		<PackageReference Include="itext" Version="8.0.4" />
 		<PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.4" />
 		<PackageReference Include="itext.pdfhtml" Version="5.0.4" />

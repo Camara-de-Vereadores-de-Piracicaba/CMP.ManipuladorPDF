@@ -3,6 +3,7 @@ using iText.Bouncycastle.Crypto;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
 using iText.Signatures;
+using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using SysadminsLV.Asn1Parser;
@@ -179,8 +180,6 @@ namespace CMP.Certificados
             CertificateRequest certificateRequest = new CertificateRequest(dadosCertificado, rsaKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             X509Extension ocspExtension = OCSPExtension(PadroesCertificado.OCSP);
             certificateRequest.CertificateExtensions.Add(ocspExtension);
-            //X509Extension crlExtension = CRLExtension(PadroesCertificado.CRL); //Não é necessário.
-            //certificateRequest.CertificateExtensions.Add(crlExtension); //Não é necessário.
             byte[] serial = GenerateSerial();
             DateTimeOffset notBefore = DateTimeOffset.UtcNow;
             DateTimeOffset notAfter = notBefore.AddYears(tempoExpiracao);
@@ -206,6 +205,84 @@ namespace CMP.Certificados
             return new X509Extension("1.3.6.1.5.5.7.1.1", encodedData, false);
         }
 
+        public static Dictionary<string, string[]> GetExtensionsOIDList(X509Certificate2 certificate)
+        {
+            Dictionary<string, string[]> result = new Dictionary<string, string[]>();
+            
+            foreach (X509Extension extension in certificate.Extensions)
+            {
+                var inputStream = new Asn1InputStream(extension.RawData).ReadObject();
+                Queue<Asn1Sequence> queue = new Queue<Asn1Sequence>();
+                List<DerObjectIdentifier> objectIdentifiers = new List<DerObjectIdentifier>();
+                if (inputStream is Asn1Sequence)
+                {
+                    queue.Enqueue(inputStream as Asn1Sequence);
+                }
+                else if (inputStream is DerObjectIdentifier)
+                {
+                    objectIdentifiers.Add(inputStream as DerObjectIdentifier);
+                }
+                while (queue.Any())
+                {
+                    Asn1Sequence sequence = queue.Dequeue();
+                    objectIdentifiers.AddRange(sequence.OfType<DerObjectIdentifier>());
+                    foreach (Asn1Sequence s in sequence.OfType<Asn1Sequence>())
+                    {
+                        queue.Enqueue(s);
+                    }
+                }
+                if (objectIdentifiers.Any())
+                {
+                    string[] oids = string.Join("#", objectIdentifiers.Select(j => j.Id)).Split('#');
+                    result.Add(extension.Oid.Value, oids);
+                }
+                else
+                {
+                    result.Add(extension.Oid.Value, null);
+                }
+            }
+            return result;
+        }
+
+        public static TipoCertificado GetCertificateType(byte[] byteArray)
+        {
+            X509Certificate2 certificate = new X509Certificate2(byteArray);
+            Dictionary<string, string[]> oids = GetExtensionsOIDList(certificate);
+            string[] policy = oids.Where(x => x.Key == "2.5.29.32").FirstOrDefault().Value;
+            TipoCertificado retorno = TipoCertificado.OTHER;
+
+            if (policy != null)
+            {
+                if (policy[0].Contains("2.16.76.1.2.3."))
+                {
+                    retorno = TipoCertificado.A3;
+                }
+                if (policy[0].Contains("2.16.76.1.2.1."))
+                {
+                    retorno = TipoCertificado.A1;
+                }
+            }
+
+            if(
+                certificate.Issuer.Contains("O=Camara Municipal de Piracicaba,") ||
+                certificate.Issuer.Contains("O=CV Piracicaba,")
+            )
+            {
+                retorno = TipoCertificado.CMP;
+            }
+
+            return retorno;
+        }
+        public enum TipoCertificado
+        {
+            CMP = 0,
+            A1 = 1,
+            A2 = 2,
+            A3 = 3,
+            A4 = 4,
+            OTHER = 99
+        }
+
         private static X509Extension CRLExtension(string url)
         {
             byte[] encodedUrl = Encoding.ASCII.GetBytes(url);
@@ -223,6 +300,14 @@ namespace CMP.Certificados
             payload[offset++] = (byte)encodedUrl.Length;
             Buffer.BlockCopy(encodedUrl, 0, payload, offset, encodedUrl.Length);
             return new X509Extension("2.5.29.31", payload, critical: false);
+        }
+
+        public Certificado(
+            byte[] certificado
+        )
+        {
+            ByteArray = certificado;
+            SetAttributes(this);
         }
 
         public Certificado(
