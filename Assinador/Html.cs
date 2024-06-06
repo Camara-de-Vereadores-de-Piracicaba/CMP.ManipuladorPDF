@@ -1,9 +1,13 @@
-﻿using iText.Html2pdf;
+﻿using HtmlAgilityPack;
+using iText.Html2pdf;
+using iText.Html2pdf.Css.Apply;
 using iText.Html2pdf.Resolver.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout.Font;
 using iText.Pdfa;
+using iText.StyledXmlParser.Node;
+using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.IO;
 
@@ -20,6 +24,13 @@ namespace CMP.ManipuladorPDF
             string keywords = "Documento PDF, Câmara Municipal de Piracicaba"
         )
         {
+
+            if(html.Contains("<style scoped>"))
+            {
+                html = html.Replace("<style scoped>", "<style scoped>*{font-family:\"Aptos\"}");
+                html = html.Replace(": %;", ": 0%;");
+            }
+
             using MemoryStream outputStream = new MemoryStream();
             PdfWriter pdfWriter = new PdfWriter(outputStream, new WriterProperties().SetPdfVersion(PdfVersion.PDF_2_0));
             Stream sRGBColorStream = EmbeddedResource.GetStream("sRGB Color Space Profile.icm");
@@ -42,7 +53,6 @@ namespace CMP.ManipuladorPDF
 
             ConverterProperties properties = new ConverterProperties();
             FontProvider fontProvider = new DefaultFontProvider();
-
             int fontCount = fontProvider.AddDirectory(DocumentoPDFConfig.FONT_PATH);
 
             if(fontCount == 0)
@@ -51,6 +61,7 @@ namespace CMP.ManipuladorPDF
             }
 
             properties.SetFontProvider(fontProvider);
+
             try
             {
                 HtmlConverter.ConvertToPdf(html, pdfDocument, properties);
@@ -89,4 +100,6 @@ namespace CMP.ManipuladorPDF
         }
 
     }
+
+
 }

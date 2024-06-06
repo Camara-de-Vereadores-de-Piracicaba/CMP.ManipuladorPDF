@@ -24,10 +24,20 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
+
+            PdfFont font = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
+            PdfFont fontBold = PdfFontFactory.CreateFont(
+                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD}.ttf"),
+                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
+            );
+
             using MemoryStream signatureStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);
-            
+
             var info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
             string _name = info.GetField("CN");
             if (_name == null)
@@ -43,14 +53,7 @@ namespace CMP.ManipuladorPDF
 
             DateTime data = DateTime.Now;
 
-            PdfFont font = PdfFontFactory.CreateFont(
-                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT}.ttf"),
-                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
-            );
-            PdfFont fontBold = PdfFontFactory.CreateFont(
-                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD}.ttf"),
-                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
-            );
+            
 
             Div root = new Div()
                 .SetWidth(220)
@@ -82,6 +85,7 @@ namespace CMP.ManipuladorPDF
             signerProperties.SetFieldName(signatureName);
 
             SignatureFieldAppearance appearance = new SignatureFieldAppearance(signerProperties.GetFieldName());
+
             appearance
                 .SetContent(root)
                 .SetHeight(50)
@@ -163,6 +167,10 @@ namespace CMP.ManipuladorPDF
                 else if (exception.Message.Contains("unexpected end-of-contents marker"))
                 {
                     throw new AssinaturaException("Certificado inválido.");
+                }
+                else if (exception.Message.Contains("All the fonts must be embedded"))
+                {
+                    throw new FontNotExistException(exception.Message);
                 }
 
                 throw new AssinaturaException(exception.Message);

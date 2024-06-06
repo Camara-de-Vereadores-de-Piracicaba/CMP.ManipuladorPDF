@@ -16,7 +16,8 @@ namespace CMP.ManipuladorPDF
 
         private static DocumentoPDF PaginaFinal(
             DocumentoPDF documento,
-            string hash = null
+            string hash = null,
+            List<AssinanteDocumento> assinantes = null
         )
         {
 
@@ -26,7 +27,14 @@ namespace CMP.ManipuladorPDF
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
 
             TimeZoneInfo fuso = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
+
             List<AssinanteDocumento> _signatures = documento.Assinantes().GroupBy(s => s.Email).Select(s => s.First()).ToList();
+
+            if (assinantes != null)
+            {
+                _signatures = assinantes.GroupBy(s => s.Email).Select(s => s.First()).ToList();
+            }
+
             string signatures = "";
             string lsv = "";
             foreach (AssinanteDocumento signature in _signatures)
@@ -205,10 +213,11 @@ namespace CMP.ManipuladorPDF
 
         public static DocumentoPDF AdicionarDetalhesAoFinal(
             this DocumentoPDF documento,
-            string hash
+            string hash = null,
+            List<AssinanteDocumento> assinantes = null
         )
         {
-            return PaginaFinal(documento, hash);
+            return PaginaFinal(documento, hash, assinantes);
         }
 
     }
