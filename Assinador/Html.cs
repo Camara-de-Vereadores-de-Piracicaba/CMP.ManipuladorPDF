@@ -30,11 +30,8 @@ namespace CMP.ManipuladorPDF
             using MemoryStream outputStream = new MemoryStream();
             PdfWriter pdfWriter = new PdfWriter(outputStream, new WriterProperties().SetPdfVersion(PdfVersion.PDF_2_0));
             Stream sRGBColorStream = EmbeddedResource.GetStream("sRGB Color Space Profile.icm");
-            PdfADocument pdfDocument = new PdfADocument(
-                pdfWriter, 
-                PdfAConformanceLevel.PDF_A_4,
-                new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream)
-            );
+            PdfOutputIntent intent = new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream);
+            PdfADocument pdfDocument = new PdfADocument(pdfWriter, PdfAConformanceLevel.PDF_A_4,intent);
             pdfDocument.SetDefaultPageSize(PageSize.A4);
             pdfDocument.GetCatalog().SetLang(new PdfString("pt-BR"));
             pdfDocument.SetTagged();

@@ -10,6 +10,7 @@ namespace CMP.ManipuladorPDF
     {
         public byte[] ByteArray { get; set; }
         public string ValidadorURL { get; set; } = "https://validar.camarapiracicaba.sp.gov.br";
+        public string Titulo { get; set; } = null;
 
         /// <summary>
         /// Cria uma referência a um documento PDF.

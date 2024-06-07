@@ -16,7 +16,7 @@ using System.Drawing.Imaging;
 using System.Drawing;
 using Rectangle = iText.Kernel.Geom.Rectangle;
 using Image = iText.Layout.Element.Image;
-using iText.Kernel.Geom;
+using IColor = iText.Kernel.Colors;
 
 namespace CMP.ManipuladorPDF
 {
@@ -36,6 +36,10 @@ namespace CMP.ManipuladorPDF
             string qrcode = null,
             int altura = 10
         ){
+
+            if (documento.TemCarimboAntigo())
+              return documento;
+
             int tamanhoQRCode = 40;
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);

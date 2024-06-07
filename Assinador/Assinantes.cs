@@ -8,6 +8,9 @@ using System.Linq;
 using static CMP.Certificados.Certificado;
 using Org.BouncyCastle.Asn1;
 using System.Text;
+using iText.Forms;
+using iText.Forms.Fields;
+using iText.Kernel.Geom;
 
 namespace CMP.ManipuladorPDF
 {
@@ -51,7 +54,8 @@ namespace CMP.ManipuladorPDF
                         for (int i = 0; i <= sequence.Count; i++)
                         {
                             rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
-                            if(rfcemail.Contains('@')) break;
+                            if(rfcemail.Contains('@')) 
+                                break;
                         }
 
                         email ??= rfcemail;
@@ -70,6 +74,7 @@ namespace CMP.ManipuladorPDF
 
                     assinantes.Add(new AssinanteDocumento()
                     {
+                        Documento = documento,
                         Certificado = certificate,
                         Nome = name,
                         Email = email,
@@ -82,6 +87,85 @@ namespace CMP.ManipuladorPDF
             }
 
             return assinantes;
+        }
+
+        private static List<CampoAssinatura> ListarCamposDeAssinatura(
+            this DocumentoPDF documento
+        )
+        {
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            PdfDocument pdfDocument = new PdfDocument(pdfReader);
+            PdfAcroForm form = PdfAcroForm.GetAcroForm(pdfDocument, false);
+
+            List <CampoAssinatura> list = new List<CampoAssinatura>();
+
+            IDictionary<String, PdfFormField> fields = form.GetAllFormFields();
+            foreach (var fieldEntry in fields)
+            {
+                PdfFormField field = fieldEntry.Value;
+                if (field.GetFormType() == PdfName.Sig)
+                {
+                    PdfArray positions = field.GetWidgets().First().GetRectangle();
+
+                    float X = float.Parse(positions.Get(0).ToString());
+                    float Y = float.Parse(positions.Get(1).ToString());
+                    float W = float.Parse(positions.Get(2).ToString());
+                    float H = float.Parse(positions.Get(3).ToString());
+
+                    
+
+                    CampoAssinatura _field = new CampoAssinatura()
+                    {
+                        Nome = fieldEntry.Key,
+                        X = X,
+                        Y = Y,
+                        W = W - X,
+                        H = H - Y
+                    };
+
+                    list.Add(_field);
+                }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Devolve todos os campos de assinatura de um documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento cujos campos de assinatura serão devolvidos.</param>
+
+        public static List<CampoAssinatura> ObterCamposDeAssinatura(
+            this DocumentoPDF documento
+        )
+        {
+            return documento.ListarCamposDeAssinatura();
+        }
+
+        /// <summary>
+        /// Checa se um PDF tem um carimbo lateral antigo
+        /// </summary>
+        /// <param name="documento">Documento para checar.</param>
+
+        public static bool TemCarimboAntigo(
+            this DocumentoPDF documento
+        )
+        {
+            List<CampoAssinatura> campos = documento.ListarCamposDeAssinatura();
+            foreach(CampoAssinatura campo in campos)
+            {
+                if (
+                    campo.X == 535 &&
+                    campo.Y == 30 &&
+                    campo.W == 50 &&
+                    campo.H == 800
+                )
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -100,6 +184,7 @@ namespace CMP.ManipuladorPDF
 
     public class AssinanteDocumento
     {
+        public DocumentoPDF Documento { get; set; }
         public IX509Certificate Certificado { get; set; }
         public string Nome { get; set; }
         public string Email { get; set; }
@@ -109,7 +194,13 @@ namespace CMP.ManipuladorPDF
         public TipoCertificado Tipo { get; set; }
     }
 
+    public class CampoAssinatura
+    {
+        public string Nome { get; set; }
+        public float X { get; set; }
+        public float Y { get; set; }
+        public float W { get; set; }
+        public float H { get; set; }
+    }
+
 }
-
-
-

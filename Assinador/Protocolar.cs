@@ -34,10 +34,9 @@ namespace CMP.ManipuladorPDF
             verificar += ".";
             linhas.Add(verificar);
 
-            string protocolo = $"Documento assinado digitalmente";
+            string protocolo = $"Este documento é uma cópia digital e foi assinado digitalmente.";
 
-            
-            if (assinantes != null)
+            if (assinantes != null && assinantes?[0].Nome!="")
             {
                 protocolo += $" por";
 
@@ -63,7 +62,7 @@ namespace CMP.ManipuladorPDF
 
             }
 
-            protocolo += $" e protocolado na Câmara Municipal de Piracicaba";
+            protocolo += $" Protocolado na Câmara Municipal de Piracicaba";
 
             if (data != null)
             {

@@ -9,10 +9,12 @@ using System.Diagnostics;
 string path = "C:\\arquivos\\testepdf\\";
 string output = "final.pdf";
 
-byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
-//byte[] arr = File.ReadAllBytes($"{path}final.pdf");
+//byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
+byte[] arr = File.ReadAllBytes($"{path}7624.pdf");
 
 DocumentoPDF documento = new DocumentoPDF(arr);
+
+//Console.WriteLine(documento.TemCarimboAntigo());
 
 //documento.ObterFontesIncorporadas();
 
@@ -46,7 +48,6 @@ await keila.AdicionarOCSP();
 Adobe.Acrobat.FecharAcrobat();
 
 documento
-    .ConverterParaPDFA()
     //.Juntar("C:\\testepdf\\tese.pdf")
     //.Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
@@ -55,6 +56,7 @@ documento
     //.Assinar(keila, 1, 20, 770)
     //.AssinarLegado(keila,1, 100, 400)
     .Assinar(keila,0)
+    .Protocolar("AAAAA")
     //.AdicionarDetalhesAoFinal("JAHSOMWE")
     .Salvar($"{path}{output}");
 

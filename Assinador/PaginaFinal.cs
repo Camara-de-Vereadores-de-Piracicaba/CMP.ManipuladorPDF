@@ -1,5 +1,4 @@
 ﻿using iText.Kernel.Pdf;
-using iText.Signatures;
 using QRCoder;
 using System.Collections.Generic;
 using System.Drawing.Imaging;
@@ -7,7 +6,6 @@ using System.Drawing;
 using System.IO;
 using System;
 using System.Linq;
-using static QRCoder.PayloadGenerator;
 
 namespace CMP.ManipuladorPDF
 {
@@ -30,9 +28,12 @@ namespace CMP.ManipuladorPDF
 
             List<AssinanteDocumento> _signatures = documento.Assinantes().GroupBy(s => s.Email).Select(s => s.First()).ToList();
 
+            string title = "Este documento foi assinado digitalmente pelos seguintes signatários:";
+
             if (assinantes != null)
             {
-                _signatures = assinantes.GroupBy(s => s.Email).Select(s => s.First()).ToList();
+                title = "Estes documentos foram assinados digitalmente pelos seguintes signatários:";
+                _signatures = assinantes;
             }
 
             string signatures = "";
@@ -40,11 +41,19 @@ namespace CMP.ManipuladorPDF
             foreach (AssinanteDocumento signature in _signatures)
             {
 
+                string docTitle = "";
+
+                if (assinantes != null && signature.Documento.Titulo != null)
+                {
+                    docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
+                }
+
                 if (signature.Nome == "Piracicaba Camara")
                 {
                     signature.Nome = "Câmara Municipal de Piracicaba";
                     signature.Email = "Certificado da entidade";
                 }
+
                 if (signature.Nome == "Wagner Alexandre de Oliveira" && signature.Email == "mariane@camarapiracicaba.sp.gov.br")
                 {
                     signature.Email = "wagnao@camarapiracicaba.sp.gov.br";
@@ -57,6 +66,7 @@ namespace CMP.ManipuladorPDF
                         <svg xmlns=""http://www.w3.org/2000/svg"" height=""24"" viewBox=""0 -960 960 960"" width=""24""><path d=""M563-491q73-54 114-118.5T718-738q0-32-10.5-47T679-800q-47 0-83 79.5T560-541q0 14 .5 26.5T563-491ZM120-120v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80Zm160 0v-80h80v80h-80ZM136-280l-56-56 64-64-64-64 56-56 64 64 64-64 56 56-64 64 64 64-56 56-64-64-64 64Zm482-40q-30 0-55-11.5T520-369q-25 14-51.5 25T414-322l-28-75q28-10 53.5-21.5T489-443q-5-22-7.5-48t-2.5-56q0-144 57-238.5T679-880q52 0 85 38.5T797-734q0 86-54.5 170T591-413q7 7 14.5 10.5T621-399q26 0 60.5-33t62.5-87l73 34q-7 17-11 41t1 42q10-5 23.5-17t27.5-30l63 49q-26 36-60 58t-63 22q-21 0-37.5-12.5T733-371q-28 25-57 38t-58 13Z""/></svg>
                     </div>
                     <div class=""signature-info"">
+                        {docTitle}
                         <h1>{signature.Nome}</h1>
                         <h2>{signature.Email}</h2>
                         <h4>Assinado no dia {date}</h4>
@@ -180,7 +190,7 @@ namespace CMP.ManipuladorPDF
                     <img src=""https://sistemas.camarapiracicaba.sp.gov.br/arquivos/imagens/horizontal.png"" />
                 </div>
                 <div id=""main"">
-                    <h1 class=""title"">Este documento foi assinado digitalmente pelos seguintes signatários:</h1>
+                    <h1 class=""title"">{title}</h1>
                     <div class=""signatures"">{signatures}</div>
                     <div class=""signatures"">{lsv}</div>
                 </div>
