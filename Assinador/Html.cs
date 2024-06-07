@@ -1,13 +1,9 @@
-﻿using HtmlAgilityPack;
-using iText.Html2pdf;
-using iText.Html2pdf.Css.Apply;
+﻿using iText.Html2pdf;
 using iText.Html2pdf.Resolver.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout.Font;
 using iText.Pdfa;
-using iText.StyledXmlParser.Node;
-using Org.BouncyCastle.Crypto.Generators;
 using System;
 using System.IO;
 
@@ -100,6 +96,5 @@ namespace CMP.ManipuladorPDF
         }
 
     }
-
 
 }

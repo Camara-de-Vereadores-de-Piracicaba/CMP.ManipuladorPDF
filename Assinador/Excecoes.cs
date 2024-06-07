@@ -5,11 +5,11 @@ using System.Text;
 namespace CMP.ManipuladorPDF
 {
 
-    public class AssinaturaException : Exception
+    public class SignatureException : Exception
     {
-        public AssinaturaException(){}
-        public AssinaturaException(string message) : base(message) {}
-        public AssinaturaException(string message, Exception inner) : base(message, inner) {}
+        public SignatureException(){}
+        public SignatureException(string message) : base(message) {}
+        public SignatureException(string message, Exception inner) : base(message, inner) {}
     }
 
     public class FontNotExistException : Exception
@@ -44,6 +44,16 @@ namespace CMP.ManipuladorPDF
     public class FontDirectoryEmptyException : Exception
     {
         public FontDirectoryEmptyException() { }
+    }
+
+    public class NotPDFADocumentException : Exception
+    {
+        public NotPDFADocumentException() { }
+    }
+
+    public class InvalidPDFDocumentException : Exception
+    {
+        public InvalidPDFDocumentException() { }
     }
 
 }

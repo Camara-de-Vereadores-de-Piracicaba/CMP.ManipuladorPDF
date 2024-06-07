@@ -22,6 +22,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace CMP.ManipuladorPDFLegado
 {
+    [Obsolete]
     public static class AssinarPDF
     {
         
@@ -227,6 +228,7 @@ namespace CMP.ManipuladorPDFLegado
                 {
                     chain[k] = new X509CertificateBC(ce[k].Certificate);
                 }
+
                 pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
                 var dadosCertificado = pk12.GetCertificate(alias);
@@ -276,7 +278,7 @@ namespace CMP.ManipuladorPDFLegado
 
             if (rotate.HasValue)
             {
-                appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.GRAPHIC_AND_DESCRIPTION);
+                appearance.SetRenderingMode(PdfSignatureAppearance.RenderingMode.DESCRIPTION);
 
                 PdfFormXObject layer2Object = appearance.GetLayer2();
                 Rectangle rect = layer2Object.GetBBox().ToRectangle();
@@ -300,6 +302,7 @@ namespace CMP.ManipuladorPDFLegado
                 {
                     text.SetFixedPosition(50, 5, height - 100);
                 }
+
                 appearanceCanvas.Add(text);
 
                 if (!string.IsNullOrEmpty(qrData))
@@ -515,7 +518,6 @@ namespace CMP.ManipuladorPDFLegado
 
                 using PdfReader reader = new PdfReader(fs);
 
-
                 return AssinarInternamente(certificado, senha, reader, mostrarCarimbo: false);
             }
             catch (Exception ex)
@@ -568,7 +570,6 @@ namespace CMP.ManipuladorPDFLegado
 
             char[] PASSWORD = senha.ToCharArray();
 
-
             Pkcs12Store pk12 = new Pkcs12StoreBuilder().Build();
             pk12.Load(new MemoryStream(certificado), PASSWORD);
             string alias = null;
@@ -588,8 +589,8 @@ namespace CMP.ManipuladorPDFLegado
             {
                 chain[k] = new X509CertificateBC(ce[k].Certificate);
             }
-            pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
+            pks = new PrivateKeySignature(new PrivateKeyBC(pk), DigestAlgorithms.SHA256);
 
             using MemoryStream outputStream = new MemoryStream();
             PdfSigner signer = new PdfSigner(reader, outputStream, new StampingProperties().UseAppendMode());
@@ -644,6 +645,7 @@ namespace CMP.ManipuladorPDFLegado
                     {
                         text.SetFixedPosition(50, 5, height - 100);
                     }
+
                     appearanceCanvas.Add(text);
 
                     if (!string.IsNullOrEmpty(qrData))
@@ -662,6 +664,7 @@ namespace CMP.ManipuladorPDFLegado
                     appearance.SetLayer2Font(ObterPdfFont.Obter());
                 }
             }
+
             string signatureName = signer.GetNewSigFieldName();
             signer.SetFieldName(signatureName);
             signer.SetSignDate(dataAssinatura.Value);

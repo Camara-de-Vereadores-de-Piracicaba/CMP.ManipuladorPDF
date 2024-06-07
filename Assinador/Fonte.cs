@@ -1,6 +1,7 @@
 ﻿using iText.Kernel.Font;
 using iText.Kernel.Pdf;
 using System.IO;
+using System.Collections.Generic;
 
 namespace CMP.ManipuladorPDF
 {
@@ -25,6 +26,29 @@ namespace CMP.ManipuladorPDF
             return new DocumentoPDF(outputStream.ToArray());
         }
 
+        private static List<string> ObterTodasAsFontes(
+            DocumentoPDF documento
+        )
+        {
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            PdfDocument pdfDocument = new PdfDocument(pdfReader);
+            List<string> list = new List<string>();
+            for (int pageNum = 1; pageNum <= pdfDocument.GetNumberOfPages(); pageNum++)
+            {
+                PdfPage page = pdfDocument.GetPage(pageNum);
+                PdfResources resources = page.GetResources();
+                foreach (PdfName fontName in resources.GetResourceNames(PdfName.Font))
+                {
+                    PdfDictionary dictionary = (PdfDictionary)resources.GetResourceObject(PdfName.Font, fontName);
+                    PdfFont font = PdfFontFactory.CreateFont(dictionary);
+                    list.Add(font.GetFontProgram().GetFontNames().GetFontName());
+                }
+            }
+
+            return list;
+        }
+
         /// <summary>
         /// Incorpora uma fonte a um documento PDF.
         /// </summary>
@@ -37,6 +61,18 @@ namespace CMP.ManipuladorPDF
         )
         {
             return IncorporarFonteNoPDF(documento, fonte);
+        }
+
+        /// <summary>
+        /// Obtém todas as fontes de um documento PDF
+        /// </summary>
+        /// <param name="documento">Documento cujas fontes serão obtidas</param>
+        /// <returns>List</returns>
+        public static List<string> ObterFontesIncorporadas(
+           this DocumentoPDF documento
+        )
+        {
+            return ObterTodasAsFontes(documento);
         }
 
     }
@@ -55,5 +91,8 @@ namespace CMP.ManipuladorPDF
         }
 
     }
+
+
+
 
 }
