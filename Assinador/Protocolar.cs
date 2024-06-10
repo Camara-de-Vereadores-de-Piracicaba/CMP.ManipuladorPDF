@@ -16,7 +16,15 @@ namespace CMP.ManipuladorPDF
         /// <param name="posicao">Posição do carimbo. Tipo PosicaoCarimbo.</param>
         /// <param name="qrcode">Link para o QRCode. O QRCode não é apresentado caso setado como 'null'.</param>
 
-        public static DocumentoPDF Protocolar(this DocumentoPDF documento, string hash = null, string data = null, List<AssinanteDocumento> assinantes = null, string numero = null, PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA, bool qrcode = true)
+        public static DocumentoPDF Protocolar(
+            this DocumentoPDF documento, 
+            string hash = null, 
+            string data = null, 
+            List<AssinanteDocumento> assinantes = null, 
+            string numero = null, 
+            PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA, 
+            bool qrcode = true
+        )
         {
             data ??= DateTime.Now.ToString("G");
             
@@ -36,7 +44,7 @@ namespace CMP.ManipuladorPDF
 
             string protocolo = $"Este documento é uma cópia digital e foi assinado digitalmente.";
 
-            if (assinantes != null && assinantes?[0].Nome!="")
+            if (assinantes != null && assinantes.Any() && assinantes?[0].Nome!="")
             {
                 protocolo += $" por";
 

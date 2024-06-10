@@ -11,6 +11,7 @@ using System.Text;
 using iText.Forms;
 using iText.Forms.Fields;
 using iText.Kernel.Geom;
+using iText.Kernel.Pdf.Annot;
 
 namespace CMP.ManipuladorPDF
 {
@@ -100,31 +101,41 @@ namespace CMP.ManipuladorPDF
 
             List <CampoAssinatura> list = new List<CampoAssinatura>();
 
-            IDictionary<String, PdfFormField> fields = form.GetAllFormFields();
-            foreach (var fieldEntry in fields)
+            if (form != null)
             {
-                PdfFormField field = fieldEntry.Value;
-                if (field.GetFormType() == PdfName.Sig)
+                IDictionary<String, PdfFormField> fields = form.GetAllFormFields();
+                foreach (var fieldEntry in fields)
                 {
-                    PdfArray positions = field.GetWidgets().First().GetRectangle();
-
-                    float X = float.Parse(positions.Get(0).ToString());
-                    float Y = float.Parse(positions.Get(1).ToString());
-                    float W = float.Parse(positions.Get(2).ToString());
-                    float H = float.Parse(positions.Get(3).ToString());
-
-                    
-
-                    CampoAssinatura _field = new CampoAssinatura()
+                    PdfFormField field = fieldEntry.Value;
+                    if (field.GetFormType() == PdfName.Sig)
                     {
-                        Nome = fieldEntry.Key,
-                        X = X,
-                        Y = Y,
-                        W = W - X,
-                        H = H - Y
-                    };
+                        PdfWidgetAnnotation annotation = field.GetWidgets().FirstOrDefault();
 
-                    list.Add(_field);
+                        if (annotation != null)
+                        {
+                            PdfArray positions = annotation.GetRectangle();
+
+                            if (positions != null)
+                            {
+
+                                float X = float.Parse(positions.Get(0).ToString());
+                                float Y = float.Parse(positions.Get(1).ToString());
+                                float W = float.Parse(positions.Get(2).ToString());
+                                float H = float.Parse(positions.Get(3).ToString());
+
+                                CampoAssinatura _field = new CampoAssinatura()
+                                {
+                                    Nome = fieldEntry.Key,
+                                    X = X,
+                                    Y = Y,
+                                    W = W - X,
+                                    H = H - Y
+                                };
+
+                                list.Add(_field);
+                            }
+                        }
+                    }
                 }
             }
 
