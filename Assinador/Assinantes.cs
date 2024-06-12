@@ -68,8 +68,8 @@ namespace CMP.ManipuladorPDF
                         certificate = signature.GetCertificates().First();
                         info = CertificateInfo.GetSubjectFields(certificate);
                         issuer = CertificateInfo.GetIssuerFields(certificate);
-                        name = info.GetField("CN").ToTitleCase();
-                        email = info.GetField("E").ToLower();
+                        name = info.GetField("CN")?.ToTitleCase();
+                        email = info.GetField("E")?.ToLower();
                         iss = issuer.GetField("CN");
                     }
 

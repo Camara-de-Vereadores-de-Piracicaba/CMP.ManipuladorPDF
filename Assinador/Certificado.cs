@@ -16,6 +16,10 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateRequest = System.Security.Cryptography.X509Certificates.CertificateRequest;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
+using X509CertificateParser = Org.BouncyCastle.X509.X509CertificateParser;
+using X509CertificateStructure = Org.BouncyCastle.Asn1.X509.X509CertificateStructure;
 
 namespace CMP.Certificados
 {
@@ -23,11 +27,12 @@ namespace CMP.Certificados
     public class Certificado
     {
         public byte[] ByteArray { get; set; }
-        public string Senha { get; set; }
+        public string Senha { get; set; } = null;
         public string Serial { get; set; }
         public string Atributos { get; set; }
         public DateTime Vencimento { get; set; }
-        public PrivateKeySignature PKS { get; set; }
+        public PrivateKeySignature PKS { get; set; } = null;
+        public X509Certificate2RSASignature RSASignature { get; set; } = null;
         public IX509Certificate[] Chain { get; set; }
 
         private static Pkcs12Store GetStore(Certificado certificado)
@@ -44,6 +49,7 @@ namespace CMP.Certificados
                 {
                     throw new CertificateWrongPasswordException();
                 }
+                throw new Exception(exception.Message);
             }
 
             return store;
@@ -61,7 +67,7 @@ namespace CMP.Certificados
 
             if (alias == null)
             {
-                throw new CertificateInvalidException();
+                throw new CertificateWithoutAliasException();
             }
 
             return alias;
@@ -90,6 +96,30 @@ namespace CMP.Certificados
 
             IX509Certificate[] chain = _chain.ToArray();
             return chain;
+        }
+
+        private static Certificado GetExternalCertificate(string name)
+        {
+            X509Store store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            store.Open(OpenFlags.ReadOnly);
+            string distinguishedName = new X500DistinguishedName(name).Name;
+            X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, distinguishedName, false);
+            if (collection.Count == 0)
+                throw new CertificateStoreNotFoundException();
+
+            List<X509CertificateBC> _chain = new List<X509CertificateBC>();
+            X509Certificate2 certificate = collection[0];
+            X509Certificate _bcCertificate = new X509CertificateParser().ReadCertificate(certificate.GetRawCertData());
+            _chain.Add(new X509CertificateBC(_bcCertificate));
+            IX509Certificate[] chain = _chain.ToArray();
+            X509Certificate2RSASignature signature = new X509Certificate2RSASignature(certificate);
+            return new Certificado()
+            {
+                ByteArray = certificate.GetRawCertData(),
+                RSASignature = signature,
+                Chain = chain
+            };
+
         }
 
         internal byte[] GenerateSerial()
@@ -302,6 +332,18 @@ namespace CMP.Certificados
             return new X509Extension("2.5.29.31", payload, critical: false);
         }
 
+        public Certificado() { }
+
+        public Certificado(
+            string nome
+        )
+        {
+            Certificado _certificado = GetExternalCertificate(nome);
+            ByteArray = _certificado.ByteArray;
+            Chain = _certificado.Chain;
+            RSASignature = _certificado.RSASignature;
+        }
+
         public Certificado(
             byte[] certificado
         )
@@ -501,4 +543,42 @@ namespace CMP.Certificados
         }
 
     }
+
+    public class X509Certificate2RSASignature : IExternalSignature
+    {
+        public X509Certificate2RSASignature(X509Certificate2 certificate)
+        {
+            this.certificate = certificate;
+        }
+
+        public Org.BouncyCastle.X509.X509Certificate[] GetChain()
+        {
+            var bcCertificate = new Org.BouncyCastle.X509.X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
+            return new Org.BouncyCastle.X509.X509Certificate[] { bcCertificate };
+        }
+
+        public string GetSignatureAlgorithmName()
+        {
+            return "RSA";
+        }
+
+        public ISignatureMechanismParams GetSignatureMechanismParameters()
+        {
+            return null;
+        }
+
+        public string GetDigestAlgorithmName()
+        {
+            return "SHA512";
+        }
+
+        public byte[] Sign(byte[] message)
+        {
+            using RSA rsa = certificate.GetRSAPrivateKey();
+            return rsa.SignData(message, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
+        }
+
+        X509Certificate2 certificate;
+    }
+
 }

@@ -5,13 +5,13 @@ using CMP.Certificados;
 using iText.Kernel.Geom;
 using iText.Layout.Element;
 using iText.IO.Image;
-using iText.Forms.Form.Element;
 using System;
 using iText.Layout.Renderer;
 using iText.Kernel.Font;
 using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
+using iText.Forms.Form.Element;
 
 namespace CMP.ManipuladorPDF
 {
@@ -73,21 +73,43 @@ namespace CMP.ManipuladorPDF
 
             try
             {
-                if (profile == "LT")
+                if (certificado.PKS != null)
                 {
-                    padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                    if (profile == "LT")
+                    {
+                        padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                    }
+                    else if (profile == "T")
+                    {
+                        padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                    }
+                    else if (profile == "B")
+                    {
+                        padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
+                    }
+                    else
+                    {
+                        padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                    }
                 }
-                else if (profile == "T")
+                else if(certificado.RSASignature!=null)
                 {
-                    padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-                }
-                else if (profile == "B")
-                {
-                    padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
-                }
-                else
-                {
-                    padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                    if (profile == "LT")
+                    {
+                        padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                    }
+                    else if (profile == "T")
+                    {
+                        padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                    }
+                    else if (profile == "B")
+                    {
+                        padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.RSASignature);
+                    }
+                    else
+                    {
+                        padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                    }
                 }
             }catch(Exception exception)
             {
@@ -193,7 +215,12 @@ namespace CMP.ManipuladorPDF
         {
             try
             {
-                Certificado _certificado = new Certificado(certificado, senha);
+                Certificado _certificado = certificado;
+                if (senha!=null)
+                {
+                    _certificado = new Certificado(certificado, senha);
+                }
+                
                 return AssinarDocumento(documento, _certificado, x, y, pagina, profile);
             }
             catch(Exception exception)
@@ -268,7 +295,12 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
+            if (certificado.Senha == null)
+            {
+                return ProcessarAssinatura(documento, certificado, certificado.Senha, pagina, x, y, profile);
+            }
             return ProcessarAssinatura(documento, certificado.ByteArray, certificado.Senha, pagina, x, y, profile);
+
         }
 
         /// <summary>

@@ -36,6 +36,16 @@ namespace CMP.ManipuladorPDF
         public CertificateNotFoundException() { }
     }
 
+    public class CertificateStoreNotFoundException : Exception
+    {
+        public CertificateStoreNotFoundException() { }
+    }
+
+    public class CertificateWithoutAliasException : Exception
+    {
+        public CertificateWithoutAliasException() { }
+    }
+
     public class CertificateInvalidException : Exception
     {
         public CertificateInvalidException() { }
