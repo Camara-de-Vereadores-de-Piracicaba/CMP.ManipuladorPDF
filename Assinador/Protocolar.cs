@@ -42,11 +42,11 @@ namespace CMP.ManipuladorPDF
             verificar += ".";
             linhas.Add(verificar);
 
-            string protocolo = $"Este documento é uma cópia digital e foi assinado digitalmente.";
+            string protocolo = $"Este documento é uma cópia digital";
 
             if (assinantes != null && assinantes.Any() && assinantes?[0].Nome!="")
             {
-                protocolo += $" por";
+                protocolo += $" e foi assinado digitalmente por";
 
                 AssinanteDocumento ultimo = assinantes.LastOrDefault();
 
@@ -67,10 +67,9 @@ namespace CMP.ManipuladorPDF
                     }
                 }
 
-
             }
 
-            protocolo += $" Protocolado na Câmara Municipal de Piracicaba";
+            protocolo += $". Protocolado na Câmara Municipal de Piracicaba";
 
             if (data != null)
             {

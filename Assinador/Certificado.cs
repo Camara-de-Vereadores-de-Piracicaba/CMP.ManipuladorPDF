@@ -241,46 +241,50 @@ namespace CMP.Certificados
             
             foreach (X509Extension extension in certificate.Extensions)
             {
-                var inputStream = new Asn1InputStream(extension.RawData).ReadObject();
-                Queue<Asn1Sequence> queue = new Queue<Asn1Sequence>();
-                List<DerObjectIdentifier> objectIdentifiers = new List<DerObjectIdentifier>();
-                if (inputStream is Asn1Sequence)
+                try
                 {
-                    queue.Enqueue(inputStream as Asn1Sequence);
-                }
-                else if (inputStream is DerObjectIdentifier)
-                {
-                    objectIdentifiers.Add(inputStream as DerObjectIdentifier);
-                }
-                while (queue.Any())
-                {
-                    Asn1Sequence sequence = queue.Dequeue();
-                    objectIdentifiers.AddRange(sequence.OfType<DerObjectIdentifier>());
-                    foreach (Asn1Sequence s in sequence.OfType<Asn1Sequence>())
+                    var inputStream = new Asn1InputStream(extension.RawData).ReadObject();
+                    Queue<Asn1Sequence> queue = new Queue<Asn1Sequence>();
+                    List<DerObjectIdentifier> objectIdentifiers = new List<DerObjectIdentifier>();
+                    if (inputStream is Asn1Sequence)
                     {
-                        queue.Enqueue(s);
+                        queue.Enqueue(inputStream as Asn1Sequence);
+                    }
+                    else if (inputStream is DerObjectIdentifier)
+                    {
+                        objectIdentifiers.Add(inputStream as DerObjectIdentifier);
+                    }
+                    while (queue.Any())
+                    {
+                        Asn1Sequence sequence = queue.Dequeue();
+                        objectIdentifiers.AddRange(sequence.OfType<DerObjectIdentifier>());
+                        foreach (Asn1Sequence s in sequence.OfType<Asn1Sequence>())
+                        {
+                            queue.Enqueue(s);
+                        }
+                    }
+                    if (objectIdentifiers.Any())
+                    {
+                        string[] oids = string.Join("#", objectIdentifiers.Select(j => j.Id)).Split('#');
+                        result.Add(extension.Oid.Value, oids);
+                    }
+                    else
+                    {
+                        result.Add(extension.Oid.Value, null);
                     }
                 }
-                if (objectIdentifiers.Any())
-                {
-                    string[] oids = string.Join("#", objectIdentifiers.Select(j => j.Id)).Split('#');
-                    result.Add(extension.Oid.Value, oids);
-                }
-                else
-                {
-                    result.Add(extension.Oid.Value, null);
-                }
+                catch (Exception exception){}
             }
             return result;
         }
 
         public static TipoCertificado GetCertificateType(byte[] byteArray)
         {
+            TipoCertificado retorno = TipoCertificado.OTHER;
+
             X509Certificate2 certificate = new X509Certificate2(byteArray);
             Dictionary<string, string[]> oids = GetExtensionsOIDList(certificate);
             string[] policy = oids.Where(x => x.Key == "2.5.29.32").FirstOrDefault().Value;
-            TipoCertificado retorno = TipoCertificado.OTHER;
-
             if (policy != null)
             {
                 if (policy[0].Contains("2.16.76.1.2.3."))
@@ -293,14 +297,13 @@ namespace CMP.Certificados
                 }
             }
 
-            if(
+            if (
                 certificate.Issuer.Contains("O=Camara Municipal de Piracicaba,") ||
                 certificate.Issuer.Contains("O=CV Piracicaba,")
             )
             {
                 retorno = TipoCertificado.CMP;
             }
-
             return retorno;
         }
         public enum TipoCertificado

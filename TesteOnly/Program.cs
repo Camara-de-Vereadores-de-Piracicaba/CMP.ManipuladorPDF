@@ -10,7 +10,7 @@ string path = "C:\\arquivos\\testepdf\\";
 string output = "final.pdf";
 
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
-byte[] arr = File.ReadAllBytes($"{path}teste.pdf");
+byte[] arr = File.ReadAllBytes($"{path}test3.pdf");
 
 DocumentoPDF documento = new DocumentoPDF(arr);
 
@@ -39,10 +39,10 @@ DocumentoPDF documento = new DocumentoPDF(arr);
 //Certificado certificado = new Certificado(raiz, "KEILA CRISTINA DE OLIVEIRA BARBOSA", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
 //certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
-//Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
-//await keila.AdicionarOCSP();
+Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
+await keila.AdicionarOCSP();
 
-Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
+//Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
 //await keila.AdicionarOCSP();
 
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");

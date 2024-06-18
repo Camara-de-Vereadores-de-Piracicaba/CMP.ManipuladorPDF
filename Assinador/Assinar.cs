@@ -32,8 +32,6 @@ namespace CMP.ManipuladorPDF
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);
 
-
-
             var info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
             string _name = info.GetField("CN");
             _name ??= "";
@@ -205,8 +203,7 @@ namespace CMP.ManipuladorPDF
 
         private static DocumentoPDF ProcessarAssinatura(
             DocumentoPDF documento,
-            dynamic certificado,
-            string senha,
+            Certificado certificado,
             int pagina = 1,
             int x = 0,
             int y = 0,
@@ -215,13 +212,7 @@ namespace CMP.ManipuladorPDF
         {
             try
             {
-                Certificado _certificado = certificado;
-                if (senha!=null)
-                {
-                    _certificado = new Certificado(certificado, senha);
-                }
-                
-                return AssinarDocumento(documento, _certificado, x, y, pagina, profile);
+                return AssinarDocumento(documento, certificado, x, y, pagina, profile);
             }
             catch(Exception exception)
             {
@@ -295,12 +286,7 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
-            if (certificado.Senha == null)
-            {
-                return ProcessarAssinatura(documento, certificado, certificado.Senha, pagina, x, y, profile);
-            }
-            return ProcessarAssinatura(documento, certificado.ByteArray, certificado.Senha, pagina, x, y, profile);
-
+            return ProcessarAssinatura(documento, certificado, pagina, x, y, profile);
         }
 
         /// <summary>
@@ -323,7 +309,20 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
+
+            Certificado _certificado = new Certificado();
+            try
+            {
+                _certificado = new Certificado(certificado, senha);
+            }
+            catch (Exception exception)
+            {
+                if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
+                    throw new CertificateWrongPasswordException();
+            }
+
+            return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
+
         }
 
         /// <summary>
@@ -346,7 +345,17 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
+            Certificado _certificado = new Certificado();
+            try
+            {
+                _certificado = new Certificado(certificado, senha);
+            }
+            catch (Exception exception)
+            {
+                if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
+                    throw new CertificateWrongPasswordException();
+            }
+            return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
         }
 
         /// <summary>
@@ -369,7 +378,17 @@ namespace CMP.ManipuladorPDF
             string profile = "LTA"
         )
         {
-            return ProcessarAssinatura(documento, certificado, senha, pagina, x, y, profile);
+            Certificado _certificado = new Certificado();
+            try
+            {
+                _certificado = new Certificado(certificado, senha);
+            }
+            catch (Exception exception)
+            {
+                if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
+                    throw new CertificateWrongPasswordException();
+            }
+            return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
         }
 
         /// <summary>

@@ -47,19 +47,19 @@ namespace CMP.ManipuladorPDF
                     {
                         byte[] extensions = certificate.GetExtensionValue("2.5.29.17").GetOctets();
                         Asn1InputStream inputStream = new Asn1InputStream(extensions);
-                        Asn1Object obj = inputStream.ReadObject();
-                        Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
-
-                        string rfcemail = "";
-
-                        for (int i = 0; i <= sequence.Count; i++)
+                        if (inputStream != null)
                         {
-                            rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
-                            if(rfcemail.Contains('@')) 
-                                break;
+                            Asn1Object obj = inputStream.ReadObject();
+                            Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
+                            string rfcemail = "";
+                            for (int i = 0; i <= sequence.Count; i++)
+                            {
+                                rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
+                                if (rfcemail.Contains('@'))
+                                    break;
+                            }
+                            email ??= rfcemail;
                         }
-
-                        email ??= rfcemail;
                         name = name.Split(':')[0].ToTitleCase();
                     }
 
