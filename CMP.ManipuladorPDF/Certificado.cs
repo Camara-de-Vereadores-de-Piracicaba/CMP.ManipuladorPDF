@@ -113,6 +113,7 @@ namespace CMP.Certificados
             _chain.Add(new X509CertificateBC(_bcCertificate));
             IX509Certificate[] chain = _chain.ToArray();
             X509Certificate2RSASignature signature = new X509Certificate2RSASignature(certificate);
+
             return new Certificado()
             {
                 ByteArray = certificate.GetRawCertData(),
@@ -554,10 +555,10 @@ namespace CMP.Certificados
             this.certificate = certificate;
         }
 
-        public Org.BouncyCastle.X509.X509Certificate[] GetChain()
+        public X509Certificate[] GetChain()
         {
-            var bcCertificate = new Org.BouncyCastle.X509.X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
-            return new Org.BouncyCastle.X509.X509Certificate[] { bcCertificate };
+            var bcCertificate = new X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
+            return new X509Certificate[] { bcCertificate };
         }
 
         public string GetSignatureAlgorithmName()
@@ -578,6 +579,9 @@ namespace CMP.Certificados
         public byte[] Sign(byte[] message)
         {
             using RSA rsa = certificate.GetRSAPrivateKey();
+            if (rsa == null)
+                throw new RSAPrivateKeyNotFoundException();
+
             return rsa.SignData(message, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
         }
 

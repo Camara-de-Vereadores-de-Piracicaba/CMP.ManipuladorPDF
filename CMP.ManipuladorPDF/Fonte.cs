@@ -82,12 +82,20 @@ namespace CMP.ManipuladorPDF
 
         public PdfFont Fonte { get; set; } = null;
 
-        public FontePDF(string nome)
+        public FontePDF(string nome, bool embedded=false)
         {
-            Fonte = PdfFontFactory.CreateFont(
-                File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{nome}.ttf"),
-                PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
-            );
+            byte[] fontBytes;
+
+            if (embedded)
+            {
+                fontBytes = EmbeddedResource.GetByteArray($"{nome}.ttf");
+            }
+            else
+            {
+                fontBytes = File.ReadAllBytes($"{DocumentoPDFConfig.FONT_PATH}/{nome}.ttf");
+            }
+
+            Fonte = PdfFontFactory.CreateFont(fontBytes,PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
         }
 
     }

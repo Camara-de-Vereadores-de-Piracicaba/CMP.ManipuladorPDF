@@ -57,8 +57,11 @@ namespace CMP.ManipuladorPDF
                 PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED
             );
 
+            int _altura = altura;
+
             for (int pagina = 1; pagina <= totalPaginas; pagina++)
             {
+                _altura = altura;
                 int distanciaBorda = 6;
                 int tamanhoFonte = 6;
                 PdfPage page = pdfDocument.GetPage(pagina);
@@ -85,9 +88,9 @@ namespace CMP.ManipuladorPDF
 
                     _qrcode
                         .ScaleAbsolute(tamanhoQRCode, tamanhoQRCode)
-                        .SetFixedPosition(qx, altura);
+                        .SetFixedPosition(qx, _altura);
                     canvas.Add(_qrcode);
-                    altura = altura + tamanhoQRCode + 5;
+                    _altura = _altura + tamanhoQRCode + 5;
                 }
 
                 void Texto(string texto, int linha)
@@ -112,7 +115,7 @@ namespace CMP.ManipuladorPDF
                         p: text,
                         pageNumber: pagina,
                         x: x,
-                        y: altura,
+                        y: _altura,
                         textAlign: TextAlignment.LEFT,
                         vertAlign: VerticalAlignment.TOP,
                         radAngle: 1.5708f
@@ -126,7 +129,6 @@ namespace CMP.ManipuladorPDF
                     {
                         _texto = $"Página {pagina} de {totalPaginas}. {_texto}";
                     }
-
                     Texto(_texto, i);
                 }
             }

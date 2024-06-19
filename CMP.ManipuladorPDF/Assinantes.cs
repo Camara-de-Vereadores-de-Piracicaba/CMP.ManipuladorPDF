@@ -30,9 +30,11 @@ namespace CMP.ManipuladorPDF
             foreach (String signatureName in names)
             {
                 PdfPKCS7 signature = signatureUtil.ReadSignatureData(signatureName);
+
                 if (!signature.IsTsp())
                 {
-                    IX509Certificate certificate = signature.GetCertificates().Last();
+
+                    IX509Certificate certificate = signature.GetSignCertificateChain().First();
 
                     CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificate);
                     CertificateInfo.X500Name issuer = CertificateInfo.GetIssuerFields(certificate);
@@ -45,25 +47,32 @@ namespace CMP.ManipuladorPDF
 
                     if(tipo==TipoCertificado.A1 || tipo == TipoCertificado.A3)
                     {
-                        byte[] extensions = certificate.GetExtensionValue("2.5.29.17").GetOctets();
-                        Asn1InputStream inputStream = new Asn1InputStream(extensions);
-                        if (inputStream != null)
+                        try
                         {
-                            Asn1Object obj = inputStream.ReadObject();
-                            Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
-                            string rfcemail = "";
-                            for (int i = 0; i <= sequence.Count; i++)
+                            var asn1 = certificate.GetExtensionValue("2.5.29.17");
+                            byte[] extensions = asn1.GetOctets();
+                            Asn1InputStream inputStream = new Asn1InputStream(extensions);
+                            if (inputStream != null)
                             {
-                                rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
-                                if (rfcemail.Contains('@'))
-                                    break;
+                                Asn1Object obj = inputStream.ReadObject();
+                                Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
+                                string rfcemail = "";
+                                for (int i = 0; i <= sequence.Count; i++)
+                                {
+                                    rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
+                                    if (rfcemail.Contains('@'))
+                                        break;
+                                }
+                                email ??= rfcemail;
                             }
-                            email ??= rfcemail;
+                            name = name.Split(':')[0].ToTitleCase();
                         }
-                        name = name.Split(':')[0].ToTitleCase();
+                        catch (Exception) { }
                     }
 
-                    if (tipo == TipoCertificado.CMP)
+                    if (
+                        tipo == TipoCertificado.CMP
+                    )
                     {
                         certificate = signature.GetCertificates().First();
                         info = CertificateInfo.GetSubjectFields(certificate);

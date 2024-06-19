@@ -136,7 +136,7 @@ namespace CMP.ManipuladorPDF
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);
             PdfSigner signer = new PdfSigner(pdfReader, signatureStream, new StampingProperties().UseAppendMode());
             PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT).Fonte;
+            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT,true).Fonte;
             string signatureName = "Signature_" + System.IO.Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
             appearance
                 .SetLocation(SignatureText.LOCATION)
@@ -160,7 +160,6 @@ namespace CMP.ManipuladorPDF
             canvas.Add(root);
             signer.SetFieldName(signatureName);
             signer.SetSignDate(DateTime.Now);
-            
             signer.SignDetached(certificado.PKS, certificado.Chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
             return new DocumentoPDF(signatureStream);
         }
@@ -171,8 +170,8 @@ namespace CMP.ManipuladorPDF
         )
         {
 
-            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT).Fonte;
-            PdfFont fontBold = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD).Fonte;
+            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT,true).Fonte;
+            PdfFont fontBold = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD,true).Fonte;
 
             Div root = new Div()
                 .SetWidth(220)

@@ -66,4 +66,9 @@ namespace CMP.ManipuladorPDF
         public InvalidPDFDocumentException() { }
     }
 
+    public class RSAPrivateKeyNotFoundException : Exception
+    {
+        public RSAPrivateKeyNotFoundException() { }
+    }
+
 }

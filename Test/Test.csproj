@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Assinador\CMP.ManipuladorPDF.csproj" />
+    <ProjectReference Include="..\CMP.ManipuladorPDF\CMP.ManipuladorPDF.csproj" />
   </ItemGroup>
 
 </Project>

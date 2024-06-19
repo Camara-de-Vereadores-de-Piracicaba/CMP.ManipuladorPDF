@@ -8,14 +8,20 @@
 		<Description>Este projeto reune um conjunto de funcionalidades necessárias para manipulação de PDFs</Description>
 		<PackageTags>pdf signature html to pdf</PackageTags>
 		<PackageReleaseNotes></PackageReleaseNotes>
+    <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+    <Deterministic>False</Deterministic>
 	</PropertyGroup>
 	
 	<ItemGroup>
 		<None Remove="Resources\sRGB Color Space Profile.icm" />
+    <None Remove="Resources\aptos.ttf" />
+    <None Remove="Resources\aptos-bold.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Resources\sRGB Color Space Profile.icm" />
+    <EmbeddedResource Include="Resources\aptos.ttf" />
+    <EmbeddedResource Include="Resources\aptos-bold.ttf" />
 	</ItemGroup>
 
 	<ItemGroup>

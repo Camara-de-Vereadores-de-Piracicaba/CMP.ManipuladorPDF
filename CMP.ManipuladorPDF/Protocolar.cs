@@ -49,8 +49,9 @@ namespace CMP.ManipuladorPDF
                 protocolo += $" e foi assinado digitalmente por";
 
                 AssinanteDocumento ultimo = assinantes.LastOrDefault();
+                AssinanteDocumento penultimo = assinantes.AsEnumerable().Reverse().Skip(1).FirstOrDefault();
 
-                foreach(AssinanteDocumento assinante in assinantes)
+                foreach (AssinanteDocumento assinante in assinantes)
                 {
                     if (assinante.Equals(ultimo))
                     {
@@ -63,7 +64,14 @@ namespace CMP.ManipuladorPDF
                     }
                     else
                     {
-                        protocolo += $" {assinante.Nome}, ";
+                        if (assinante.Equals(penultimo))
+                        {
+                            protocolo += $" {assinante.Nome} ";
+                        }
+                        else
+                        {
+                            protocolo += $" {assinante.Nome}, ";
+                        }
                     }
                 }
 
