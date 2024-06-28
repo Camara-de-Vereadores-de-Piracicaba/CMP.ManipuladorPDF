@@ -97,7 +97,7 @@ namespace CMP.ManipuladorPDF
             string html = $@"
                 <style>
                     *{{
-                        font-family:'Calibri';
+                        font-family:'Aptos';
                         margin:0;
                         padding:0;
                         box-sizing:border-box;
