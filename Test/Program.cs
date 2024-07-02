@@ -12,6 +12,8 @@ string output = "final.pdf";
 
 DocumentoPDF documento = new DocumentoPDF($"{path}compras2.pdf");
 
+Console.WriteLine(documento.OCR());
+
 //List<AssinanteDocumento> assinantes = documento.Assinantes();
 
 //Console.WriteLine(assinantes[1].Email);
@@ -42,12 +44,12 @@ DocumentoPDF documento = new DocumentoPDF($"{path}compras2.pdf");
 
 //DocumentoPDF documento = new DocumentoPDF($"{path}sample.pdf");
 
-byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
-Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
-Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
-certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
+//byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
+//Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
+//Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
+//certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
-Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
+//Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
 //await keila.AdicionarOCSP();
 
 //Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
@@ -55,6 +57,8 @@ Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","123
 
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");
 //documento = new DocumentoPDF(npdf.PDFAssinado);
+
+/*
 
 Adobe.Acrobat.FecharAcrobat();
 
@@ -73,3 +77,5 @@ documento
     .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
+
+*/
