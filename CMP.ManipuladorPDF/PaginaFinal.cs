@@ -48,17 +48,6 @@ namespace CMP.ManipuladorPDF
                     docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
                 }
 
-                if (signature.Nome == "Piracicaba Camara")
-                {
-                    signature.Nome = "Câmara Municipal de Piracicaba";
-                    signature.Email = "Certificado da entidade";
-                }
-
-                if (signature.Nome == "Wagner Alexandre de Oliveira" && signature.Email == "mariane@camarapiracicaba.sp.gov.br")
-                {
-                    signature.Email = "wagnao@camarapiracicaba.sp.gov.br";
-                }
-
                 string date = signature.Data;
                 signatures += $@"
                     <div class=""signature"">

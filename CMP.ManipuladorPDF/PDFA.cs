@@ -1,13 +1,12 @@
 ﻿using iText.Kernel.Pdf;
-using iText.Kernel.Utils;
 using iText.Pdfa;
+using System;
 using System.IO;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
-
         private static DocumentoPDF ConverterDocumentoParaPDFA(
             this DocumentoPDF documento
         )
@@ -22,8 +21,22 @@ namespace CMP.ManipuladorPDF
                 PdfAConformanceLevel.PDF_A_4,
                 new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream)
             );
-            PdfMerger pdfMerger = new PdfMerger(pdfADocument);
-            pdfMerger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
+
+            int pages = pdfDocument.GetNumberOfPages();
+            for (int i = 1; i <= pages; i++)
+            {
+                try
+                {
+                    PdfPage page = pdfDocument.GetPage(i);
+                    PdfPage copiedPage = page.CopyTo(pdfADocument);
+                    pdfADocument.AddPage(copiedPage);
+                }
+                catch (Exception exception)
+                {
+                    throw new PdfAConversionErrorException(exception.Message);
+                }
+            }
+
             pdfDocument.Close();
             pdfADocument.Close();
             return new DocumentoPDF(outputStream.ToArray());
@@ -38,7 +51,14 @@ namespace CMP.ManipuladorPDF
             this DocumentoPDF documento
         )
         {
-            return ConverterDocumentoParaPDFA(documento);
+            try
+            {
+                return ConverterDocumentoParaPDFA(documento);
+            }
+            catch(Exception exception)
+            {
+                throw new PdfAConversionErrorException(exception.Message);
+            }
         }
 
 

@@ -1,6 +1,7 @@
-$Major = $(Get-Date -f yyyyMMdd)
-$Minor = $(Get-Date -f HHmmss)
-$Version = '1.1.' + $Major + '.' + $Minor
+$YearMonth = $(Get-Date -f yyMMdd).substring(1);
+$Hour = "1" + $(Get-Date -f HHmm)
+$Second = "1" + $(Get-Date -f ss)
+$Version = '1.' + $YearMonth + '.' + $Hour + '.' + $Second;
 $AssemblyName = Split-Path -Path (Get-Location) -Leaf
 $Package = $AssemblyName + '\bin\Release\' + $AssemblyName +'.' + $Version + '.nupkg';
 dotnet pack --configuration Release /p:Version=$Version

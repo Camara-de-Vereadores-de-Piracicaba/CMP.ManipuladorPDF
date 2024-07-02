@@ -12,6 +12,7 @@ using iText.Forms;
 using iText.Forms.Fields;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf.Annot;
+using CMP.ManipuladorPDF.Patch;
 
 namespace CMP.ManipuladorPDF
 {
@@ -45,7 +46,7 @@ namespace CMP.ManipuladorPDF
 
                     TipoCertificado tipo = GetCertificateType(certificate.GetEncoded());
 
-                    if(tipo==TipoCertificado.A1 || tipo == TipoCertificado.A3)
+                    if(tipo==TipoCertificado.A1 || tipo == TipoCertificado.A3 || tipo==TipoCertificado.GOVBR)
                     {
                         try
                         {
@@ -82,7 +83,7 @@ namespace CMP.ManipuladorPDF
                         iss = issuer.GetField("CN");
                     }
 
-                    assinantes.Add(new AssinanteDocumento()
+                    AssinanteDocumento assinante = new AssinanteDocumento()
                     {
                         Documento = documento,
                         Certificado = certificate,
@@ -92,7 +93,12 @@ namespace CMP.ManipuladorPDF
                         Razao = signature.GetReason(),
                         Emissor = iss,
                         Tipo = tipo
-                    });
+                    };
+
+                    assinante.Patch();
+
+                    assinantes.Add(assinante);
+
                 }
             }
 

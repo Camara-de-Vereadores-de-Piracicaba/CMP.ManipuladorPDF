@@ -12,6 +12,7 @@ using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Forms.Form.Element;
+using Org.BouncyCastle.Tls;
 
 namespace CMP.ManipuladorPDF
 {
@@ -24,7 +25,8 @@ namespace CMP.ManipuladorPDF
             int x,
             int y,
             int pagina,
-            string profile = "LTA"
+            string profile = "LTA",
+            bool tryRecovery = true
         )
         {
 
@@ -71,51 +73,25 @@ namespace CMP.ManipuladorPDF
 
             try
             {
-                if (certificado.PKS != null)
-                {
-                    if (profile == "LT")
-                    {
-                        padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-                    }
-                    else if (profile == "T")
-                    {
-                        padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-                    }
-                    else if (profile == "B")
-                    {
-                        padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
-                    }
-                    else
-                    {
-                        padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
-                    }
-                }
-                else if(certificado.RSASignature!=null)
-                {
-                    if (profile == "LT")
-                    {
-                        padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
-                    }
-                    else if (profile == "T")
-                    {
-                        padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
-                    }
-                    else if (profile == "B")
-                    {
-                        padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.RSASignature);
-                    }
-                    else
-                    {
-                        padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
-                    }
-                }
-            }catch(Exception exception)
+                padesSigner.Sign(certificado, signerProperties, profile);
+            }
+            catch(Exception exception)
             {
                 if(exception.Message.Contains("All the fonts must be embedded."))
                 {
                     throw new InvalidPDFDocumentException();
                 }
+                else if(exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
+                {
+                    if (tryRecovery)
+                    {
+                        DocumentoPDF documentoRecuperado = new DocumentoPDF(documento.ConverterParaByteArray()).RepararDocumento();
+                        documento = AssinarDocumento(documentoRecuperado, certificado, x, y, pagina, profile, false);
+                        return new DocumentoPDF(documento.ConverterParaByteArray());
+                    }
 
+                    throw new IrrecuperableBrokenPDFDocumentException();
+                }
                 throw new SignatureException(exception.Message);
             }
 
@@ -243,6 +219,11 @@ namespace CMP.ManipuladorPDF
                 {
                     throw new FontNotExistException(exception.Message);
                 }
+                else if (exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
+                {
+                    throw new BrokenPDFDocumentException();
+                }
+
 
                 throw new SignatureException(exception.Message);
             }
@@ -411,6 +392,58 @@ namespace CMP.ManipuladorPDF
             return AssinarNoModoLegado(documento, certificado, pagina, x, y);
         }
 
+    }
+
+    public static class PdfPadesSignerExtension
+    {
+        public static void Sign(
+            this PdfPadesSigner padesSigner,
+            Certificado certificado,
+            SignerProperties signerProperties,
+            string profile)
+        {
+
+            TSAClientBouncyCastle tsaClient = new TSAClientBouncyCastle(TSAServers.TSA_DEFAULT, null, null, 8192, DigestAlgorithms.SHA256);
+
+            if (certificado.PKS != null)
+            {
+                if (profile == "LT")
+                {
+                    padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                }
+                else if (profile == "T")
+                {
+                    padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                }
+                else if (profile == "B")
+                {
+                    padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.PKS);
+                }
+                else
+                {
+                    padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.PKS, tsaClient);
+                }
+            }
+            else if (certificado.RSASignature != null)
+            {
+                if (profile == "LT")
+                {
+                    padesSigner.SignWithBaselineLTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                }
+                else if (profile == "T")
+                {
+                    padesSigner.SignWithBaselineTProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                }
+                else if (profile == "B")
+                {
+                    padesSigner.SignWithBaselineBProfile(signerProperties, certificado.Chain, certificado.RSASignature);
+                }
+                else
+                {
+                    padesSigner.SignWithBaselineLTAProfile(signerProperties, certificado.Chain, certificado.RSASignature, tsaClient);
+                }
+            }
+        }
     }
 
 

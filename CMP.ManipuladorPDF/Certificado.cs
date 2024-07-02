@@ -216,15 +216,27 @@ namespace CMP.Certificados
             DateTimeOffset notAfter = notBefore.AddYears(tempoExpiracao);
             X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
             SecureString secureString = GetSecureString(senha);
+
+
+            
             X509Certificate2Collection join = new X509Certificate2Collection();
-            join.Add(certificadoRaiz);
-            join.Add(certificado);
+
+            join.Insert(0, certificadoRaiz);
+            join.Insert(1, certificado);
+
+            //join.Add(certificado);
+            //join.Add(certificadoRaiz);
+
             byte[] exportedChain = join.Export(X509ContentType.Pfx, senha);
+
+
+
             return (
                 exportedChain,
                 certificado.GetSerialNumberString(),
                 "/" + dadosCertificado.ToString().Replace(",", "/")
             );
+
         }
 
         private static X509Extension OCSPExtension(string url)
@@ -286,6 +298,8 @@ namespace CMP.Certificados
             X509Certificate2 certificate = new X509Certificate2(byteArray);
             Dictionary<string, string[]> oids = GetExtensionsOIDList(certificate);
             string[] policy = oids.Where(x => x.Key == "2.5.29.32").FirstOrDefault().Value;
+
+
             if (policy != null)
             {
                 if (policy[0].Contains("2.16.76.1.2.3."))
@@ -296,6 +310,10 @@ namespace CMP.Certificados
                 {
                     retorno = TipoCertificado.A1;
                 }
+                if (policy[0].Contains("2.16.76.3.2.1."))
+                {
+                    retorno = TipoCertificado.GOVBR;
+                }
             }
 
             if (
@@ -305,6 +323,7 @@ namespace CMP.Certificados
             {
                 retorno = TipoCertificado.CMP;
             }
+
             return retorno;
         }
         public enum TipoCertificado
@@ -314,6 +333,7 @@ namespace CMP.Certificados
             A2 = 2,
             A3 = 3,
             A4 = 4,
+            GOVBR = 5,
             OTHER = 99
         }
 
