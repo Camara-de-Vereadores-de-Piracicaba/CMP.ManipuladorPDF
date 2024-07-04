@@ -23,6 +23,8 @@ namespace CMP.ManipuladorPDF
         this DocumentoPDF documento
         )
         {
+            documento = documento.DesencriptarCasoNecessario();
+
             TimeZoneInfo fuso = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
             PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
             SignatureUtil signatureUtil = new SignatureUtil(pdfDocument);
@@ -30,76 +32,86 @@ namespace CMP.ManipuladorPDF
             List<AssinanteDocumento> assinantes = new List<AssinanteDocumento>();
             foreach (String signatureName in names)
             {
-                PdfPKCS7 signature = signatureUtil.ReadSignatureData(signatureName);
-
-                if (!signature.IsTsp())
+                try
                 {
 
-                    IX509Certificate certificate = signature.GetSignCertificateChain().First();
+                    PdfPKCS7 signature = signatureUtil.ReadSignatureData(signatureName);
 
-                    CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificate);
-                    CertificateInfo.X500Name issuer = CertificateInfo.GetIssuerFields(certificate);
-
-                    string name = info.GetField("CN");
-                    string email = info.GetField("E");
-                    string iss = issuer.GetField("CN");
-
-                    TipoCertificado tipo = GetCertificateType(certificate.GetEncoded());
-
-                    if(tipo==TipoCertificado.A1 || tipo == TipoCertificado.A3 || tipo==TipoCertificado.GOVBR)
+                    if (!signature.IsTsp())
                     {
-                        try
+
+                        IX509Certificate certificate = signature.GetSignCertificateChain().First();
+
+                        CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificate);
+                        CertificateInfo.X500Name issuer = CertificateInfo.GetIssuerFields(certificate);
+
+                        string name = info.GetField("CN");
+                        string email = info.GetField("E");
+                        string iss = issuer.GetField("CN");
+
+                        TipoCertificado tipo = GetCertificateType(certificate.GetEncoded());
+
+                        if (tipo == TipoCertificado.A1 || tipo == TipoCertificado.A3 || tipo == TipoCertificado.GOVBR)
                         {
-                            var asn1 = certificate.GetExtensionValue("2.5.29.17");
-                            byte[] extensions = asn1.GetOctets();
-                            Asn1InputStream inputStream = new Asn1InputStream(extensions);
-                            if (inputStream != null)
+                            try
                             {
-                                Asn1Object obj = inputStream.ReadObject();
-                                Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
-                                string rfcemail = "";
-                                for (int i = 0; i <= sequence.Count; i++)
+                                var asn1 = certificate.GetExtensionValue("2.5.29.17");
+                                byte[] extensions = asn1.GetOctets();
+                                Asn1InputStream inputStream = new Asn1InputStream(extensions);
+                                if (inputStream != null)
                                 {
-                                    rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
-                                    if (rfcemail.Contains('@'))
-                                        break;
+                                    Asn1Object obj = inputStream.ReadObject();
+                                    Asn1Sequence sequence = Asn1Sequence.GetInstance(obj);
+                                    string rfcemail = "";
+                                    for (int i = 0; i <= sequence.Count; i++)
+                                    {
+                                        rfcemail = Encoding.UTF8.GetString(sequence[i].GetDerEncoded()).Substring(2).ToLower();
+                                        if (rfcemail.Contains('@'))
+                                            break;
+                                    }
+                                    email ??= rfcemail;
                                 }
-                                email ??= rfcemail;
+                                name = name.Split(':')[0].ToTitleCase();
                             }
-                            name = name.Split(':')[0].ToTitleCase();
+                            catch (Exception) { }
                         }
-                        catch (Exception) { }
+
+                        if (
+                            tipo == TipoCertificado.CMP
+                        )
+                        {
+                            certificate = signature.GetCertificates().First();
+                            info = CertificateInfo.GetSubjectFields(certificate);
+                            issuer = CertificateInfo.GetIssuerFields(certificate);
+                            name = info.GetField("CN")?.ToTitleCase();
+                            email = info.GetField("E")?.ToLower();
+                            iss = issuer.GetField("CN");
+                        }
+
+                        AssinanteDocumento assinante = new AssinanteDocumento()
+                        {
+                            Documento = documento,
+                            Certificado = certificate,
+                            Nome = name,
+                            Email = email,
+                            Data = TimeZoneInfo.ConvertTime(signature.GetSignDate(), fuso).ToString("G"),
+                            Razao = signature.GetReason(),
+                            Emissor = iss,
+                            Tipo = tipo
+                        };
+
+                        assinante.Patch();
+
+                        assinantes.Add(assinante);
                     }
-
-                    if (
-                        tipo == TipoCertificado.CMP
-                    )
-                    {
-                        certificate = signature.GetCertificates().First();
-                        info = CertificateInfo.GetSubjectFields(certificate);
-                        issuer = CertificateInfo.GetIssuerFields(certificate);
-                        name = info.GetField("CN")?.ToTitleCase();
-                        email = info.GetField("E")?.ToLower();
-                        iss = issuer.GetField("CN");
-                    }
-
-                    AssinanteDocumento assinante = new AssinanteDocumento()
-                    {
-                        Documento = documento,
-                        Certificado = certificate,
-                        Nome = name,
-                        Email = email,
-                        Data = TimeZoneInfo.ConvertTime(signature.GetSignDate(), fuso).ToString("G"),
-                        Razao = signature.GetReason(),
-                        Emissor = iss,
-                        Tipo = tipo
-                    };
-
-                    assinante.Patch();
-
-                    assinantes.Add(assinante);
 
                 }
+                catch(Exception)
+                {
+                    //Não faz nada. É só para evitar erros quando o documento é encriptado,
+                    //já que a Adobe adiciona uma assinatura específica que não pode ser lida.
+                }
+
             }
 
             return assinantes;
@@ -109,6 +121,9 @@ namespace CMP.ManipuladorPDF
             this DocumentoPDF documento
         )
         {
+
+            documento = documento.DesencriptarCasoNecessario();
+
             using MemoryStream outputStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
