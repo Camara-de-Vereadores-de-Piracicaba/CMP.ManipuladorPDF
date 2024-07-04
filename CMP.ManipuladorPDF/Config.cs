@@ -8,6 +8,7 @@ namespace CMP.ManipuladorPDF
         public static string FONT_PATH { get; set; } = "/app/fonts";
         public static string SIGNATURE_DEFAULT_FONT { get; set; } = "aptos";
         public static string SIGNATURE_DEFAULT_FONT_BOLD { get; set; } = "aptos-bold";
+        public static bool UNETHICAL_READING { get; set; } = true;
 
         public static void DefinirDiretorioDeFontes(
             string diretorio = null

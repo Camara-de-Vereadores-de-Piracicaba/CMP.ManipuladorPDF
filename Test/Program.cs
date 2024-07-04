@@ -10,9 +10,9 @@ string output = "final.pdf";
 //byte[] arr = File.ReadAllBytes($"{path}test3.pdf");
 
 
-DocumentoPDF documento = new DocumentoPDF($"{path}compras2.pdf");
+DocumentoPDF documento = new DocumentoPDF($"{path}protegido.pdf");
 
-Console.WriteLine(documento.OCR());
+//Console.WriteLine(documento.OCR());
 
 //List<AssinanteDocumento> assinantes = documento.Assinantes();
 
@@ -44,13 +44,13 @@ Console.WriteLine(documento.OCR());
 
 //DocumentoPDF documento = new DocumentoPDF($"{path}sample.pdf");
 
-//byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
-//Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
-//Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
-//certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
+byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
+Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
+Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
+certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
-//Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
-//await keila.AdicionarOCSP();
+Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
+await keila.AdicionarOCSP();
 
 //Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
 //await keila.AdicionarOCSP();
@@ -58,24 +58,22 @@ Console.WriteLine(documento.OCR());
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");
 //documento = new DocumentoPDF(npdf.PDFAssinado);
 
-/*
+
 
 Adobe.Acrobat.FecharAcrobat();
 
 documento
-    //.Juntar("C:\\testepdf\\tese.pdf")
-    //.Numerar()
-    //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
-    //.Protocolar("99/2024", DateTime.Now, "X0X0X0X0")
-    //.TornarSemEfeito()
-    //.Assinar(keila, 1, 20, 770)
-    //.AssinarLegado(keila,1, 100, 400)
+    .Juntar($"{path}compras2.pdf")
+    .Numerar()
+    .AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
+    .TornarSemEfeito()
+    .Assinar(keila, 1, 20, 770)
+    .AssinarLegado(keila,1, 100, 400)
     .Protocolar("AAAAA")
-    //.Assinar(keila, 0)
+    .Assinar(keila, 0)
     .Assinar(keila,0,0,0,"B")
-    //.AdicionarDetalhesAoFinal("JAHSOMWE")
+    .AdicionarDetalhesAoFinal("JAHSOMWE")
     .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
 
-*/

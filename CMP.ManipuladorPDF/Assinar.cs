@@ -30,6 +30,8 @@ namespace CMP.ManipuladorPDF
         )
         {
 
+            documento = documento.DesencriptarCasoNecessario();
+
             using MemoryStream signatureStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);

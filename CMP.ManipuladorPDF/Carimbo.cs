@@ -44,7 +44,14 @@ namespace CMP.ManipuladorPDF
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+
+            documento = documento.DesencriptarCasoNecessario();
+
             PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+
             int totalPaginas = pdfDocument.GetNumberOfPages();
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
 

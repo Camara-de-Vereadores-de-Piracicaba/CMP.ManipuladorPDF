@@ -11,7 +11,7 @@ namespace CMP.ManipuladorPDF
 
         private static DocumentoPDF InserirMetadados(this DocumentoPDF documento, List<Metadado> metadados)
         {
-            
+            documento = documento.DesencriptarCasoNecessario();
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));

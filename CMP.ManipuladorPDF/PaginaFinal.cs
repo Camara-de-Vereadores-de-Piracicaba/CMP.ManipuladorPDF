@@ -19,10 +19,17 @@ namespace CMP.ManipuladorPDF
         )
         {
 
+            documento = documento.DesencriptarCasoNecessario();
+
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument newPdfDocument = new PdfDocument(pdfWriter);
-            PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+            
+            PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
             TimeZoneInfo fuso = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
 
