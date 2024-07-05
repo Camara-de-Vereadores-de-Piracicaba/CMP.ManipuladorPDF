@@ -11,8 +11,7 @@
     <PackageReference Include="itext" Version="8.0.4" />
     <PackageReference Include="itext.bouncy-castle-adapter" Version="8.0.4" />
     <PackageReference Include="itext.pdfhtml" Version="5.0.4" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="QRCoder" Version="1.4.1" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="SysadminsLV.Asn1Parser" Version="1.2.12" />
   </ItemGroup>
 
