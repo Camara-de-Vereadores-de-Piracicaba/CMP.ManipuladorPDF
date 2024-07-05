@@ -64,12 +64,12 @@ Adobe.Acrobat.FecharAcrobat();
 Adobe.Acrobat.FecharAcrobat();
 
 documento
-    .Juntar("C:\\testepdf\\tese.pdf")
+    //.Juntar("C:\\testepdf\\tese.pdf")
     .Numerar()
     .AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
     .TornarSemEfeito()
     .Assinar(keila, 1, 20, 770)
-    .AssinarLegado(keila,1, 100, 400)
+    //.AssinarLegado(keila,1, 100, 400)
     .Protocolar("AAAAA")
     .Assinar(keila, 0)
     .Assinar(keila,0,0,0,"B")

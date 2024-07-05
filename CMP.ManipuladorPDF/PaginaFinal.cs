@@ -1,11 +1,10 @@
 ﻿using iText.Kernel.Pdf;
 using QRCoder;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
-using System.Drawing;
 using System.IO;
 using System;
 using System.Linq;
+using SixLabors.ImageSharp;
 
 namespace CMP.ManipuladorPDF
 {
@@ -85,9 +84,9 @@ namespace CMP.ManipuladorPDF
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
             QRCodeData qrCodeData = qrGenerator.CreateQrCode(validadorUrl, QRCodeGenerator.ECCLevel.Q);
             QRCode _qrCode = new QRCode(qrCodeData);
-            Bitmap qrCodeImage = _qrCode.GetGraphic(4);
+            Image qrCodeImage = _qrCode.GetGraphic(4);
             MemoryStream ms = new MemoryStream();
-            qrCodeImage.Save(ms, ImageFormat.Png);
+            qrCodeImage.SaveAsPng(ms);
             string qrCode = Convert.ToBase64String(ms.ToArray());
 
             string html = $@"

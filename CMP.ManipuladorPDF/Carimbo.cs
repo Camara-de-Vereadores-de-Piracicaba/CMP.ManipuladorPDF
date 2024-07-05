@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System;
 using iText.Layout.Element;
 using iText.Kernel.Font;
 using iText.Kernel.Pdf.Canvas;
@@ -12,11 +11,10 @@ using iText.Layout.Renderer;
 using iText.Layout.Layout;
 using iText.IO.Image;
 using QRCoder;
-using System.Drawing.Imaging;
-using System.Drawing;
 using Rectangle = iText.Kernel.Geom.Rectangle;
 using Image = iText.Layout.Element.Image;
-using IColor = iText.Kernel.Colors;
+using QRImage = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp;
 
 namespace CMP.ManipuladorPDF
 {
@@ -82,9 +80,9 @@ namespace CMP.ManipuladorPDF
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrcode, QRCodeGenerator.ECCLevel.L);
                     QRCode _qrCode = new QRCode(qrCodeData);
-                    Bitmap qrCodeImage = _qrCode.GetGraphic(4,Color.Black,Color.White,false);
+                    QRImage qrCodeImage = _qrCode.GetGraphic(4,Color.Black,Color.White,false);
                     MemoryStream ms = new MemoryStream();
-                    qrCodeImage.Save(ms, ImageFormat.Png);
+                    qrCodeImage.SaveAsPng(ms);
                     ImageData imageData = ImageDataFactory.CreatePng(ms.ToArray());
                     Image _qrcode = new Image(imageData);
                     int qx = (int)pageWidth - tamanhoQRCode - distanciaBorda;
