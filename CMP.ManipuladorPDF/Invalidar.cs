@@ -18,6 +18,7 @@ namespace CMP.ManipuladorPDF
             string texto
         )
         {
+            documento = documento.DesencriptarCasoNecessario();
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)),pdfWriter);
@@ -56,6 +57,18 @@ namespace CMP.ManipuladorPDF
         }
 
         /// <summary>
+        /// Escreve uma frase em diagonal sobre um Documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento para marcar.</param>
+        /// <param name="texto">Texto que aparecerá no meio da página.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF Marcar(this DocumentoPDF documento, string texto)
+        {
+            return InvalidarArquivo(documento, texto);
+        }
+
+        /// <summary>
         /// Escreve a frase "Sem efeito" em um Documento PDF.
         /// </summary>
         /// <param name="documento">Documento para tornar sem efeito.</param>
@@ -64,6 +77,28 @@ namespace CMP.ManipuladorPDF
         public static DocumentoPDF TornarSemEfeito(this DocumentoPDF documento)
         {
             return Invalidar(documento, "SEM EFEITO");
+        }
+
+        /// <summary>
+        /// Escreve a frase "Cópia" em um Documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento para tornar cópia.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF MarcarComoCopia(this DocumentoPDF documento)
+        {
+            return Invalidar(documento, "CÓPIA");
+        }
+
+        /// <summary>
+        /// Escreve a frase "Modelo" em um Documento PDF.
+        /// </summary>
+        /// <param name="documento">Documento para marcar como modelo.</param>
+        /// <returns>DocumentoPDF</returns>
+
+        public static DocumentoPDF MarcarComoModelo(this DocumentoPDF documento)
+        {
+            return Invalidar(documento, "MODELO");
         }
 
     }

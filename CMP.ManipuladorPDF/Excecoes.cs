@@ -26,6 +26,13 @@ namespace CMP.ManipuladorPDF
         public HtmlConverterException(string message, Exception inner) : base(message, inner) { }
     }
 
+    public class PdfAConversionErrorException : Exception
+    {
+        public PdfAConversionErrorException() { }
+        public PdfAConversionErrorException(string message) : base(message) { }
+        public PdfAConversionErrorException(string message, Exception inner) : base(message, inner) { }
+    }
+
     public class CertificateWrongPasswordException : Exception
     {
         public CertificateWrongPasswordException() { }
@@ -69,6 +76,16 @@ namespace CMP.ManipuladorPDF
     public class RSAPrivateKeyNotFoundException : Exception
     {
         public RSAPrivateKeyNotFoundException() { }
+    }
+
+    public class BrokenPDFDocumentException : Exception
+    {
+        public BrokenPDFDocumentException() { }
+    }
+
+    public class IrrecuperableBrokenPDFDocumentException : Exception
+    {
+        public IrrecuperableBrokenPDFDocumentException() { }
     }
 
 }

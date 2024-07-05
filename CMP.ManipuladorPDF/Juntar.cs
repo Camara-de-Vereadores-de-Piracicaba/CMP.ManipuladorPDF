@@ -17,6 +17,9 @@ namespace CMP.ManipuladorPDF
             DocumentoPDF documento2
         )
         {
+            documento1 = documento1.DesencriptarCasoNecessario();
+            documento2 = documento2.DesencriptarCasoNecessario();
+
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument mergedPdfDocument = new PdfDocument(pdfWriter);

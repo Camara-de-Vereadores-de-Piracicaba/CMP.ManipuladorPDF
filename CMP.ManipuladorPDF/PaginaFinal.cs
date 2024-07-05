@@ -19,10 +19,17 @@ namespace CMP.ManipuladorPDF
         )
         {
 
+            documento = documento.DesencriptarCasoNecessario();
+
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument newPdfDocument = new PdfDocument(pdfWriter);
-            PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+            
+            PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
             TimeZoneInfo fuso = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
 
@@ -46,17 +53,6 @@ namespace CMP.ManipuladorPDF
                 if (assinantes != null && signature.Documento.Titulo != null)
                 {
                     docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
-                }
-
-                if (signature.Nome == "Piracicaba Camara")
-                {
-                    signature.Nome = "Câmara Municipal de Piracicaba";
-                    signature.Email = "Certificado da entidade";
-                }
-
-                if (signature.Nome == "Wagner Alexandre de Oliveira" && signature.Email == "mariane@camarapiracicaba.sp.gov.br")
-                {
-                    signature.Email = "wagnao@camarapiracicaba.sp.gov.br";
                 }
 
                 string date = signature.Data;
@@ -97,7 +93,7 @@ namespace CMP.ManipuladorPDF
             string html = $@"
                 <style>
                     *{{
-                        font-family:'Calibri';
+                        font-family:'Aptos';
                         margin:0;
                         padding:0;
                         box-sizing:border-box;
