@@ -12,7 +12,6 @@ using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Forms.Form.Element;
-using Org.BouncyCastle.Tls;
 
 namespace CMP.ManipuladorPDF
 {

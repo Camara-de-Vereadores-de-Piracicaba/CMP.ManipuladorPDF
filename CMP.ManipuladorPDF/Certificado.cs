@@ -8,6 +8,7 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using SysadminsLV.Asn1Parser;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -217,19 +218,23 @@ namespace CMP.Certificados
             X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
             SecureString secureString = GetSecureString(senha);
 
-
-            
             X509Certificate2Collection join = new X509Certificate2Collection();
-
-            join.Insert(0, certificadoRaiz);
-            join.Insert(1, certificado);
-
-            //join.Add(certificado);
-            //join.Add(certificadoRaiz);
-
+            join.Add(certificadoRaiz);
+            join.Add(certificado);
             byte[] exportedChain = join.Export(X509ContentType.Pfx, senha);
+            X509Certificate2 ordemCertificado = new X509Certificate2(exportedChain, secureString);
+            Console.WriteLine(ordemCertificado.SubjectName.Name);
 
+            if (ordemCertificado.SubjectName.Name == "CN=Camara Municipal de Piracicaba, OU=Departamento de Tecnologia da Informacao, O=Camara Municipal de Piracicaba, L=Piracicaba, S=Sao Paulo, C=BR")
+            {
+                join = new X509Certificate2Collection();
+                join.Add(certificado);
+                join.Add(certificadoRaiz);
+                exportedChain = join.Export(X509ContentType.Pfx, senha);
+            }
 
+            ordemCertificado = new X509Certificate2(exportedChain, secureString);
+            Console.WriteLine(ordemCertificado.SubjectName.Name);
 
             return (
                 exportedChain,
