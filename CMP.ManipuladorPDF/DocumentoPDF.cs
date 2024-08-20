@@ -60,6 +60,8 @@ namespace CMP.ManipuladorPDF
         public static int QuantidadeDePaginas(this DocumentoPDF documento)
         {
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
             using PdfDocument pdfDocument = new PdfDocument(pdfReader);
             return pdfDocument.GetNumberOfPages();
         }
@@ -68,7 +70,10 @@ namespace CMP.ManipuladorPDF
         {
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
+            PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+            using PdfDocument pdfDocument = new PdfDocument(pdfReader);
             PdfDocument newPdfDocument = new PdfDocument(pdfWriter);
             pdfDocument.CopyPagesTo(pagina, pagina, newPdfDocument);
             pdfDocument.Close();
@@ -80,7 +85,10 @@ namespace CMP.ManipuladorPDF
         {
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)));
+            PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+            using PdfDocument pdfDocument = new PdfDocument(pdfReader);
             PdfDocument newPdfDocument = new PdfDocument(pdfWriter);
             pdfDocument.CopyPagesTo(inicio, fim, newPdfDocument);
             pdfDocument.Close();

@@ -8,10 +8,10 @@ using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Security;
 using SysadminsLV.Asn1Parser;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -230,6 +230,14 @@ namespace CMP.Certificados
                 join = new X509Certificate2Collection();
                 join.Add(certificado);
                 join.Add(certificadoRaiz);
+                exportedChain = join.Export(X509ContentType.Pfx, senha);
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                join = new X509Certificate2Collection();
+                join.Add(certificadoRaiz);
+                join.Add(certificado);
                 exportedChain = join.Export(X509ContentType.Pfx, senha);
             }
 

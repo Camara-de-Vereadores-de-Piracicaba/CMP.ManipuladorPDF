@@ -37,12 +37,15 @@ namespace CMP.ManipuladorPDF
             if (DocumentoPDFConfig.UNETHICAL_READING)
                 pdfReader.SetUnethicalReading(true);
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
-            if (pdfDocument.GetReader().IsEncrypted())
+
+            PdfReader checkReader = pdfDocument.GetReader();
+
+            if (checkReader.IsEncrypted() || !checkReader.IsOpenedWithFullPermission())
                 documento = documento.Desencriptar();
+
             pdfDocument.Close();
             return documento;
         }
-
 
         /// <summary>
         /// Desencripta um documento que só está fechado para edição.
