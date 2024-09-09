@@ -227,7 +227,17 @@ namespace CMP.ManipuladorPDF
                 {
                     throw new BrokenPDFDocumentException();
                 }
-
+                else if (exception.Message.Contains("The SSL connection could not be established"))
+                {
+                    try
+                    {
+                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B);
+                    }
+                    catch (Exception)
+                    {
+                        throw new OCSPSignatureVerifyConnectionException();
+                    }
+                }
 
                 throw new SignatureException(exception.Message);
             }

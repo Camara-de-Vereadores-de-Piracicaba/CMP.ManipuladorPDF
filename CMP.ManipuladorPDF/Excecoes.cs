@@ -88,4 +88,9 @@ namespace CMP.ManipuladorPDF
         public IrrecuperableBrokenPDFDocumentException() { }
     }
 
+    public class OCSPSignatureVerifyConnectionException : Exception
+    {
+        public OCSPSignatureVerifyConnectionException() { }
+    }
+
 }

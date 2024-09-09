@@ -10,7 +10,6 @@ using Org.BouncyCastle.Asn1;
 using System.Text;
 using iText.Forms;
 using iText.Forms.Fields;
-using iText.Kernel.Geom;
 using iText.Kernel.Pdf.Annot;
 using CMP.ManipuladorPDF.Patch;
 

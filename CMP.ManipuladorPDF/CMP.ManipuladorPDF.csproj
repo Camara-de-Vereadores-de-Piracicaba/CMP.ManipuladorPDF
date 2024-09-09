@@ -10,7 +10,12 @@
 		<PackageReleaseNotes></PackageReleaseNotes>
     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
     <Deterministic>False</Deterministic>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+  
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 	
 	<ItemGroup>
 		<None Remove="Resources\sRGB Color Space Profile.icm" />

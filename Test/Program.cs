@@ -1,7 +1,9 @@
-﻿using CMP.Certificados;
-using CMP.ManipuladorPDF;
+﻿using CMP.ManipuladorPDF;
 
 //DocumentoPDFConfig.DefinirDiretorioDeFontes();
+
+
+Adobe.Acrobat.FecharAcrobat();
 
 string path = "C:\\arquivos\\testepdf\\";
 string output = "final.pdf";
@@ -10,7 +12,7 @@ string output = "final.pdf";
 //byte[] arr = File.ReadAllBytes($"{path}test3.pdf");
 
 
-DocumentoPDF documento = new DocumentoPDF($"{path}ultragaz2.pdf");
+DocumentoPDF documento = new DocumentoPDF($"{path}compras.pdf");
 
 //Console.WriteLine(documento.OCR());
 
@@ -60,21 +62,22 @@ await keila.AdicionarOCSP();
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");
 //documento = new DocumentoPDF(npdf.PDFAssinado);
 
-documento.ExtrairPagina(1).Salvar($"{path}{output}");
+//documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
-/*
+
+
 documento
     //.Juntar("C:\\testepdf\\tese.pdf")
-    .Numerar()
-    .AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
-    .TornarSemEfeito()
-    .Assinar(keila, 1, 20, 770)
+    //.Numerar()
+    //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
+    
+    //.TornarSemEfeito()
+    //.Assinar(keila, 1, 20, 770)
     //.AssinarLegado(keila,1, 100, 400)
-    .Protocolar("AAAAA")
-    .Assinar(keila, 0)
-    .Assinar(keila,0,0,0,"B")
+    //.Protocolar("AAAAA")
+    //.Assinar(keila, 0)
+    //.Assinar(keila,0,0,0,"B")
     .AdicionarDetalhesAoFinal("JAHSOMWE")
     .Salvar($"{path}{output}");
-*/
 
-Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
+//Adobe.Acrobat.AbrirAcrobat($"{path}{output}");

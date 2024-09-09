@@ -241,8 +241,7 @@ namespace CMP.Certificados
                 exportedChain = join.Export(X509ContentType.Pfx, senha);
             }
 
-            ordemCertificado = new X509Certificate2(exportedChain, secureString);
-            Console.WriteLine(ordemCertificado.SubjectName.Name);
+            //ordemCertificado = new X509Certificate2(exportedChain, secureString);
 
             return (
                 exportedChain,

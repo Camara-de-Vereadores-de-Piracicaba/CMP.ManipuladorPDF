@@ -18,7 +18,7 @@ namespace CMP.ManipuladorPDF
         )
         {
 
-            documento = documento.DesencriptarCasoNecessario();
+            //documento = documento.DesencriptarCasoNecessario();
 
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
@@ -204,7 +204,7 @@ namespace CMP.ManipuladorPDF
             PdfDocument paginaFinal = new PdfDocument(new PdfReader(_paginaFinalStream));
             paginaFinal.CopyPagesTo(1, paginaFinal.GetNumberOfPages(), newPdfDocument);
             paginaFinal.Close();
-            newPdfDocument.Close();
+            //newPdfDocument.Close();
 
             return new DocumentoPDF(outputStream);
         }
