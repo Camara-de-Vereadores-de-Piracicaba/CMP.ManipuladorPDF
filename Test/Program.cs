@@ -11,12 +11,29 @@ string output = "final.pdf";
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
 //byte[] arr = File.ReadAllBytes($"{path}test3.pdf");
 
-
-DocumentoPDF documento = new DocumentoPDF($"{path}compras.pdf");
+DocumentoPDF documento = new DocumentoPDF($"{path}baiao.pdf");
 
 //Console.WriteLine(documento.OCR());
 
-//List<AssinanteDocumento> assinantes = documento.Assinantes();
+List<AssinanteDocumento> assinantes = documento.Assinantes();
+
+Console.WriteLine(documento.TestarValidadeDasAssinaturas(ValidacaoAssinatura.PARCIAL));
+
+foreach(AssinanteDocumento assinante in assinantes)
+{
+    Console.WriteLine(assinante.Validacao.Valido);
+    
+    if (!assinante.Validacao.Valido)
+    {
+        Console.WriteLine(assinante.Validacao.Status[0]);
+    }
+
+    if (!assinante.ValidacaoCompleta.Valido)
+    {
+        Console.WriteLine(assinante.ValidacaoCompleta.Status[0]);
+    }
+
+}
 
 //Console.WriteLine(assinantes[1].Email);
 
@@ -66,7 +83,7 @@ await keila.AdicionarOCSP();
 
 
 
-documento
+//documento
     //.Juntar("C:\\testepdf\\tese.pdf")
     //.Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
@@ -77,7 +94,7 @@ documento
     //.Protocolar("AAAAA")
     //.Assinar(keila, 0)
     //.Assinar(keila,0,0,0,"B")
-    .AdicionarDetalhesAoFinal("JAHSOMWE")
-    .Salvar($"{path}{output}");
+    //.AdicionarDetalhesAoFinal("JAHSOMWE")
+    //.Salvar($"{path}{output}");
 
 //Adobe.Acrobat.AbrirAcrobat($"{path}{output}");

@@ -96,6 +96,32 @@ namespace CMP.ManipuladorPDF
             return new DocumentoPDF(outputStream.ToArray());
         }
 
+        public static bool TestarValidadeDasAssinaturas(this DocumentoPDF documento, ValidacaoAssinatura validacao = ValidacaoAssinatura.NORMAL)
+        {
+            List<AssinanteDocumento> assinantes = documento.Assinantes();
+            foreach(AssinanteDocumento assinante in assinantes)
+            {
+                if(validacao == ValidacaoAssinatura.COMPLETA)
+                {
+                    if (!assinante.ValidacaoCompleta.Valido)
+                        return false;
+                }
+                else if (validacao == ValidacaoAssinatura.NORMAL)
+                {
+                    if (!assinante.Validacao.Valido)
+                        return false;
+                }
+                else if (validacao == ValidacaoAssinatura.PARCIAL)
+                {
+                    if (!assinante.ValidacaoParcial.Valido)
+                        return false;
+                }
+            }
+
+            return true;
+
+        }
+
     }
 
 }

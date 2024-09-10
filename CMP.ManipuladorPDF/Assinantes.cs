@@ -12,15 +12,20 @@ using iText.Forms;
 using iText.Forms.Fields;
 using iText.Kernel.Pdf.Annot;
 using CMP.ManipuladorPDF.Patch;
+using S = System.Security.Cryptography.X509Certificates;
+using System.Security.Cryptography.X509Certificates;
+using System.Security.Claims;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
-        
+
         private static List<AssinanteDocumento> DevolverAssinantes(
-        this DocumentoPDF documento
-        )
+            this DocumentoPDF documento,
+            X509VerificationFlags flags,
+            X509RevocationFlag revocation,
+            X509RevocationMode mode)
         {
             documento = documento.DesencriptarCasoNecessario();
 
@@ -34,12 +39,18 @@ namespace CMP.ManipuladorPDF
                 try
                 {
 
+                    DateTime currentDate = DateTime.UtcNow;
+
+                    List<string> status = new List<string>();
+
                     PdfPKCS7 signature = signatureUtil.ReadSignatureData(signatureName);
 
                     if (!signature.IsTsp())
                     {
 
                         IX509Certificate certificate = signature.GetSignCertificateChain().First();
+
+                        S.X509Certificate2 x509 = new S.X509Certificate2(certificate.GetEncoded());
 
                         CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificate);
                         CertificateInfo.X500Name issuer = CertificateInfo.GetIssuerFields(certificate);
@@ -73,11 +84,12 @@ namespace CMP.ManipuladorPDF
                                 name = name.Split(':')[0].ToTitleCase();
                             }
                             catch (Exception) { }
+
+                            ValidacaoCertificado vc = x509.ValidarCertificado(flags);
+
                         }
 
-                        if (
-                            tipo == TipoCertificado.CMP
-                        )
+                        if (tipo == TipoCertificado.CMP)
                         {
                             certificate = signature.GetCertificates().First();
                             info = CertificateInfo.GetSubjectFields(certificate);
@@ -96,7 +108,10 @@ namespace CMP.ManipuladorPDF
                             Data = TimeZoneInfo.ConvertTime(signature.GetSignDate(), fuso).ToString("G"),
                             Razao = signature.GetReason(),
                             Emissor = iss,
-                            Tipo = tipo
+                            Tipo = tipo,
+                            Validacao = x509.ValidarCertificado(flags),
+                            ValidacaoCompleta = x509.ValidarCertificado(X509VerificationFlags.NoFlag),
+                            ValidacaoParcial = x509.ValidarCertificado(X509VerificationFlags.AllFlags)
                         };
 
                         assinante.Patch();
@@ -105,7 +120,7 @@ namespace CMP.ManipuladorPDF
                     }
 
                 }
-                catch(Exception)
+                catch (Exception)
                 {
                     //Não faz nada. É só para evitar erros quando o documento é encriptado,
                     //já que a Adobe adiciona uma assinatura específica que não pode ser lida.
@@ -115,6 +130,38 @@ namespace CMP.ManipuladorPDF
 
             return assinantes;
         }
+
+        public static ValidacaoCertificado ValidarCertificado(
+            this X509Certificate2 certificate, 
+            X509VerificationFlags flags = X509VerificationFlags.AllFlags,
+            X509RevocationFlag revocation = X509RevocationFlag.EntireChain,
+            X509RevocationMode mode = X509RevocationMode.Online)
+        {
+            using X509Chain chain = new X509Chain();
+
+            ValidacaoCertificado vc = new ValidacaoCertificado();
+
+            chain.ChainPolicy.RevocationMode = mode;
+            chain.ChainPolicy.RevocationFlag = revocation;
+            chain.ChainPolicy.VerificationFlags = flags;
+            chain.ChainPolicy.VerificationTime = DateTime.UtcNow;
+            
+            vc.Valido = chain.Build(certificate);
+            vc.Status = new List<X509ChainStatusFlags>();
+
+            if (!vc.Valido)
+            {
+                foreach (X509ChainStatus status in chain.ChainStatus)
+                {
+                    vc.Status.Add(status.Status);
+                }
+            }
+
+            return vc;
+
+        }
+
+
 
         private static List<CampoAssinatura> ListarCamposDeAssinatura(
             this DocumentoPDF documento
@@ -212,12 +259,18 @@ namespace CMP.ManipuladorPDF
         /// Devolve todos os assinantes de um documento PDF.
         /// </summary>
         /// <param name="documento">Documento cujos assinantes serão devolvidos.</param>
+        /// <param name="flags">Objeto X509VerificationFlags que definem especificidades da validação da assinatura.</param>
+        /// <param name="revocation">Objeto X509RevocationFlag que indica se a validação será feita em toda a cadeia, ou em certificados específicos.</param>
+        /// <param name="mode">Objeto X509RevocationMode que define se o teste de revogação será online, offline ou não será checado.</param>
 
         public static List<AssinanteDocumento> Assinantes(
-            this DocumentoPDF documento
+            this DocumentoPDF documento,
+            X509VerificationFlags flags = X509VerificationFlags.AllFlags,
+            X509RevocationFlag revocation = X509RevocationFlag.EntireChain,
+            X509RevocationMode mode = X509RevocationMode.Online
         )
         {
-            return documento.DevolverAssinantes();
+            return documento.DevolverAssinantes(flags,revocation,mode);
         }
 
     }
@@ -231,6 +284,9 @@ namespace CMP.ManipuladorPDF
         public string Razao { get; set; }
         public string Data { get; set; }
         public string Emissor { get; set; }
+        public ValidacaoCertificado Validacao { get; set; }
+        public ValidacaoCertificado ValidacaoCompleta { get; set; }
+        public ValidacaoCertificado ValidacaoParcial { get; set; }
         public TipoCertificado Tipo { get; set; }
     }
 
@@ -241,6 +297,20 @@ namespace CMP.ManipuladorPDF
         public float Y { get; set; }
         public float W { get; set; }
         public float H { get; set; }
+    }
+
+    public class ValidacaoCertificado
+    {
+        public bool Valido { get; set; }
+        public List<X509ChainStatusFlags> Status { get; set; }
+
+    }
+
+    public enum ValidacaoAssinatura
+    {
+        NORMAL,
+        COMPLETA,
+        PARCIAL
     }
 
 }
