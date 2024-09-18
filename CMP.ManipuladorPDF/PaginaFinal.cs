@@ -5,6 +5,7 @@ using System.IO;
 using System;
 using System.Linq;
 using SixLabors.ImageSharp;
+using iText.Kernel.Utils;
 
 namespace CMP.ManipuladorPDF
 {
@@ -18,42 +19,42 @@ namespace CMP.ManipuladorPDF
         )
         {
 
-            //documento = documento.DesencriptarCasoNecessario();
+            documento = documento.DesencriptarCasoNecessario();
 
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfDocument newPdfDocument = new PdfDocument(pdfWriter);
-            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            using PdfDocument mergedPdfDocument = new PdfDocument(pdfWriter);
+            PdfMerger pdfMerger = new PdfMerger(mergedPdfDocument);
 
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             if (DocumentoPDFConfig.UNETHICAL_READING)
-                pdfReader.SetUnethicalReading(true);
+               pdfReader.SetUnethicalReading(true);
             
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
+            pdfMerger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
+            pdfDocument.Close();
+
             TimeZoneInfo fuso = TimeZoneInfo.FindSystemTimeZoneById("E. South America Standard Time");
 
-            List<AssinanteDocumento> _signatures = documento.Assinantes().GroupBy(s => s.Email).Select(s => s.First()).ToList();
-
             string title = "Este documento foi assinado digitalmente pelos seguintes signatários:";
+            string signatures = "";
+            string lsv = "";
 
+            List<AssinanteDocumento> _signatures = documento.Assinantes().GroupBy(s => s.Email).Select(s => s.First()).ToList();
             if (assinantes != null)
             {
                 title = "Estes documentos foram assinados digitalmente pelos seguintes signatários:";
                 _signatures = assinantes;
             }
-
-            string signatures = "";
-            string lsv = "";
             foreach (AssinanteDocumento signature in _signatures)
             {
 
                 string docTitle = "";
-
                 if (assinantes != null && signature.Documento.Titulo != null)
                 {
                     docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
                 }
-
                 string date = signature.Data;
                 signatures += $@"
                     <div class=""signature"">
@@ -69,9 +70,6 @@ namespace CMP.ManipuladorPDF
                 </div>";
             }
 
-            pdfDocument.CopyPagesTo(1, pdfDocument.GetNumberOfPages(), newPdfDocument);
-            pdfDocument.Close();
-
             string validadorUrl = $"{documento.ValidadorURL}";
             string hasHash = ".";
 
@@ -80,7 +78,6 @@ namespace CMP.ManipuladorPDF
                 validadorUrl = $"{documento.ValidadorURL}/{hash}";
                 hasHash = $" e informe o código <b>{hash}</b>.";
             }
-
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
             QRCodeData qrCodeData = qrGenerator.CreateQrCode(validadorUrl, QRCodeGenerator.ECCLevel.Q);
             QRCode _qrCode = new QRCode(qrCodeData);
@@ -199,12 +196,16 @@ namespace CMP.ManipuladorPDF
                     </div>
                 </div>
             ";
+
             MemoryStream _paginaFinal = html.ConverterParaPdf().ConverterParaMemoryStream();
             MemoryStream _paginaFinalStream = new MemoryStream(_paginaFinal.ToArray());
             PdfDocument paginaFinal = new PdfDocument(new PdfReader(_paginaFinalStream));
-            paginaFinal.CopyPagesTo(1, paginaFinal.GetNumberOfPages(), newPdfDocument);
+
+            pdfMerger.Merge(paginaFinal, 1, paginaFinal.GetNumberOfPages());
             paginaFinal.Close();
-            //newPdfDocument.Close();
+
+            pdfMerger.Close();
+            mergedPdfDocument.Close();
 
             return new DocumentoPDF(outputStream);
         }
