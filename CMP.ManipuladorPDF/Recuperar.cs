@@ -24,9 +24,8 @@ namespace CMP.ManipuladorPDF
                     PdfPage page = brokenPdfDocument.GetPage(i);
                     PdfPage copiedPage = page.CopyTo(recoveredPdfDocument);
                     recoveredPdfDocument.AddPage(copiedPage);
-                }catch(Exception exception)
+                }catch(Exception)
                 {
-                    Console.WriteLine(exception.Message);
                     throw new IrrecuperableBrokenPDFDocumentException();
                 }
             }

@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System;
+using iText.Kernel.XMP.Properties;
+using iText.Kernel.XMP;
+using static Org.BouncyCastle.Bcpg.Attr.ImageAttrib;
+using System.Globalization;
 
 namespace CMP.ManipuladorPDF
 {
@@ -76,6 +80,67 @@ namespace CMP.ManipuladorPDF
 
         }
 
+        private static List<Metadado> ObterMetadados(this DocumentoPDF documento)
+        {
+            documento = documento.DesencriptarCasoNecessario();
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            using PdfDocument pdfDocument = new PdfDocument(pdfReader);
+
+            byte[] xmpBytes = pdfDocument.GetXmpMetadata();
+            List <Metadado> metadata = new List<Metadado>();
+
+            PdfDocumentInfo info = pdfDocument.GetDocumentInfo();
+            PdfDictionary infoDictionary = pdfDocument.GetTrailer().GetAsDictionary(PdfName.Info);
+            foreach (PdfName key in infoDictionary.KeySet())
+            {
+
+                string name = key.ToString().Replace("/", "");
+                string value = infoDictionary.GetAsString(key).ToString();
+
+                switch (name)
+                {
+                    case "Author":
+                        value = info.GetAuthor().ToString();
+                        break;
+                    case "Creator":
+                        value = info.GetCreator().ToString();
+                        break;
+                    case "Keywords":
+                        value = info.GetKeywords().ToString();
+                        break;
+                    case "Producer":
+                        value = info.GetProducer().ToString();
+                        break;
+                    case "Subject":
+                        value = info.GetSubject().ToString();
+                        break;
+                    case "Title":
+                        value = info.GetTitle().ToString();
+                        break;
+                    case "Trapped":
+                        value = info.GetTrapped().ToString();
+                        break;
+                    case "CreationDate":
+                        value = DateTime.ParseExact(info
+                                .GetMoreInfo("CreationDate").ToString().Replace("D:", ""), 
+                                "yyyyMMddHHmmssZ", 
+                                CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToString();
+                        break;
+                    case "ModDate":
+                        value = DateTime.ParseExact(info
+                                .GetMoreInfo("CreationDate").ToString().Replace("D:", ""),
+                                "yyyyMMddHHmmssZ",
+                                CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal).ToString();
+                        break;
+                }
+                metadata.Add(new Metadado(name,value));
+            }
+
+            return metadata;
+
+        }
+
         /// <summary>
         /// Adiciona metadados a um documento PDF.
         /// </summary>
@@ -143,7 +208,7 @@ namespace CMP.ManipuladorPDF
 
         public static List<Metadado> ObtemMetadados(this DocumentoPDF documento)
         {
-            return new List<Metadado>();
+            return ObterMetadados(documento);
         }
 
     }

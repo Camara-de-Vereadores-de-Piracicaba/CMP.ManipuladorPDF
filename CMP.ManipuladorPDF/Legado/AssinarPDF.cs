@@ -103,9 +103,6 @@ namespace CMP.ManipuladorPDFLegado
                     File.Delete(fileName);
                 }
 
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException);
-
                 return new AssinarPDFResponse
                 {
                     Sucesso = false,
@@ -159,9 +156,6 @@ namespace CMP.ManipuladorPDFLegado
                 {
                     File.Delete(fileName);
                 }
-
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException);
 
                 return new AssinarPDFResponse
                 {
@@ -412,9 +406,6 @@ namespace CMP.ManipuladorPDFLegado
                     File.Delete(fileName);
                 }
 
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException);
-
                 return new AssinarPDFResponse
                 {
                     Sucesso = false,
@@ -468,9 +459,6 @@ namespace CMP.ManipuladorPDFLegado
                 {
                     File.Delete(fileName);
                 }
-
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException);
 
                 return new AssinarPDFResponse
                 {
@@ -532,9 +520,6 @@ namespace CMP.ManipuladorPDFLegado
                 {
                     File.Delete(fileName);
                 }
-
-                Console.WriteLine(ex.Message);
-                Console.WriteLine(ex.InnerException);
 
                 return new AssinarPDFResponse
                 {

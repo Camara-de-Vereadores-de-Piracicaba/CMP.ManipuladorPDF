@@ -81,6 +81,12 @@ await keila.AdicionarOCSP();
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");
 //documento = new DocumentoPDF(npdf.PDFAssinado);
 
+documento = documento.AdicionarMetadado("NOME", "VALOR");
+documento = documento.AdicionarMetadado("NOME2", "VALOR2");
+
+List<Metadado> metadata = documento.ObtemMetadados();
+
+/*
 documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
 documento
@@ -97,3 +103,4 @@ documento
     .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
+*/

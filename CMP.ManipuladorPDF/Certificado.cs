@@ -223,7 +223,6 @@ namespace CMP.Certificados
             join.Add(certificado);
             byte[] exportedChain = join.Export(X509ContentType.Pfx, senha);
             X509Certificate2 ordemCertificado = new X509Certificate2(exportedChain, secureString);
-            Console.WriteLine(ordemCertificado.SubjectName.Name);
 
             if (ordemCertificado.SubjectName.Name == "CN=Camara Municipal de Piracicaba, OU=Departamento de Tecnologia da Informacao, O=Camara Municipal de Piracicaba, L=Piracicaba, S=Sao Paulo, C=BR")
             {

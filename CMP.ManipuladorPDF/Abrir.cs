@@ -1,4 +1,5 @@
-﻿using iText.Kernel.Pdf;
+﻿using iText.Commons.Utils;
+using iText.Kernel.Pdf;
 using System;
 using System.IO;
 using System.Text;
