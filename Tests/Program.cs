@@ -1,4 +1,5 @@
-﻿using CMP.ManipuladorPDF;
+﻿using CMP.Certificados;
+using CMP.ManipuladorPDF;
 
 //DocumentoPDFConfig.DefinirDiretorioDeFontes();
 
@@ -9,9 +10,26 @@ string path = "C:\\arquivos\\testepdf\\";
 string output = "final.pdf";
 
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
-//byte[] arr = File.ReadAllBytes($"{path}test3.pdf");
+//byte[] arr = File.ReadAllBytes($"{path}despacho.pdf");
 
-DocumentoPDF documento = new DocumentoPDF($"{path}problema.pdf");
+/*
+DocumentoPDF documento = new TemplateHtml(
+    "<h1>TESTE</h1>", 
+    "Dep. De Teste de Departamento",
+    "Setor de Teste", 
+    new double[] { 3, 3, 1.5, 2 }, 
+    "h1{ color: #f00; }"
+).ConverterParaPdf();
+
+documento.Salvar($"{path}{output}");
+
+*/
+
+//Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
+
+
+
+
 
 //Console.WriteLine(documento.OCR());
 
@@ -63,9 +81,10 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //DocumentoPDF documento = str.ConverterParaPdf();
 
-//DocumentoPDF documento = new DocumentoPDF($"{path}sample.pdf");
+DocumentoPDF documento = new DocumentoPDF($"{path}kimura.pdf");
+//documento = documento.IncorporarFonte("Helvetica");
 
-/*
+
 byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
 Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
 Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
@@ -73,7 +92,6 @@ certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
 Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
 await keila.AdicionarOCSP();
-*/
 
 //Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
 //await keila.AdicionarOCSP();
@@ -81,26 +99,26 @@ await keila.AdicionarOCSP();
 //AssinarPDFResponse npdf = CMP.ManipuladorPDFLegado.AssinarPDF.AdicionarAssinaturaLateral("C:\\arquivos\\certificados\\keila.pfx", "1234ab",documento.ConverterParaMemoryStream(),"QQ COISA","QQ COISA CODE");
 //documento = new DocumentoPDF(npdf.PDFAssinado);
 
-documento = documento.AdicionarMetadado("NOME", "VALOR");
-documento = documento.AdicionarMetadado("NOME2", "VALOR2");
+//documento = documento.AdicionarMetadado("NOME", "VALOR");
+//documento = documento.AdicionarMetadado("NOME2", "VALOR2");
 
-List<Metadado> metadata = documento.ObtemMetadados();
+//List<Metadado> metadata = documento.ObtemMetadados();
 
-/*
-documento.ExtrairPagina(1).Salvar($"{path}{output}");
+
+//documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
 documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
     //.Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
     //.TornarSemEfeito()
+    .Invalidar("MEU_TEXTO",new int[] {0, 255, 0})
     //.Assinar(keila, 1, 20, 770)
     //.AssinarLegado(keila,1, 100, 400)
     //.Protocolar("AAAAA")
     //.Assinar(keila, 0)
     //.Assinar(keila,0,0,0,"B")
-    .AdicionarDetalhesAoFinal("XXXXXXXX")
+    //.AdicionarDetalhesAoFinal("XXXXXXXX")
     .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
-*/

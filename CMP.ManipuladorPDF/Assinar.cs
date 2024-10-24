@@ -80,6 +80,7 @@ namespace CMP.ManipuladorPDF
             {
                 if(exception.Message.Contains("All the fonts must be embedded."))
                 {
+                    Console.WriteLine(exception.Message);
                     throw new InvalidPDFDocumentException();
                 }
                 else if(exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))

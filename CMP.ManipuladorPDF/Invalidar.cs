@@ -15,15 +15,16 @@ namespace CMP.ManipuladorPDF
     {
         private static DocumentoPDF InvalidarArquivo(
             DocumentoPDF documento,
-            string texto
+            string texto,
+            int[] cor = null
         )
         {
+            cor = cor ?? new int[] { 255, 50, 50 };
             documento = documento.DesencriptarCasoNecessario();
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)),pdfWriter);
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
-            //PdfFont font = PDFTrueTypeFont.GetFont("calibrib");
             float fontSize = 140;
             for (int pagina = 1; pagina <= pdfDocument.GetNumberOfPages(); pagina++)
             {
@@ -34,8 +35,7 @@ namespace CMP.ManipuladorPDF
                 Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
                 Paragraph paragraph = new Paragraph(texto)
                     .SetMargin(0)
-                    //.SetFont(font)
-                    .SetFontColor(new DeviceRgb(255, 50, 50))
+                    .SetFontColor(new DeviceRgb(cor[0], cor[1], cor[2]))
                     .SetFontSize(fontSize);
                 canvas.ShowTextAligned(paragraph, pageWidth / 2, pageHeight / 2, pagina, TextAlignment.CENTER, VerticalAlignment.MIDDLE, 45f);
             }
@@ -51,9 +51,10 @@ namespace CMP.ManipuladorPDF
         /// <param name="texto">Texto que aparecerá no meio da página.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF Invalidar(this DocumentoPDF documento, string texto)
+        public static DocumentoPDF Invalidar(this DocumentoPDF documento, string texto, int[] cor = null)
         {
-            return InvalidarArquivo(documento, texto);
+            
+            return InvalidarArquivo(documento, texto, cor);
         }
 
         /// <summary>
@@ -63,9 +64,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="texto">Texto que aparecerá no meio da página.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF Marcar(this DocumentoPDF documento, string texto)
+        public static DocumentoPDF Marcar(this DocumentoPDF documento, string texto, int[] cor = null)
         {
-            return InvalidarArquivo(documento, texto);
+            return InvalidarArquivo(documento, texto, cor);
         }
 
         /// <summary>
@@ -74,9 +75,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para tornar sem efeito.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF TornarSemEfeito(this DocumentoPDF documento)
+        public static DocumentoPDF TornarSemEfeito(this DocumentoPDF documento, int[] cor = null)
         {
-            return Invalidar(documento, "SEM EFEITO");
+            return Invalidar(documento, "SEM EFEITO", cor);
         }
 
         /// <summary>
@@ -85,9 +86,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para tornar cópia.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF MarcarComoCopia(this DocumentoPDF documento)
+        public static DocumentoPDF MarcarComoCopia(this DocumentoPDF documento, int[] cor = null)
         {
-            return Invalidar(documento, "CÓPIA");
+            return Invalidar(documento, "CÓPIA", cor);
         }
 
         /// <summary>
@@ -96,9 +97,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para marcar como modelo.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF MarcarComoModelo(this DocumentoPDF documento)
+        public static DocumentoPDF MarcarComoModelo(this DocumentoPDF documento, int[] cor = null)
         {
-            return Invalidar(documento, "MODELO");
+            return Invalidar(documento, "MODELO", cor);
         }
 
     }
