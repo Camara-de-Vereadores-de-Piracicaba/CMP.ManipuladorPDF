@@ -7,7 +7,7 @@ using CMP.ManipuladorPDF;
 Adobe.Acrobat.FecharAcrobat();
 
 string path = "C:\\arquivos\\testepdf\\";
-string output = "final.pdf";
+string output = "simples.pdf";
 
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
 //byte[] arr = File.ReadAllBytes($"{path}despacho.pdf");
@@ -81,9 +81,12 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //DocumentoPDF documento = str.ConverterParaPdf();
 
-DocumentoPDF documento = new DocumentoPDF($"{path}kimura.pdf");
+string file = "c9180";
+
+DocumentoPDF documento = new DocumentoPDF($"{path}{file}.pdf");
 //documento = documento.IncorporarFonte("Helvetica");
 
+documento = documento.ConverterParaPDFA();
 
 byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
 Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
@@ -111,9 +114,10 @@ documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
     //.Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
-    //.TornarSemEfeito()
-    .Invalidar("MEU_TEXTO",new int[] {0, 255, 0})
-    //.Assinar(keila, 1, 20, 770)
+    //.TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
+    //.TornarSemEfeito(new int[] { 50, 50, 50 }, 0.5f)
+    //.Invalidar("MEU_TEXTO",new int[] {0, 255, 0})
+    .Assinar(keila, 1, 20, 770)
     //.AssinarLegado(keila,1, 100, 400)
     //.Protocolar("AAAAA")
     //.Assinar(keila, 0)

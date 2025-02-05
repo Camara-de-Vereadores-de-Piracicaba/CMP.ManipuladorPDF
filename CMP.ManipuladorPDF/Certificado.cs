@@ -210,7 +210,7 @@ namespace CMP.Certificados
             RSA rsaKey = RSA.Create();
             string dadosCertificado = GetCertificateAttributes(nome, email);
             CertificateRequest certificateRequest = new CertificateRequest(dadosCertificado, rsaKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-            X509Extension ocspExtension = OCSPExtension(PadroesCertificado.OCSP);
+            X509Extension ocspExtension = OCSPExtension(PadroesCertificado.OCSP());
             certificateRequest.CertificateExtensions.Add(ocspExtension);
             byte[] serial = GenerateSerial();
             DateTimeOffset notBefore = DateTimeOffset.UtcNow;
@@ -445,8 +445,29 @@ namespace CMP.Certificados
 
     public static class PadroesCertificado
     {
-        public static string OCSP { get; set; } = "https://ocsp.camarapiracicaba.sp.gov.br";
-        public static string CRL { get; set; } = "https://ocsp.camarapiracicaba.sp.gov.br";
+        public static string OCSP() {
+            string OCSPDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
+
+            if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
+            {
+                OCSPDomain = "http://172.16.90.5:5262";
+            }
+
+            return OCSPDomain;
+        }
+
+        public static string CRL()
+        {
+            string CRLDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
+
+            if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
+            {
+                CRLDomain = "http://172.16.90.5:5262";
+            }
+
+            return CRLDomain;
+        }
+
     }
 
     public static class CertificadoOCSP
@@ -464,7 +485,7 @@ namespace CMP.Certificados
                 {"notAfter", vencimento.ToString("yyMMddHHmmssZ") },
                 {"attributes", atributos }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -474,7 +495,7 @@ namespace CMP.Certificados
             {
                 {"serial", serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -484,7 +505,7 @@ namespace CMP.Certificados
             {
                 {"serial", serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
         public static async void DesrevogarOCSP(string serial)
@@ -493,7 +514,7 @@ namespace CMP.Certificados
             {
                 {"serial", serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -503,7 +524,7 @@ namespace CMP.Certificados
             {
                 {"serial", serial }
             };
-            string response = await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            string response = await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return response == "\"1\"";
         }
     }
@@ -534,7 +555,7 @@ namespace CMP.Certificados
                 {"notAfter", certificado.Vencimento.ToString("yyMMddHHmmssZ") },
                 {"attributes", certificado.Atributos }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/add?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -544,7 +565,7 @@ namespace CMP.Certificados
             {
                 {"serial", certificado.Serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/remove?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -554,7 +575,7 @@ namespace CMP.Certificados
             {
                 {"serial", certificado.Serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/revoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
         public static async Task DesrevogarOCSP(this Certificado certificado)
@@ -563,7 +584,7 @@ namespace CMP.Certificados
             {
                 {"serial", certificado.Serial }
             };
-            await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/unrevoke?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return;
         }
 
@@ -573,7 +594,7 @@ namespace CMP.Certificados
             {
                 {"serial", certificado.Serial }
             };
-            string response = await APIRequest.Post(PadroesCertificado.OCSP + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
+            string response = await APIRequest.Post(PadroesCertificado.OCSP() + "/certificate/valid?key=nUZJ85MDV8D52S23Ro65KDqSt9eLaqAs", values);
             return response == "\"1\"";
         }
 

@@ -8,6 +8,7 @@ using iText.Layout;
 using System.IO;
 using iText.Layout.Properties;
 using System.Collections.Generic;
+using iText.Kernel.Pdf.Extgstate;
 
 namespace CMP.ManipuladorPDF
 {
@@ -16,7 +17,8 @@ namespace CMP.ManipuladorPDF
         private static DocumentoPDF InvalidarArquivo(
             DocumentoPDF documento,
             string texto,
-            int[] cor = null
+            int[] cor = null,
+            float opacidade = 1f
         )
         {
             cor = cor ?? new int[] { 255, 50, 50 };
@@ -25,7 +27,7 @@ namespace CMP.ManipuladorPDF
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
             using PdfDocument pdfDocument = new PdfDocument(new PdfReader(new MemoryStream(documento.ByteArray)),pdfWriter);
             Rectangle pageSize = pdfDocument.GetDefaultPageSize();
-            float fontSize = 140;
+            float fontSize = 120;
             for (int pagina = 1; pagina <= pdfDocument.GetNumberOfPages(); pagina++)
             {
                 PdfPage page = pdfDocument.GetPage(pagina);
@@ -37,9 +39,9 @@ namespace CMP.ManipuladorPDF
                     .SetMargin(0)
                     .SetFontColor(new DeviceRgb(cor[0], cor[1], cor[2]))
                     .SetFontSize(fontSize);
+                paragraph.SetOpacity(opacidade);
                 canvas.ShowTextAligned(paragraph, pageWidth / 2, pageHeight / 2, pagina, TextAlignment.CENTER, VerticalAlignment.MIDDLE, 45f);
             }
-
             pdfDocument.Close();
             return new DocumentoPDF(outputStream);
         }
@@ -51,10 +53,10 @@ namespace CMP.ManipuladorPDF
         /// <param name="texto">Texto que aparecerá no meio da página.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF Invalidar(this DocumentoPDF documento, string texto, int[] cor = null)
+        public static DocumentoPDF Invalidar(this DocumentoPDF documento, string texto, int[] cor = null, float opacidade = 1f)
         {
             
-            return InvalidarArquivo(documento, texto, cor);
+            return InvalidarArquivo(documento, texto, cor, opacidade);
         }
 
         /// <summary>
@@ -64,9 +66,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="texto">Texto que aparecerá no meio da página.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF Marcar(this DocumentoPDF documento, string texto, int[] cor = null)
+        public static DocumentoPDF Marcar(this DocumentoPDF documento, string texto, int[] cor = null, float opacidade = 1f)
         {
-            return InvalidarArquivo(documento, texto, cor);
+            return InvalidarArquivo(documento, texto, cor, opacidade);
         }
 
         /// <summary>
@@ -75,9 +77,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para tornar sem efeito.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF TornarSemEfeito(this DocumentoPDF documento, int[] cor = null)
+        public static DocumentoPDF TornarSemEfeito(this DocumentoPDF documento, int[] cor = null, float opacidade = 1f)
         {
-            return Invalidar(documento, "SEM EFEITO", cor);
+            return Invalidar(documento, "SEM EFEITO", cor, opacidade);
         }
 
         /// <summary>
@@ -86,9 +88,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para tornar cópia.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF MarcarComoCopia(this DocumentoPDF documento, int[] cor = null)
+        public static DocumentoPDF MarcarComoCopia(this DocumentoPDF documento, int[] cor = null, float opacidade = 1f)
         {
-            return Invalidar(documento, "CÓPIA", cor);
+            return Invalidar(documento, "CÓPIA", cor, opacidade);
         }
 
         /// <summary>
@@ -97,9 +99,9 @@ namespace CMP.ManipuladorPDF
         /// <param name="documento">Documento para marcar como modelo.</param>
         /// <returns>DocumentoPDF</returns>
 
-        public static DocumentoPDF MarcarComoModelo(this DocumentoPDF documento, int[] cor = null)
+        public static DocumentoPDF MarcarComoModelo(this DocumentoPDF documento, int[] cor = null, float opacidade = 1f)
         {
-            return Invalidar(documento, "MODELO", cor);
+            return Invalidar(documento, "MODELO", cor, opacidade);
         }
 
     }

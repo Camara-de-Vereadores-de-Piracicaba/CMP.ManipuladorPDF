@@ -33,6 +33,13 @@ namespace CMP.ManipuladorPDF
         public PdfAConversionErrorException(string message, Exception inner) : base(message, inner) { }
     }
 
+    public class PdfColorConversionErrorException : Exception
+    {
+        public PdfColorConversionErrorException() { }
+        public PdfColorConversionErrorException(string message) : base(message) { }
+        public PdfColorConversionErrorException(string message, Exception inner) : base(message, inner) { }
+    }
+
     public class CertificateWrongPasswordException : Exception
     {
         public CertificateWrongPasswordException() { }
