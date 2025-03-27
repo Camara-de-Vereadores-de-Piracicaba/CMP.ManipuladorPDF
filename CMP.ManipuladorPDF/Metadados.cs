@@ -87,7 +87,7 @@ namespace CMP.ManipuladorPDF
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
-            byte[] xmpBytes = pdfDocument.GetXmpMetadata();
+            //byte[] xmpBytes = pdfDocument.GetXmpMetadata();
             List <Metadado> metadata = new List<Metadado>();
 
             PdfDocumentInfo info = pdfDocument.GetDocumentInfo();

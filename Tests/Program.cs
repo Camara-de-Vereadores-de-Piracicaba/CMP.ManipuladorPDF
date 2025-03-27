@@ -81,12 +81,13 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //DocumentoPDF documento = str.ConverterParaPdf();
 
-string file = "c9180";
+string file = "pdf20";
+//string file = "new";
 
 DocumentoPDF documento = new DocumentoPDF($"{path}{file}.pdf");
 //documento = documento.IncorporarFonte("Helvetica");
 
-documento = documento.ConverterParaPDFA();
+//documento = documento.ConverterParaPDFA();
 
 byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
 Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
@@ -112,17 +113,16 @@ await keila.AdicionarOCSP();
 
 documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
-    //.Numerar()
-    //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
+    .Numerar()
+    .AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
     //.TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
     //.TornarSemEfeito(new int[] { 50, 50, 50 }, 0.5f)
-    //.Invalidar("MEU_TEXTO",new int[] {0, 255, 0})
-    .Assinar(keila, 1, 20, 770)
-    //.AssinarLegado(keila,1, 100, 400)
-    //.Protocolar("AAAAA")
+    .Assinar(keila, 1, 320, 550, "LTA")
+    .Protocolar("AAAAA")
+    .Invalidar("MEU_TEXTO", new int[] { 0, 255, 0 })
     //.Assinar(keila, 0)
     //.Assinar(keila,0,0,0,"B")
-    //.AdicionarDetalhesAoFinal("XXXXXXXX")
+    .AdicionarDetalhesAoFinal("XXXXXXXX")
     .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");

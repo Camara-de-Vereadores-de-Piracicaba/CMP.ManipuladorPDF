@@ -2,6 +2,7 @@
 using iText.Bouncycastle.Crypto;
 using iText.Bouncycastle.X509;
 using iText.Commons.Bouncycastle.Cert;
+using iText.Kernel.Crypto;
 using iText.Signatures;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Pkcs;

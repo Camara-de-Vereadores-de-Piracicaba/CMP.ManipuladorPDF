@@ -78,6 +78,8 @@ namespace CMP.ManipuladorPDF
     public class InvalidPDFDocumentException : Exception
     {
         public InvalidPDFDocumentException() { }
+        public InvalidPDFDocumentException(string message) : base(message) { }
+        public InvalidPDFDocumentException(string message, Exception inner) : base(message, inner) { }
     }
 
     public class RSAPrivateKeyNotFoundException : Exception
@@ -88,6 +90,11 @@ namespace CMP.ManipuladorPDF
     public class BrokenPDFDocumentException : Exception
     {
         public BrokenPDFDocumentException() { }
+    }
+
+    public class InvalidPDFHeaderDocumentException : Exception
+    {
+        public InvalidPDFHeaderDocumentException() { }
     }
 
     public class IrrecuperableBrokenPDFDocumentException : Exception

@@ -30,10 +30,6 @@ namespace CMP.ManipuladorPDF
 
         }
 
-   
-
-    
-
         /// <summary>
         /// Converte o espaço de cor de um documento
         /// </summary>

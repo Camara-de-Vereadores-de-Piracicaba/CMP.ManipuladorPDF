@@ -12,6 +12,8 @@ using iText.Kernel.Pdf.Xobject;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Forms.Form.Element;
+using iText.Kernel.Crypto;
+using iText.Kernel.Colors;
 
 namespace CMP.ManipuladorPDF
 {
@@ -80,8 +82,7 @@ namespace CMP.ManipuladorPDF
             {
                 if(exception.Message.Contains("All the fonts must be embedded."))
                 {
-                    Console.WriteLine(exception.Message);
-                    throw new InvalidPDFDocumentException();
+                    throw new InvalidPDFDocumentException(exception.Message);
                 }
                 else if(exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
                 {
@@ -100,51 +101,6 @@ namespace CMP.ManipuladorPDF
             return new DocumentoPDF(outputStream);
         }
 
-        [Obsolete]
-        public static DocumentoPDF AssinarNoModoLegado(
-            this DocumentoPDF documento,
-            Certificado certificado,
-            int pagina = 1,
-            int x = 0,
-            int y =0
-        )
-        {
-
-            documento = documento.DesencriptarCasoNecessario();
-
-            using MemoryStream signatureStream = new MemoryStream();
-            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
-            using PdfWriter pdfWriter = new PdfWriter(signatureStream);
-            PdfSigner signer = new PdfSigner(pdfReader, signatureStream, new StampingProperties().UseAppendMode());
-            PdfSignatureAppearance appearance = signer.GetSignatureAppearance();
-            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT,true).Fonte;
-            string signatureName = "Signature_" + System.IO.Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
-            appearance
-                .SetLocation(SignatureText.LOCATION)
-                .SetReason(SignatureText.REASON)
-                .SetContact(SignatureText.CONTACT)
-                .SetSignatureCreator(SignatureText.CREATOR)
-                .SetPageRect(new Rectangle(x, y, 220, 50))
-                .SetLayer2FontSize(12)
-                .SetPageNumber(pagina)
-                .SetLayer2Font(font);
-
-            Rectangle rectangle = new Rectangle(0, 0, 220, 50);
-            PdfFormXObject layer = appearance.GetLayer2();
-            PdfCanvas pdfCanvas = new PdfCanvas(layer, signer.GetDocument());
-            Canvas canvas = new Canvas(pdfCanvas, rectangle);
-            var info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
-            string name = info.GetField("CN");
-            name ??= "";
-            DateTime data = DateTime.Now;
-            Div root = CarimboDeIdentidade(name, data);
-            canvas.Add(root);
-            signer.SetFieldName(signatureName);
-            signer.SetSignDate(DateTime.Now);
-            signer.SignDetached(certificado.PKS, certificado.Chain, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
-            return new DocumentoPDF(signatureStream);
-        }
-
         private static Div CarimboDeIdentidade(
             string nome,
             DateTime data
@@ -156,7 +112,8 @@ namespace CMP.ManipuladorPDF
 
             Div root = new Div()
                 .SetWidth(220)
-                .SetHeight(50);
+                .SetHeight(50)
+                .SetBackgroundColor(ColorConstants.WHITE);
             root.SetNextRenderer(new FlexContainerRenderer(root));
 
             Div logo = new Div()
@@ -228,6 +185,18 @@ namespace CMP.ManipuladorPDF
                 {
                     throw new BrokenPDFDocumentException();
                 }
+                else if (exception.Message.Contains("The file header shall begin at byte zero and shall consist of"))
+                {
+                    try
+                    {
+                        documento = documento.ConverterDocumentoParaPDFA();
+                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_LTA);
+                    }
+                    catch (Exception)
+                    {
+                        throw new InvalidPDFHeaderDocumentException();
+                    }
+                }
                 else if (exception.Message.Contains("The SSL connection could not be established"))
                 {
                     try
@@ -237,6 +206,18 @@ namespace CMP.ManipuladorPDF
                     catch (Exception)
                     {
                         throw new OCSPSignatureVerifyConnectionException();
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        documento = documento.ConverterDocumentoParaPDFA();
+                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_LTA);
+                    }
+                    catch (Exception)
+                    {
+                        throw new SignatureException(exception.Message);
                     }
                 }
 
@@ -384,27 +365,6 @@ namespace CMP.ManipuladorPDF
                     throw new CertificateWrongPasswordException();
             }
             return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
-        }
-
-        /// <summary>
-        /// Assina um Documento PDF no modo legado (Você não deveria estar usando isso...)
-        /// </summary>
-        /// <param name="documento">Documento para ser assinado.</param>
-        /// <param name="certificado">Certificado do signatário.</param>
-        /// <param name="pagina">Página onde a assinatura vai aparecer. Defina como zero (0) para uma assinatura invisível.</param>
-        /// <param name="x">Posição X da assinatura.</param>
-        /// <param name="y">Posição Y da assinatura. As coordenadas são de baixo para cima.</param>
-
-        [Obsolete]
-        public static DocumentoPDF AssinarLegado(
-            this DocumentoPDF documento,
-            Certificado certificado,
-            int pagina = 1,
-            int x = 0,
-            int y = 0
-        )
-        {
-            return AssinarNoModoLegado(documento, certificado, pagina, x, y);
         }
 
     }

@@ -15,6 +15,7 @@ using Rectangle = iText.Kernel.Geom.Rectangle;
 using Image = iText.Layout.Element.Image;
 using QRImage = SixLabors.ImageSharp.Image;
 using SixLabors.ImageSharp;
+using iText.Kernel.Colors;
 
 namespace CMP.ManipuladorPDF
 {
@@ -80,7 +81,7 @@ namespace CMP.ManipuladorPDF
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrcode, QRCodeGenerator.ECCLevel.L);
                     QRCode _qrCode = new QRCode(qrCodeData);
-                    QRImage qrCodeImage = _qrCode.GetGraphic(4,Color.Black,Color.White,false);
+                    QRImage qrCodeImage = _qrCode.GetGraphic(4,SixLabors.ImageSharp.Color.Black,SixLabors.ImageSharp.Color.White,false);
                     MemoryStream ms = new MemoryStream();
                     qrCodeImage.SaveAsPng(ms);
                     ImageData imageData = ImageDataFactory.CreatePng(ms.ToArray());
@@ -91,9 +92,16 @@ namespace CMP.ManipuladorPDF
                         qx = 0;
                     }
 
+                    pdfCanvas.SaveState()
+                     .SetFillColor(ColorConstants.WHITE)
+                     .Rectangle(qx - 2, _altura - 2, tamanhoQRCode + 4, tamanhoQRCode + 4)
+                     .Fill()
+                     .RestoreState();
+
                     _qrcode
                         .ScaleAbsolute(tamanhoQRCode, tamanhoQRCode)
                         .SetFixedPosition(qx, _altura);
+
                     canvas.Add(_qrcode);
                     _altura = _altura + tamanhoQRCode + 5;
                 }
@@ -134,6 +142,7 @@ namespace CMP.ManipuladorPDF
                     {
                         _texto = $"Página {pagina} de {totalPaginas}. {_texto}";
                     }
+
                     Texto(_texto, i);
                 }
             }

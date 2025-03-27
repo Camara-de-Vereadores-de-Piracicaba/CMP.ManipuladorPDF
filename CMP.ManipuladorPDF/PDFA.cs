@@ -19,7 +19,7 @@ namespace CMP.ManipuladorPDF
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
             PdfADocument pdfADocument = new PdfADocument(
                 pdfWriter,
-                PdfAConformanceLevel.PDF_A_4,
+                PdfAConformance.PDF_A_4,
                 new PdfOutputIntent("Custom", "", "http://www.color.org", "sRGB IEC61966-2.1", sRGBColorStream)
             );
 
