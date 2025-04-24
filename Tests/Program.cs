@@ -1,5 +1,4 @@
-﻿using CMP.Certificados;
-using CMP.ManipuladorPDF;
+﻿using CMP.ManipuladorPDF;
 
 //DocumentoPDFConfig.DefinirDiretorioDeFontes();
 
@@ -112,7 +111,7 @@ window.onload = function() {
 </body></html>"
 ).ConverterParaPdf();
 
-documento.Salvar($"{path}{output}");
+//documento.Salvar($"{path}{output}");
 
 
 //Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
@@ -201,7 +200,7 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
-//documento
+documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
     //.Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
@@ -213,6 +212,7 @@ foreach(AssinanteDocumento assinante in assinantes)
     //.Assinar(keila, 0)
     //.Assinar(keila,0,0,0,"B")
     //.AdicionarDetalhesAoFinal("XXXXXXXX")
-    //.Salvar($"{path}{output}");
+    .ProtegerComSenha("fabio")
+    .Salvar($"{path}{output}");
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
