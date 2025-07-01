@@ -1,7 +1,7 @@
-﻿using CMP.ManipuladorPDF;
+﻿using CMP.Certificados;
+using CMP.ManipuladorPDF;
 
 //DocumentoPDFConfig.DefinirDiretorioDeFontes();
-
 
 Adobe.Acrobat.FecharAcrobat();
 
@@ -11,7 +11,7 @@ string output = "simples.pdf";
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
 //byte[] arr = File.ReadAllBytes($"{path}despacho.pdf");
 
-
+/*
 DocumentoPDF documento = new TemplateHtml(
     @"<!DOCTYPE html>
 <!-- saved from url=(0091)https://localhost:44368/planocontratacoes/publico/solicitacoesinclusaopca/imprimir/jnkkcjlm -->
@@ -111,6 +111,8 @@ window.onload = function() {
 </body></html>"
 ).ConverterParaPdf();
 
+*/
+
 //documento.Salvar($"{path}{output}");
 
 
@@ -178,13 +180,13 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //documento = documento.ConverterParaPDFA();
 
-//byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
-//Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
-//Certificado certificado = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
-//certificado.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
+ byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
+Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
+Certificado keila = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigues@camarapiracicaba.sp.gov.br", "1234ab");
+keila.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
 //Certificado keila = new Certificado("C:\\arquivos\\certificados\\keila.pfx","1234ab");
-//await keila.AdicionarOCSP();
+await keila.AdicionarOCSP();
 
 //Certificado keila = new Certificado("CN=Fabio Cardoso, OU=Fabio Cardoso, O=Fabio Cardoso, L=Piracicaba, S=Sao Paulo, C=BR");
 //await keila.AdicionarOCSP();
@@ -200,19 +202,41 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
+DocumentoPDF documento = new DocumentoPDF($"{path}1.pdf");
+
+
+
 documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
-    //.Numerar()
+    .Numerar()
     //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
     //.TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
     //.TornarSemEfeito(new int[] { 50, 50, 50 }, 0.5f)
     //.Assinar(keila, 1, 320, 550, "LTA")
     //.Protocolar("AAAAA")
     //.Invalidar("MEU_TEXTO", new int[] { 0, 255, 0 })
-    //.Assinar(keila, 0)
-    //.Assinar(keila,0,0,0,"B")
+    .Assinar(keila, 0)
+    .Assinar(keila,0,0,0,"B")
     //.AdicionarDetalhesAoFinal("XXXXXXXX")
-    .ProtegerComSenha("fabio")
+    //.ProtegerComSenha("fabio")
     .Salvar($"{path}{output}");
+
+
+
+DocumentoPDF documento2 = new DocumentoPDF($"{path}{output}");
+List<AssinanteDocumento> assinantes = documento2.Assinantes();
+
+
+foreach (var assinante in assinantes)
+{
+    Console.WriteLine($"Nome: {assinante.Nome}");
+    Console.WriteLine($"Email: {assinante.Email}");
+    Console.WriteLine($"Razão: {assinante.Razao}");
+    Console.WriteLine($"Data: {assinante.Data}");
+    Console.WriteLine($"Emissor: {assinante.Emissor}");
+    Console.WriteLine($"Tipo: {assinante.Tipo}");
+    Console.WriteLine($"Validação: {assinante.Validacao}");
+    Console.WriteLine(new string('-', 40));
+}
 
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");

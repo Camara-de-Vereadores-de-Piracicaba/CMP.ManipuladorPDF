@@ -1,10 +1,12 @@
-﻿using iText.Kernel.Pdf;
-using System.IO;
-using iText.Layout.Element;
+﻿using iText.Kernel.Colors;
 using iText.Kernel.Font;
+using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
+using iText.Layout.Element;
 using iText.Layout.Properties;
+using System.IO;
+using System.Text.RegularExpressions;
 using Rectangle = iText.Kernel.Geom.Rectangle;
 
 namespace CMP.ManipuladorPDF
@@ -61,27 +63,37 @@ namespace CMP.ManipuladorPDF
 
                 Paragraph text = new Paragraph();
                 text.SetFontSize(tamanhoFonte).Add($"{prefixo}{numero}");
-                //text.SetFont(PDFTrueTypeFont.GetFont("calibri"));
 
                 float x = margem;
                 float y = margem;
                 TextAlignment alignment = TextAlignment.LEFT;
 
+                float bgx = 0;
+
                 if (posicao == PosicaoNumero.RODAPE_DIREITA)
                 {
                     x = pageWidth - margem;
                     alignment = TextAlignment.RIGHT;
+                    bgx = x - 50;
                 }
                 else if (posicao == PosicaoNumero.TOPO_ESQUERDA)
                 {
                     y = pageHeight - margem;
+                    bgx = x - 10;
                 }
                 else if (posicao == PosicaoNumero.TOPO_DIREITA)
                 {
                     x = pageWidth - margem;
                     y = pageHeight - margem;
                     alignment = TextAlignment.RIGHT;
+                    bgx = x - 50;
                 }
+
+                pdfCanvas.SaveState()
+                    .SetFillColor(ColorConstants.WHITE)
+                    .Rectangle(bgx, y - 10, 60, 20)
+                    .Fill()
+                    .RestoreState();
 
                 canvas.ShowTextAligned(text, x, y, alignment, VerticalAlignment.MIDDLE);
 

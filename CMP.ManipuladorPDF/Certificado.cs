@@ -51,6 +51,7 @@ namespace CMP.Certificados
                 {
                     throw new CertificateWrongPasswordException();
                 }
+
                 throw new Exception(exception.Message);
             }
 
@@ -279,6 +280,7 @@ namespace CMP.Certificados
                     {
                         objectIdentifiers.Add(inputStream as DerObjectIdentifier);
                     }
+
                     while (queue.Any())
                     {
                         Asn1Sequence sequence = queue.Dequeue();
@@ -288,6 +290,7 @@ namespace CMP.Certificados
                             queue.Enqueue(s);
                         }
                     }
+
                     if (objectIdentifiers.Any())
                     {
                         string[] oids = string.Join("#", objectIdentifiers.Select(j => j.Id)).Split('#');
@@ -298,8 +301,11 @@ namespace CMP.Certificados
                         result.Add(extension.Oid.Value, null);
                     }
                 }
-                catch (Exception exception){}
+                catch (Exception){
+                    
+                }
             }
+
             return result;
         }
 
@@ -318,10 +324,12 @@ namespace CMP.Certificados
                 {
                     retorno = TipoCertificado.A3;
                 }
+
                 if (policy[0].Contains("2.16.76.1.2.1."))
                 {
                     retorno = TipoCertificado.A1;
                 }
+
                 if (policy[0].Contains("2.16.76.3.2.1."))
                 {
                     retorno = TipoCertificado.GOVBR;
