@@ -1,11 +1,10 @@
 ﻿using iText.Kernel.Pdf;
+using iText.Kernel.Utils;
 using QRCoder;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System;
 using System.Linq;
-using SixLabors.ImageSharp;
-using iText.Kernel.Utils;
 
 namespace CMP.ManipuladorPDF
 {
@@ -28,8 +27,8 @@ namespace CMP.ManipuladorPDF
 
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             if (DocumentoPDFConfig.UNETHICAL_READING)
-               pdfReader.SetUnethicalReading(true);
-            
+                pdfReader.SetUnethicalReading(true);
+
             PdfDocument pdfDocument = new PdfDocument(pdfReader);
 
             pdfMerger.Merge(pdfDocument, 1, pdfDocument.GetNumberOfPages());
@@ -47,6 +46,7 @@ namespace CMP.ManipuladorPDF
                 title = "Estes documentos foram assinados digitalmente pelos seguintes signatários:";
                 _signatures = assinantes;
             }
+
             foreach (AssinanteDocumento signature in _signatures)
             {
 
@@ -55,6 +55,7 @@ namespace CMP.ManipuladorPDF
                 {
                     docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
                 }
+
                 string date = signature.Data;
                 signatures += $@"
                     <div class=""signature"">
@@ -78,13 +79,11 @@ namespace CMP.ManipuladorPDF
                 validadorUrl = $"{documento.ValidadorURL}/{hash}";
                 hasHash = $" e informe o código <b>{hash}</b>.";
             }
+
             QRCodeGenerator qrGenerator = new QRCodeGenerator();
             QRCodeData qrCodeData = qrGenerator.CreateQrCode(validadorUrl, QRCodeGenerator.ECCLevel.Q);
-            QRCode _qrCode = new QRCode(qrCodeData);
-            Image qrCodeImage = _qrCode.GetGraphic(4);
-            MemoryStream ms = new MemoryStream();
-            qrCodeImage.SaveAsPng(ms);
-            string qrCode = Convert.ToBase64String(ms.ToArray());
+            Base64QRCode qrCode = new Base64QRCode(qrCodeData);
+            string qrCodeString = qrCode.GetGraphic(4);
 
             string html = $@"
                 <style>
@@ -187,11 +186,11 @@ namespace CMP.ManipuladorPDF
                     <div class=""signatures"">{lsv}</div>
                 </div>
                 <div id=""footer"">
-                    <img id=""qrcode"" src=""data:image/png;base64, {qrCode}"" />
+                    <img id=""qrcode"" src=""data:image/png;base64,{qrCodeString}"" />
                     <div id=""info"">
                         <p>
                             Se você deseja verificar a autenticidade deste documento, use o QR Code ao lado,<br />
-                            ou acesse <b><a href=""{documento.ValidadorURL}"">{documento.ValidadorURL}</a></b>{hasHash}</b>
+                            ou acesse <b><a href=""{documento.ValidadorURL}"">{documento.ValidadorURL}</a></b>{hasHash}
                         </p>
                     </div>
                 </div>

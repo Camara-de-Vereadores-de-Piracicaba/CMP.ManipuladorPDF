@@ -1,21 +1,19 @@
-﻿using iText.Kernel.Pdf;
+﻿using iText.IO.Image;
+using iText.Kernel.Colors;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Layout;
+using iText.Layout.Properties;
+using iText.Layout.Renderer;
+using QRCoder;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using iText.Layout.Element;
-using iText.Kernel.Font;
-using iText.Kernel.Pdf.Canvas;
-using iText.Layout;
-using iText.Layout.Properties;
-using iText.Layout.Renderer;
-using iText.Layout.Layout;
-using iText.IO.Image;
-using QRCoder;
-using Rectangle = iText.Kernel.Geom.Rectangle;
 using Image = iText.Layout.Element.Image;
-using QRImage = SixLabors.ImageSharp.Image;
-using SixLabors.ImageSharp;
-using iText.Kernel.Colors;
+using Rectangle = iText.Kernel.Geom.Rectangle;
 
 namespace CMP.ManipuladorPDF
 {
@@ -34,10 +32,11 @@ namespace CMP.ManipuladorPDF
             PosicaoCarimbo posicao,
             string qrcode = null,
             int altura = 10
-        ){
+        )
+        {
 
             if (documento.TemCarimboAntigo())
-              return documento;
+                return documento;
 
             int tamanhoQRCode = 40;
             using MemoryStream outputStream = new MemoryStream();
@@ -71,26 +70,23 @@ namespace CMP.ManipuladorPDF
                 int distanciaBorda = 6;
                 int tamanhoFonte = 6;
                 PdfPage page = pdfDocument.GetPage(pagina);
-                var mediaBox = page.GetCropBox();
+                Rectangle mediaBox = page.GetCropBox();
                 float pageWidth = mediaBox.GetWidth();
                 float pageHeight = mediaBox.GetHeight();
                 PdfCanvas pdfCanvas = new PdfCanvas(page);
                 Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
-                if(qrcode != null)
+                if (qrcode != null)
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
                     QRCodeData qrCodeData = qrGenerator.CreateQrCode(qrcode, QRCodeGenerator.ECCLevel.L);
-                    QRCode _qrCode = new QRCode(qrCodeData);
-                    QRImage qrCodeImage = _qrCode.GetGraphic(4,SixLabors.ImageSharp.Color.Black,SixLabors.ImageSharp.Color.White,false);
-                    MemoryStream ms = new MemoryStream();
-                    qrCodeImage.SaveAsPng(ms);
-                    ImageData imageData = ImageDataFactory.CreatePng(ms.ToArray());
+                    PngByteQRCode qrCode = new PngByteQRCode(qrCodeData);
+                    byte[] qrCodeBytes = qrCode.GetGraphic(4);
+                    ImageData imageData = ImageDataFactory.CreatePng(qrCodeBytes);
                     Image _qrcode = new Image(imageData);
+
                     int qx = (int)pageWidth - tamanhoQRCode - distanciaBorda;
                     if (posicao == PosicaoCarimbo.ESQUERDA)
-                    {
                         qx = 0;
-                    }
 
                     pdfCanvas.SaveState()
                      .SetFillColor(ColorConstants.WHITE)
@@ -135,7 +131,7 @@ namespace CMP.ManipuladorPDF
                     );
                 }
 
-                for(int i = 0; i <= linhas.Count()-1; i++)
+                for (int i = 0; i <= linhas.Count() - 1; i++)
                 {
                     string _texto = linhas[i];
                     if (i == 0)
@@ -174,8 +170,10 @@ namespace CMP.ManipuladorPDF
 
         public static DocumentoPDF Carimbar(this DocumentoPDF documento, string linha, PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA)
         {
-            List<string> linhas = new List<string>();
-            linhas.Add(linha);
+            List<string> linhas = new List<string>
+            {
+                linha
+            };
             return Carimbo(documento, linhas, posicao);
         }
 
@@ -204,8 +202,10 @@ namespace CMP.ManipuladorPDF
 
         public static DocumentoPDF CarimbarComQRCode(this DocumentoPDF documento, string linha, string qrcode, PosicaoCarimbo posicao = PosicaoCarimbo.DIREITA)
         {
-            List<string> linhas = new List<string>();
-            linhas.Add(linha);
+            List<string> linhas = new List<string>
+            {
+                linha
+            };
             return Carimbo(documento, linhas, posicao, qrcode);
         }
 

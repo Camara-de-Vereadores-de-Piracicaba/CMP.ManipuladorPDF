@@ -1,19 +1,16 @@
-﻿using iText.Kernel.Pdf;
-using iText.Signatures;
-using System.IO;
-using CMP.Certificados;
-using iText.Kernel.Geom;
-using iText.Layout.Element;
-using iText.IO.Image;
-using System;
-using iText.Layout.Renderer;
-using iText.Kernel.Font;
-using iText.Kernel.Pdf.Xobject;
-using iText.Kernel.Pdf.Canvas;
-using iText.Layout;
+﻿using CMP.Certificados;
 using iText.Forms.Form.Element;
-using iText.Kernel.Crypto;
+using iText.IO.Image;
 using iText.Kernel.Colors;
+using iText.Kernel.Crypto;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout.Element;
+using iText.Layout.Renderer;
+using iText.Signatures;
+using System;
+using System.IO;
 
 namespace CMP.ManipuladorPDF
 {
@@ -37,15 +34,15 @@ namespace CMP.ManipuladorPDF
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
             using PdfWriter pdfWriter = new PdfWriter(signatureStream);
 
-            var info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
+            CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
             string _name = info.GetField("CN");
             _name ??= "";
 
             DateTime data = DateTime.Now;
 
-            Div root = CarimboDeIdentidade(_name,data);
+            Div root = CarimboDeIdentidade(_name, data);
 
-            string signatureName = "Signature_" + System.IO.Path.GetRandomFileName().Replace(".","").Substring(0,8);
+            string signatureName = "Signature_" + System.IO.Path.GetRandomFileName().Replace(".", "").Substring(0, 8);
 
             SignerProperties signerProperties = new SignerProperties();
             signerProperties.SetFieldName(signatureName);
@@ -78,13 +75,13 @@ namespace CMP.ManipuladorPDF
             {
                 padesSigner.Sign(certificado, signerProperties, profile);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-                if(exception.Message.Contains("All the fonts must be embedded."))
+                if (exception.Message.Contains("All the fonts must be embedded."))
                 {
                     throw new InvalidPDFDocumentException(exception.Message);
                 }
-                else if(exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
+                else if (exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
                 {
                     if (tryRecovery)
                     {
@@ -107,8 +104,8 @@ namespace CMP.ManipuladorPDF
         )
         {
 
-            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT,true).Fonte;
-            PdfFont fontBold = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD,true).Fonte;
+            PdfFont font = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT, true).Fonte;
+            PdfFont fontBold = new FontePDF(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT_BOLD, true).Fonte;
 
             Div root = new Div()
                 .SetWidth(220)
@@ -151,16 +148,16 @@ namespace CMP.ManipuladorPDF
             {
                 return AssinarDocumento(documento, certificado, x, y, pagina, profile);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-                
+
                 if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
                 {
                     throw new CertificateWrongPasswordException();
                 }
                 else if (exception.Message.Contains("Could not find file"))
                 {
-                    if (exception.Message.Contains(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT)) 
+                    if (exception.Message.Contains(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT))
                     {
                         throw new FontNotExistException(DocumentoPDFConfig.SIGNATURE_DEFAULT_FONT);
                     }
@@ -212,8 +209,8 @@ namespace CMP.ManipuladorPDF
                 {
                     try
                     {
-                        documento = documento.ConverterDocumentoParaPDFA();
-                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_LTA);
+                        documento = documento.RecuperarDocumento();
+                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B);
                     }
                     catch (Exception)
                     {
@@ -223,7 +220,7 @@ namespace CMP.ManipuladorPDF
 
                 throw new SignatureException(exception.Message);
             }
-            
+
         }
 
         public static class SignatureText
@@ -276,7 +273,7 @@ namespace CMP.ManipuladorPDF
         /// <param name="y">Posição Y da assinatura. As coordenadas são de baixo para cima.</param>
 
         public static DocumentoPDF Assinar(
-            this DocumentoPDF documento, 
+            this DocumentoPDF documento,
             string certificado,
             string senha,
             int pagina = 1,

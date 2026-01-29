@@ -1,9 +1,9 @@
 ﻿using iText.Html2pdf;
-using iText.Html2pdf.Resolver.Font;
 using iText.Kernel.Geom;
 using iText.Kernel.Pdf;
 using iText.Layout.Font;
 using iText.Pdfa;
+using iText.StyledXmlParser.Resolver.Font;
 using System;
 using System.IO;
 
@@ -21,7 +21,7 @@ namespace CMP.ManipuladorPDF
         )
         {
 
-            if(html.Contains("<style scoped>"))
+            if (html.Contains("<style scoped>"))
             {
                 html = html.Replace("<style scoped>", "<style scoped>*{font-family:\"Aptos\"}");
                 html = html.Replace(": %;", ": 0%;");
@@ -46,10 +46,12 @@ namespace CMP.ManipuladorPDF
                 .AddCreationDate();
 
             ConverterProperties properties = new ConverterProperties();
-            FontProvider fontProvider = new DefaultFontProvider();
+
+            FontProvider fontProvider = new BasicFontProvider();
+
             int fontCount = fontProvider.AddDirectory(DocumentoPDFConfig.FONT_PATH);
 
-            if(fontCount == 0)
+            if (fontCount == 0)
             {
                 throw new FontDirectoryEmptyException();
             }
@@ -60,9 +62,9 @@ namespace CMP.ManipuladorPDF
             {
                 HtmlConverter.ConvertToPdf(html, pdfDocument, properties);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
-                if(exception.Message.Contains("All the fonts must be embedded"))
+                if (exception.Message.Contains("All the fonts must be embedded"))
                 {
                     string message = exception.Message.Split(":")[1];
                     throw new FontNotExistException(message);

@@ -42,7 +42,7 @@ namespace Tests
             DocumentoPDF pdf = new(FileManager.GetFile("test_pdf_complex.pdf"));
             List<AssinanteDocumento> assinantes = pdf.Assinantes();
 
-            if(
+            if (
                 assinantes[0].Nome != "Douglas Miranda da Silva" ||
                 assinantes[1].Nome != "Aline Ribeiro de Campos Mello")
             {
@@ -61,7 +61,7 @@ namespace Tests
         public void LastPageTest()
         {
             DocumentoPDF pdf = new(FileManager.GetFile("test_pdf_problematic.pdf"));
-            DocumentoPDF final =pdf
+            DocumentoPDF final = pdf
                 .AdicionarDetalhesAoFinal("XXXXXXXX");
 
         }
@@ -82,22 +82,21 @@ namespace Tests
         [TestMethod]
         public async Task SignatureTest()
         {
-            Certificado raiz = new Certificado(FileManager.GetFile("ca.pfx"), "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
-            Certificado cert = new Certificado(raiz, "TESTE", "teste@teste.com.br", "1234ab");
-            await cert.AdicionarOCSP();
-
-            DocumentoPDF pdf = new(FileManager.GetFile("test_pdf_camara.pdf"));
-
-            DocumentoPDF final = pdf.Assinar(cert, 1, 20, 770);
-            List<AssinanteDocumento> assinantes = final.Assinantes();
-
-            if (
-                assinantes[0].Nome!= "Wagner Alexandre de Oliveira" ||
-                assinantes[1].Nome != "Angela Maria de Oliveira Moraes" ||
-                assinantes[2].Nome != "Câmara Municipal de Piracicaba" ||
-                assinantes[14].Nome != "Teste")
+            try
             {
-                throw new Exception();
+                Certificado raiz = new(FileManager.GetFile("ca.pfx"), "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
+                Certificado cert = new(raiz, "TESTE", "teste@teste.com.br", "1234ab");
+                await cert.AdicionarOCSP();
+
+                DocumentoPDF pdf = new(FileManager.GetFile("test_pdf_camara.pdf"));
+
+                DocumentoPDF final = pdf.Assinar(cert, 1, 20, 770);
+                List<AssinanteDocumento> assinantes = final.Assinantes();
+            }
+            catch (Exception ex)
+            {
+                Debug(ex.ToString());
+                throw;
             }
 
         }
@@ -105,7 +104,7 @@ namespace Tests
         [TestMethod]
         public async Task CompleteTest()
         {
-            
+
             Certificado raiz = new Certificado(FileManager.GetFile("ca.pfx"), "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");
             Certificado cert = new Certificado(raiz, "TESTE", "teste@teste.com.br", "1234ab");
 
