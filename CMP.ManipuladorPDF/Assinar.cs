@@ -24,12 +24,15 @@ namespace CMP.ManipuladorPDF
             int y,
             int pagina,
             string profile = "LTA",
-            bool tryRecovery = true
+            bool tryRecovery = true,
+            bool signatureTagRemoval = true
         )
         {
 
             documento = documento.DesencriptarCasoNecessario();
-            documento = documento.RemoverTagsParaAssinatura();
+
+            if (signatureTagRemoval)
+                documento = documento.RemoverTagsParaAssinatura();
 
             using MemoryStream signatureStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
@@ -211,7 +214,7 @@ namespace CMP.ManipuladorPDF
                     try
                     {
                         documento = documento.RecuperarDocumento();
-                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B);
+                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
                     }
                     catch (Exception)
                     {

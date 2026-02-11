@@ -6,11 +6,14 @@ using CMP.ManipuladorPDF;
 Adobe.Acrobat.FecharAcrobat();
 
 string path = "C:\\arquivos\\testepdf\\";
-string output = "simples.pdf";
+string output = "joao.pdf";
+
+DocumentoPDF documento = new DocumentoPDF($"{path}{output}");
 
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
 //byte[] arr = File.ReadAllBytes($"{path}despacho.pdf");
 
+/*
 DocumentoPDF documento = new TemplateHtml(
     @"
 <!DOCTYPE html>
@@ -199,6 +202,7 @@ th:empty {
 </html>
 "
 ).ConverterParaPdf();
+*/
 
 byte[] rarr = File.ReadAllBytes("C:\\arquivos\\certificados\\ca.pfx");
 Certificado raiz = new Certificado(rarr, "ET1w4VGjsRlFuyfUd5kbNamD8oZiXLBp");

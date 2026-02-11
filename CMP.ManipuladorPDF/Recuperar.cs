@@ -53,6 +53,14 @@ namespace CMP.ManipuladorPDF
 
                 if (catalogObject is PdfDictionary catalogDict)
                 {
+                    PdfDictionary markInfoDict = catalogDict.GetAsDictionary(PdfName.MarkInfo);
+                    if (markInfoDict == null)
+                    {
+                        markInfoDict = new PdfDictionary();
+                        catalogDict.Put(PdfName.MarkInfo, markInfoDict);
+                    }
+                    markInfoDict.Put(PdfName.Marked, PdfBoolean.TRUE);
+
                     if (catalogDict.ContainsKey(PdfName.EmbeddedFiles))
                         catalogDict.Remove(PdfName.EmbeddedFiles);
 
@@ -74,6 +82,7 @@ namespace CMP.ManipuladorPDF
                                 acroFormDict.Remove(PdfName.XFA);
                         }
                     }
+
                 }
 
                 int numberOfPages = pdfDocument.GetNumberOfPages();
