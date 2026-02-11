@@ -4,11 +4,11 @@
     public class TemplateHtml
     {
 
-        public string _html {  get; set; }
+        public string _html { get; set; }
 
         public TemplateHtml(
-            string text, 
-            string departamento = null, 
+            string text,
+            string departamento = null,
             string setor = null,
             double[] margem = null,
             string css = null)
@@ -17,8 +17,8 @@
         }
 
         private void AdicionarConteudo(
-            string text, 
-            string departamento = null, 
+            string text,
+            string departamento = null,
             string setor = null,
             double[] margem = null,
             string css = null)
@@ -29,7 +29,7 @@
                 margem = new double[4] { 3, 3, 1.5, 2 };
             }
 
-            if(css == null)
+            if (css == null)
             {
                 css = "";
             }
@@ -48,7 +48,7 @@
                 }
             }
 
-            string _style=$@"
+            string _style = $@"
                  <style>
                     @page{{
                         margin-left:{margem[0]}cm;
@@ -83,6 +83,11 @@
         public DocumentoPDF ConverterParaPdf()
         {
             return _html.ToString().ConverterParaPdf();
+        }
+
+        public DocumentoPDF ConverterParaPdfTagged()
+        {
+            return _html.ToString().ConverterParaPdfTagged();
         }
 
         public override string ToString()

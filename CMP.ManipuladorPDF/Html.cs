@@ -13,6 +13,7 @@ namespace CMP.ManipuladorPDF
     {
         private static DocumentoPDF Html2PDF(
             this string html,
+            bool tagged = true,
             string title = "Documento PDF",
             string author = "Câmara Municipal de Piracicaba",
             string subject = "Documento criado pelo sistema de documentos digitais da Câmara Municipal de Piracicaba",
@@ -35,7 +36,10 @@ namespace CMP.ManipuladorPDF
 
             pdfDocument.SetDefaultPageSize(PageSize.A4);
             pdfDocument.GetCatalog().SetLang(new PdfString("pt-BR"));
-            pdfDocument.SetTagged();
+
+            if (tagged)
+                pdfDocument.SetTagged();
+
             PdfDocumentInfo info = pdfDocument.GetDocumentInfo();
             info
                 .SetTitle(title)
@@ -92,7 +96,19 @@ namespace CMP.ManipuladorPDF
             string palavrasChave = "Documento PDF, Câmara Municipal de Piracicaba"
         )
         {
-            return Html2PDF(html, titulo, autor, assunto, criador, palavrasChave);
+            return Html2PDF(html, false, titulo, autor, assunto, criador, palavrasChave);
+        }
+
+        public static DocumentoPDF ConverterParaPdfTagged(
+            this string html,
+            string titulo = "Documento PDF",
+            string autor = "Câmara Municipal de Piracicaba",
+            string assunto = "Documento criado pelo sistema de documentos digitais da Câmara Municipal de Piracicaba",
+            string criador = "Câmara Municipal de Piracicaba",
+            string palavrasChave = "Documento PDF, Câmara Municipal de Piracicaba"
+        )
+        {
+            return Html2PDF(html, true, titulo, autor, assunto, criador, palavrasChave);
         }
 
     }

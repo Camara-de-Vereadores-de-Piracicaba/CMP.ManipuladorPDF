@@ -1,6 +1,4 @@
-﻿using iText.Commons.Utils;
-using iText.Kernel.Pdf;
-using System;
+﻿using iText.Kernel.Pdf;
 using System.IO;
 using System.Text;
 
@@ -8,7 +6,7 @@ namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
-       
+
         private static DocumentoPDF DesencriptarPDF(
             this DocumentoPDF documento,
             string senha = null
@@ -46,6 +44,36 @@ namespace CMP.ManipuladorPDF
 
             pdfDocument.Close();
             return documento;
+        }
+
+        internal static DocumentoPDF RemoverTagsParaAssinatura(this DocumentoPDF documento)
+        {
+            using MemoryStream input = new MemoryStream(documento.ByteArray);
+            using PdfReader reader = new PdfReader(input);
+
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                reader.SetUnethicalReading(true);
+
+            using MemoryStream output = new MemoryStream();
+            using PdfWriter writer = new PdfWriter(output);
+
+            using PdfDocument pdfDocument = new PdfDocument(reader, writer);
+
+            PdfDictionary catalog = pdfDocument.GetCatalog().GetPdfObject();
+            PdfName structTreeRootKey = PdfName.StructTreeRoot;
+
+            PdfObject structTreeRoot = catalog.Get(structTreeRootKey);
+            if (structTreeRoot != null)
+            {
+                catalog.Remove(structTreeRootKey);
+
+                PdfName markInfoKey = PdfName.MarkInfo;
+                PdfDictionary markInfo = catalog.GetAsDictionary(markInfoKey);
+                markInfo?.Put(PdfName.Marked, PdfBoolean.FALSE);
+            }
+
+            pdfDocument.Close();
+            return new DocumentoPDF(output);
         }
 
         /// <summary>

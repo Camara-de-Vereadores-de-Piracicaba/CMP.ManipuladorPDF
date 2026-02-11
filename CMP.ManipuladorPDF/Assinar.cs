@@ -29,6 +29,7 @@ namespace CMP.ManipuladorPDF
         {
 
             documento = documento.DesencriptarCasoNecessario();
+            documento = documento.RemoverTagsParaAssinatura();
 
             using MemoryStream signatureStream = new MemoryStream();
             using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));

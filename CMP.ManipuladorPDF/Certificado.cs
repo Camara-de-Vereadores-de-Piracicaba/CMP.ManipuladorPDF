@@ -220,25 +220,31 @@ namespace CMP.Certificados
             X509Certificate2 certificado = certificateRequest.Create(certificadoRaiz, notBefore, notAfter, serial).CopyWithPrivateKey(rsaKey);
             SecureString secureString = GetSecureString(senha);
 
-            X509Certificate2Collection join = new X509Certificate2Collection();
-            join.Add(certificadoRaiz);
-            join.Add(certificado);
+            X509Certificate2Collection join = new X509Certificate2Collection
+            {
+                certificadoRaiz,
+                certificado
+            };
             byte[] exportedChain = join.Export(X509ContentType.Pfx, senha);
             X509Certificate2 ordemCertificado = new X509Certificate2(exportedChain, secureString);
 
             if (ordemCertificado.SubjectName.Name == "CN=Camara Municipal de Piracicaba, OU=Departamento de Tecnologia da Informacao, O=Camara Municipal de Piracicaba, L=Piracicaba, S=Sao Paulo, C=BR")
             {
-                join = new X509Certificate2Collection();
-                join.Add(certificado);
-                join.Add(certificadoRaiz);
+                join = new X509Certificate2Collection
+                {
+                    certificado,
+                    certificadoRaiz
+                };
                 exportedChain = join.Export(X509ContentType.Pfx, senha);
             }
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                join = new X509Certificate2Collection();
-                join.Add(certificadoRaiz);
-                join.Add(certificado);
+                join = new X509Certificate2Collection
+                {
+                    certificadoRaiz,
+                    certificado
+                };
                 exportedChain = join.Export(X509ContentType.Pfx, senha);
             }
 
@@ -264,12 +270,12 @@ namespace CMP.Certificados
         public static Dictionary<string, string[]> GetExtensionsOIDList(X509Certificate2 certificate)
         {
             Dictionary<string, string[]> result = new Dictionary<string, string[]>();
-            
+
             foreach (X509Extension extension in certificate.Extensions)
             {
                 try
                 {
-                    var inputStream = new Asn1InputStream(extension.RawData).ReadObject();
+                    Asn1Object inputStream = new Asn1InputStream(extension.RawData).ReadObject();
                     Queue<Asn1Sequence> queue = new Queue<Asn1Sequence>();
                     List<DerObjectIdentifier> objectIdentifiers = new List<DerObjectIdentifier>();
                     if (inputStream is Asn1Sequence)
@@ -301,8 +307,9 @@ namespace CMP.Certificados
                         result.Add(extension.Oid.Value, null);
                     }
                 }
-                catch (Exception){
-                    
+                catch (Exception)
+                {
+
                 }
             }
 
@@ -454,13 +461,12 @@ namespace CMP.Certificados
 
     public static class PadroesCertificado
     {
-        public static string OCSP() {
+        public static string OCSP()
+        {
             string OCSPDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
 
             if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
-            {
                 OCSPDomain = "http://172.16.90.5:5262";
-            }
 
             return OCSPDomain;
         }
@@ -470,9 +476,7 @@ namespace CMP.Certificados
             string CRLDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
 
             if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
-            {
                 CRLDomain = "http://172.16.90.5:5262";
-            }
 
             return CRLDomain;
         }
@@ -618,7 +622,7 @@ namespace CMP.Certificados
 
         public X509Certificate[] GetChain()
         {
-            var bcCertificate = new X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
+            X509Certificate bcCertificate = new X509Certificate(X509CertificateStructure.GetInstance(certificate.RawData));
             return new X509Certificate[] { bcCertificate };
         }
 
