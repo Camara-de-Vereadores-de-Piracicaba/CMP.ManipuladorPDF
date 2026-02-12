@@ -65,7 +65,9 @@ namespace CMP.Certificados
             {
                 alias = (string)_alias;
                 if (store.IsKeyEntry(alias))
+                {
                     break;
+                }
             }
 
             if (alias == null)
@@ -108,7 +110,9 @@ namespace CMP.Certificados
             string distinguishedName = new X500DistinguishedName(name).Name;
             X509Certificate2Collection collection = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, distinguishedName, false);
             if (collection.Count == 0)
+            {
                 throw new CertificateStoreNotFoundException();
+            }
 
             List<X509CertificateBC> _chain = new List<X509CertificateBC>();
             X509Certificate2 certificate = collection[0];
@@ -324,7 +328,6 @@ namespace CMP.Certificados
             Dictionary<string, string[]> oids = GetExtensionsOIDList(certificate);
             string[] policy = oids.Where(x => x.Key == "2.5.29.32").FirstOrDefault().Value;
 
-
             if (policy != null)
             {
                 if (policy[0].Contains("2.16.76.1.2.3."))
@@ -463,24 +466,13 @@ namespace CMP.Certificados
     {
         public static string OCSP()
         {
-            string OCSPDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
-
-            if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
-                OCSPDomain = "http://172.16.90.5:5262";
-
-            return OCSPDomain;
+            return "https://ocsp.camarapiracicaba.sp.gov.br";
         }
 
         public static string CRL()
         {
-            string CRLDomain = "https://ocsp.camarapiracicaba.sp.gov.br";
-
-            if (Environment.GetEnvironmentVariable("CMP_IS_EXTERNAL") == "true")
-                CRLDomain = "http://172.16.90.5:5262";
-
-            return CRLDomain;
+            return "https://ocsp.camarapiracicaba.sp.gov.br";
         }
-
     }
 
     public static class CertificadoOCSP
@@ -645,12 +637,14 @@ namespace CMP.Certificados
         {
             using RSA rsa = certificate.GetRSAPrivateKey();
             if (rsa == null)
+            {
                 throw new RSAPrivateKeyNotFoundException();
+            }
 
             return rsa.SignData(message, HashAlgorithmName.SHA512, RSASignaturePadding.Pkcs1);
         }
 
-        X509Certificate2 certificate;
+        private readonly X509Certificate2 certificate;
     }
 
 }
