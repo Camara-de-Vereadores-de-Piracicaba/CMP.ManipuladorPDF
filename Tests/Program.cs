@@ -6,9 +6,11 @@ using CMP.ManipuladorPDF;
 Adobe.Acrobat.FecharAcrobat();
 
 string path = "C:\\arquivos\\testepdf\\";
-string output = "joao.pdf";
+string input = "joao_in.pdf";
+string output = "joao_out.pdf";
 
-DocumentoPDF documento = new DocumentoPDF($"{path}{output}");
+
+DocumentoPDF documento = new DocumentoPDF($"{path}{input}");
 
 //byte[] arr = File.ReadAllBytes($"{path}baiao.pdf");
 //byte[] arr = File.ReadAllBytes($"{path}despacho.pdf");
@@ -212,16 +214,17 @@ keila.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
 documento
     //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
-    .Numerar()
-    .AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
-    .TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
+    //.Numerar()
+    //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
+    //.TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
     //.TornarSemEfeito(new int[] { 50, 50, 50 }, 0.5f)
     //.Assinar(keila, 1, 320, 550, "LTA")
-    .Protocolar("AAAAA")
-    .Invalidar("MEU_TEXTO", new int[] { 0, 255, 0 })
-    .Assinar(keila, 0)
-    .Assinar(keila, 0, 0, 0, "B")
-    .AdicionarDetalhesAoFinal("XXXXXXXX")
+    //.Protocolar("AAAAA")
+    //.Invalidar("MEU_TEXTO", new int[] { 0, 255, 0 })
+    //.ConverterParaPDFA()
+    .Assinar(keila, 1, 200,300)
+    //.Assinar(keila, 0, 0, 0, "B")
+    //.AdicionarDetalhesAoFinal("XXXXXXXX")
     //.ProtegerComSenha("fabio")
     .Salvar($"{path}{output}");
 

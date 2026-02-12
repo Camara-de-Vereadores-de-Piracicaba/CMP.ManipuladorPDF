@@ -218,7 +218,23 @@ namespace CMP.ManipuladorPDF
                     }
                     catch (Exception)
                     {
-                        throw new SignatureException(exception.Message);
+                        try
+                        {
+                            documento = documento.ConverterDocumentoParaPDFA();
+                            return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
+                        }
+                        catch (Exception)
+                        {
+                            try
+                            {
+                                documento = documento.ConverterDocumentoParaPDFA();
+                                return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, true);
+                            }
+                            catch (Exception)
+                            {
+                                throw new SignatureException(exception.Message);
+                            }
+                        }
                     }
                 }
 
