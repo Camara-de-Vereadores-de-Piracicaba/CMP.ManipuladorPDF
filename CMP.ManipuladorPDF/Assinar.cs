@@ -34,9 +34,9 @@ namespace CMP.ManipuladorPDF
             if (signatureTagRemoval)
                 documento = documento.RemoverTagsParaAssinatura();
 
-            using MemoryStream signatureStream = new MemoryStream();
-            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
-            using PdfWriter pdfWriter = new PdfWriter(signatureStream);
+            MemoryStream inputStream = new MemoryStream(documento.ByteArray);
+            using PdfReader pdfReader = new PdfReader(inputStream, new ReaderProperties());
+            pdfReader.SetCloseStream(false);
 
             CertificateInfo.X500Name info = CertificateInfo.GetSubjectFields(certificado.Chain[0]);
             string _name = info.GetField("CN");
@@ -99,7 +99,9 @@ namespace CMP.ManipuladorPDF
                 throw new SignatureException(exception.Message);
             }
 
-            return new DocumentoPDF(outputStream);
+            byte[] resultBytes = outputStream.ToArray();
+            outputStream.Dispose();
+            return new DocumentoPDF(resultBytes);
         }
 
         private static Div CarimboDeIdentidade(
@@ -209,26 +211,40 @@ namespace CMP.ManipuladorPDF
                         throw new OCSPSignatureVerifyConnectionException();
                     }
                 }
-                else
+                else if (exception.Message.Contains("Cannot close document with already flushed PDF Catalog"))
                 {
                     try
                     {
-                        documento = documento.RecuperarDocumento();
-                        return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
+                        DocumentoPDF documentoRecuperado;
+                        documentoRecuperado = documento.RemoverFontDescriptorsInvalidos();
+                        return AssinarDocumento(documentoRecuperado, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
+                    }
+                    catch (Exception)
+                    {
+                        throw new SignatureException(exception.Message);
+                    }
+                }
+                else
+                {
+                    DocumentoPDF documentoRecuperado;
+                    try
+                    {
+                        documentoRecuperado = documento.RecuperarDocumento();
+                        return AssinarDocumento(documentoRecuperado, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
                     }
                     catch (Exception)
                     {
                         try
                         {
-                            documento = documento.ConverterDocumentoParaPDFA();
-                            return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
+                            documentoRecuperado = documento.ConverterDocumentoParaPDFA();
+                            return AssinarDocumento(documentoRecuperado, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, false);
                         }
                         catch (Exception)
                         {
                             try
                             {
-                                documento = documento.ConverterDocumentoParaPDFA();
-                                return AssinarDocumento(documento, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, true);
+                                documentoRecuperado = documento.ConverterDocumentoParaPDFA();
+                                return AssinarDocumento(documentoRecuperado, certificado, x, y, pagina, SignatureType.SIGNATURE_B, true, true);
                             }
                             catch (Exception)
                             {
