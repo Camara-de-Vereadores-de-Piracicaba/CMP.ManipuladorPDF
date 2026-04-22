@@ -1,12 +1,10 @@
 ﻿using iText.Kernel.Colors;
-using iText.Kernel.Font;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using System.IO;
-using System.Text.RegularExpressions;
 using Rectangle = iText.Kernel.Geom.Rectangle;
 
 namespace CMP.ManipuladorPDF
@@ -41,12 +39,12 @@ namespace CMP.ManipuladorPDF
 
             int numero = primeiroNumero;
 
-            if(paginaInicial > totalPaginas)
+            if (paginaInicial > totalPaginas)
             {
                 paginaInicial = totalPaginas;
             }
 
-            if(paginaInicial < 1) 
+            if (paginaInicial < 1)
             {
                 paginaInicial = 1;
             }
@@ -55,11 +53,12 @@ namespace CMP.ManipuladorPDF
             {
 
                 PdfPage page = pdfDocument.GetPage(pagina);
-                var mediaBox = page.GetCropBox();
+                Rectangle mediaBox = page.GetCropBox();
                 float pageWidth = mediaBox.GetWidth();
                 float pageHeight = mediaBox.GetHeight();
                 PdfCanvas pdfCanvas = new PdfCanvas(page);
-                Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
+
+                using Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
 
                 Paragraph text = new Paragraph();
                 text.SetFontSize(tamanhoFonte).Add($"{prefixo}{numero}");
@@ -129,7 +128,7 @@ namespace CMP.ManipuladorPDF
             string prefixo = ""
         )
         {
-            return NumerarDocumento(documento,posicao,tamanhoFonte,paginaInicial,primeiroNumero,margem,prefixo);
+            return NumerarDocumento(documento, posicao, tamanhoFonte, paginaInicial, primeiroNumero, margem, prefixo);
         }
 
     }

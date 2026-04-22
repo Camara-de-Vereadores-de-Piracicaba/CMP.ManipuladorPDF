@@ -74,7 +74,7 @@ namespace CMP.ManipuladorPDF
                 float pageWidth = mediaBox.GetWidth();
                 float pageHeight = mediaBox.GetHeight();
                 PdfCanvas pdfCanvas = new PdfCanvas(page);
-                Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
+                using Canvas canvas = new Canvas(pdfCanvas, new Rectangle(0, 0, pageWidth, pageHeight));
                 if (qrcode != null)
                 {
                     QRCodeGenerator qrGenerator = new QRCodeGenerator();
