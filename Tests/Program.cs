@@ -6,8 +6,8 @@ using CMP.ManipuladorPDF;
 Adobe.Acrobat.FecharAcrobat();
 
 string path = "C:\\arquivos\\testepdf\\";
-string input = "joao_in.pdf";
-string output = "joao_out.pdf";
+string input = "nf.pdf";
+string output = "nfo.pdf";
 
 
 DocumentoPDF documento = new DocumentoPDF($"{path}{input}");

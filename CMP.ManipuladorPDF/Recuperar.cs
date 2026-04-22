@@ -104,6 +104,23 @@ namespace CMP.ManipuladorPDF
             return new DocumentoPDF(outputStream.ToArray());
         }
 
+        private static DocumentoPDF RemoverFontDescriptorsInvalidos(this DocumentoPDF documento)
+        {
+            System.Text.Encoding encoding = System.Text.Encoding.GetEncoding("iso-8859-1");
+
+            string pdfText = encoding.GetString(documento.ByteArray);
+
+            pdfText = System.Text.RegularExpressions.Regex.Replace(
+                pdfText,
+                @"/FontFile\d?\s+\d+\s+\d+\s+R\s+null",
+                ""
+            );
+
+            byte[] resultBytes = encoding.GetBytes(pdfText);
+            return new DocumentoPDF(resultBytes);
+        }
+
+
         /// <summary>
         /// Repara um documento corrupto
         /// </summary>
