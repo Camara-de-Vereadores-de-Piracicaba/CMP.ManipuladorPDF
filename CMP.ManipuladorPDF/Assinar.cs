@@ -11,11 +11,14 @@ using iText.Layout.Renderer;
 using iText.Signatures;
 using System;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CMP.ManipuladorPDF
 {
     public static partial class ExtensionMethods
     {
+        private static SemaphoreSlim _tsaSemaphore = new SemaphoreSlim(1, 1);
 
         private static DocumentoPDF AssinarDocumento(
             this DocumentoPDF documento,
@@ -96,6 +99,7 @@ namespace CMP.ManipuladorPDF
 
                     throw new IrrecuperableBrokenPDFDocumentException();
                 }
+
                 throw new SignatureException(exception.Message);
             }
 
@@ -298,6 +302,24 @@ namespace CMP.ManipuladorPDF
             return ProcessarAssinatura(documento, certificado, pagina, x, y, profile);
         }
 
+        public static async Task<DocumentoPDF> AssinarAsync(this DocumentoPDF documento,
+            Certificado certificado,
+            int pagina = 1,
+            int x = 0,
+            int y = 0,
+            string profile = "LTA")
+        {
+            await _tsaSemaphore.WaitAsync();
+            try
+            {
+                return ProcessarAssinatura(documento, certificado, pagina, x, y, profile);
+            }
+            finally
+            {
+                _tsaSemaphore.Release();
+            }
+        }
+
         /// <summary>
         /// Assina um Documento PDF 
         /// </summary>
@@ -364,6 +386,7 @@ namespace CMP.ManipuladorPDF
                 if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
                     throw new CertificateWrongPasswordException();
             }
+
             return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
         }
 
@@ -397,6 +420,7 @@ namespace CMP.ManipuladorPDF
                 if (exception.Message == "PKCS12 key store MAC invalid - wrong password or corrupted file.")
                     throw new CertificateWrongPasswordException();
             }
+
             return ProcessarAssinatura(documento, _certificado, pagina, x, y, profile);
         }
 
@@ -453,6 +477,5 @@ namespace CMP.ManipuladorPDF
             }
         }
     }
-
 
 }
