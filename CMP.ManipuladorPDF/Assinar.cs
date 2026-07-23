@@ -20,6 +20,61 @@ namespace CMP.ManipuladorPDF
     {
         private static SemaphoreSlim _tsaSemaphore = new SemaphoreSlim(1, 1);
 
+        /// <summary>
+        /// Verifica se o documento já possui pelo menos uma assinatura digital
+        /// (campos de assinatura efetivamente preenchidos, com ByteRange).
+        /// </summary>
+        private static bool PossuiAssinaturas(
+            this DocumentoPDF documento
+        )
+        {
+            try
+            {
+                using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+                if (DocumentoPDFConfig.UNETHICAL_READING)
+                    pdfReader.SetUnethicalReading(true);
+                using PdfDocument pdfDocument = new PdfDocument(pdfReader);
+                SignatureUtil signatureUtil = new SignatureUtil(pdfDocument);
+                return signatureUtil.GetSignatureNames().Count > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Remove a declaração de conformidade PDF/A de um documento (metadados XMP
+        /// pdfaid e OutputIntents), em modo append para preservar assinaturas já
+        /// existentes. Usado quando um documento já assinado — tipicamente pela Adobe,
+        /// com uma Helvetica não embutida — precisa ser reassinado, mas o validador
+        /// PDF/A do iText recusaria a fonte não embutida herdada.
+        /// </summary>
+        private static DocumentoPDF RemoverConformidadePDFA(
+            this DocumentoPDF documento
+        )
+        {
+            using MemoryStream outputStream = new MemoryStream();
+            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                pdfReader.SetUnethicalReading(true);
+            using PdfWriter pdfWriter = new PdfWriter(outputStream);
+            using PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter, new StampingProperties().UseAppendMode());
+
+            PdfDictionary catalog = pdfDocument.GetCatalog().GetPdfObject();
+
+            if (catalog.ContainsKey(PdfName.Metadata))
+                catalog.Remove(PdfName.Metadata);
+
+            if (catalog.ContainsKey(PdfName.OutputIntents))
+                catalog.Remove(PdfName.OutputIntents);
+
+            catalog.SetModified();
+
+            pdfDocument.Close();
+            return new DocumentoPDF(outputStream.ToArray());
+        }
+
         private static DocumentoPDF AssinarDocumento(
             this DocumentoPDF documento,
             Certificado certificado,
@@ -186,7 +241,22 @@ namespace CMP.ManipuladorPDF
                 }
                 else if (exception.Message.Contains("All the fonts must be embedded"))
                 {
-                    throw new FontNotExistException(exception.Message);
+                    if (documento.PossuiAssinaturas())
+                    {
+                        try
+                        {
+                            DocumentoPDF documentoSemConformidade = documento.RemoverConformidadePDFA();
+                            return AssinarDocumento(documentoSemConformidade, certificado, x, y, pagina, profile, true, false);
+                        }
+                        catch (Exception)
+                        {
+                            throw new FontNotExistException(exception.Message);
+                        }
+                    }
+                    else
+                    {
+                        throw new FontNotExistException(exception.Message);
+                    }
                 }
                 else if (exception.Message.Contains("Append mode requires a document without errors, even if recovery is possible"))
                 {
