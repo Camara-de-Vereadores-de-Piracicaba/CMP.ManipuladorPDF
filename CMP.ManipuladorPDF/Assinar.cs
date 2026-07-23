@@ -10,6 +10,7 @@ using iText.Layout.Element;
 using iText.Layout.Renderer;
 using iText.Signatures;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,14 +44,36 @@ namespace CMP.ManipuladorPDF
             }
         }
 
+        private static bool FonteEstaEmbutida(PdfDictionary fontDict)
+        {
+            PdfDictionary descriptor = fontDict.GetAsDictionary(PdfName.FontDescriptor);
+            if (descriptor == null)
+            {
+                PdfArray descendants = fontDict.GetAsArray(PdfName.DescendantFonts);
+                if (descendants != null && descendants.Size() > 0)
+                    descriptor = descendants.GetAsDictionary(0)?.GetAsDictionary(PdfName.FontDescriptor);
+            }
+            if (descriptor == null) return false;
+            return descriptor.ContainsKey(PdfName.FontFile)
+                || descriptor.ContainsKey(PdfName.FontFile2)
+                || descriptor.ContainsKey(PdfName.FontFile3);
+        }
+
         /// <summary>
-        /// Remove a declaração de conformidade PDF/A de um documento (metadados XMP
-        /// pdfaid e OutputIntents), em modo append para preservar assinaturas já
-        /// existentes. Usado quando um documento já assinado — tipicamente pela Adobe,
-        /// com uma Helvetica não embutida — precisa ser reassinado, mas o validador
-        /// PDF/A do iText recusaria a fonte não embutida herdada.
+        /// Prepara, em modo append (incremental), um documento já assinado para receber
+        /// uma nova assinatura sem que o validador de conformidade do iText recuse
+        /// defeitos herdados — típicos de PDFs assinados pela Adobe. Faz duas coisas:
+        ///
+        /// 1. Remove do /DR do AcroForm as fontes padrão não embutidas (Helvetica /Helv,
+        ///    ZapfDingbats /ZaDb), que causam "All the fonts must be embedded".
+        /// 2. Remove a árvore de tags (StructTreeRoot) e desmarca MarkInfo, evitando que o
+        ///    checker PDF/UA rejeite a estrutura de acessibilidade herdada (ex.:
+        ///    "Parent-child (H2:P) relation is not allowed").
+        ///
+        /// Por ser incremental, as assinaturas anteriores permanecem criptograficamente
+        /// válidas (os bytes já assinados não são alterados).
         /// </summary>
-        private static DocumentoPDF RemoverConformidadePDFA(
+        private static DocumentoPDF PrepararDocumentoAssinadoParaReassinatura(
             this DocumentoPDF documento
         )
         {
@@ -62,14 +85,46 @@ namespace CMP.ManipuladorPDF
             using PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter, new StampingProperties().UseAppendMode());
 
             PdfDictionary catalog = pdfDocument.GetCatalog().GetPdfObject();
+            PdfDictionary acroForm = catalog.GetAsDictionary(PdfName.AcroForm);
+            PdfDictionary dr = acroForm?.GetAsDictionary(PdfName.DR);
+            PdfDictionary fonts = dr?.GetAsDictionary(PdfName.Font);
 
-            if (catalog.ContainsKey(PdfName.Metadata))
-                catalog.Remove(PdfName.Metadata);
+            if (fonts != null)
+            {
+                List<PdfName> remover = new List<PdfName>();
+                foreach (PdfName key in fonts.KeySet())
+                {
+                    PdfDictionary fontDict = fonts.GetAsDictionary(key);
+                    if (fontDict != null && !FonteEstaEmbutida(fontDict))
+                        remover.Add(key);
+                }
 
-            if (catalog.ContainsKey(PdfName.OutputIntents))
-                catalog.Remove(PdfName.OutputIntents);
+                foreach (PdfName key in remover)
+                    fonts.Remove(key);
 
-            catalog.SetModified();
+                if (remover.Count > 0)
+                {
+                    // Marca a cadeia até o objeto indireto que contém a mudança, para que o
+                    // append mode a reescreva (dicionários diretos serializam inline no
+                    // indireto que os contém).
+                    fonts.SetModified();
+                    dr.SetModified();
+                    acroForm.SetModified();
+                    catalog.SetModified();
+                }
+            }
+
+            // Remove a árvore de tags (acessibilidade). Assinar em append mode preserva as
+            // tags do documento, e o validador PDF/UA rejeitaria a estrutura herdada da
+            // Adobe (ex.: "Parent-child (H2:P) relation is not allowed"). Isso equivale ao
+            // RemoverTagsParaAssinatura, mas incremental para não invalidar assinaturas.
+            if (catalog.ContainsKey(PdfName.StructTreeRoot))
+            {
+                catalog.Remove(PdfName.StructTreeRoot);
+                PdfDictionary markInfo = catalog.GetAsDictionary(PdfName.MarkInfo);
+                markInfo?.Put(PdfName.Marked, PdfBoolean.FALSE);
+                catalog.SetModified();
+            }
 
             pdfDocument.Close();
             return new DocumentoPDF(outputStream.ToArray());
@@ -245,8 +300,8 @@ namespace CMP.ManipuladorPDF
                     {
                         try
                         {
-                            DocumentoPDF documentoSemConformidade = documento.RemoverConformidadePDFA();
-                            return AssinarDocumento(documentoSemConformidade, certificado, x, y, pagina, profile, true, false);
+                            DocumentoPDF documentoPreparado = documento.PrepararDocumentoAssinadoParaReassinatura();
+                            return AssinarDocumento(documentoPreparado, certificado, x, y, pagina, profile, true, false);
                         }
                         catch (Exception)
                         {

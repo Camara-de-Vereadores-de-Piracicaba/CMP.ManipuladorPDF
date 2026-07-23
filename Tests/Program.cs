@@ -5,10 +5,10 @@ using CMP.ManipuladorPDF;
 
 Adobe.Acrobat.FecharAcrobat();
 
-string path = "C:\\arquivos\\testepdf\\";
-string input = "nf.pdf";
 string output = "nfo.pdf";
 
+string path = "C:\\Users\\0301\\Documents\\Downloads\\";
+string input = "Autorizacao_Fornecimento_231_2026-Assinada.pdf";
 
 DocumentoPDF documento = new DocumentoPDF($"{path}{input}");
 
@@ -213,31 +213,10 @@ Certificado keila = new Certificado(raiz, "TESTANDO CERTIFICADO", "keila.rodrigu
 keila.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
 documento
-    //.Juntar("C:\\arquivos\\testepdf\\baiao.pdf")
-    //.Numerar()
-    //.AdicionarMetadado(new Metadado("Nome 4", "Valor 4"))
-    //.TornarSemEfeito(new int[] { 255, 50, 50 }, 0.5f)
-    //.TornarSemEfeito(new int[] { 50, 50, 50 }, 0.5f)
-    //.Assinar(keila, 1, 320, 550, "LTA")
-    //.Protocolar("AAAAA")
-    //.Invalidar("MEU_TEXTO", new int[] { 0, 255, 0 })
-    //.ConverterParaPDFA()
-    .Assinar(keila, 1, 200,300)
-    //.Assinar(keila, 0, 0, 0, "B")
-    //.AdicionarDetalhesAoFinal("XXXXXXXX")
-    //.ProtegerComSenha("fabio")
+    .Assinar(keila, 1, 200, 300)
     .Salvar($"{path}{output}");
 
-
-
-//documento.Salvar($"{path}{output}");
-
-
 Adobe.Acrobat.AbrirAcrobat($"{path}{output}");
-
-
-
-
 
 //Console.WriteLine(documento.OCR());
 
@@ -265,8 +244,6 @@ foreach(AssinanteDocumento assinante in assinantes)
 
 //Console.WriteLine(assinantes[1].Email);
 
-
-
 //Console.WriteLine(documento.TemCarimboAntigo());
 
 //documento.ObterFontesIncorporadas();
@@ -280,8 +257,6 @@ foreach(AssinanteDocumento assinante in assinantes)
 //var ass = documento2.CarimbosDoTempo();
 
 //Console.WriteLine(ass[0].Nome);
-
-
 
 //string str = File.ReadAllText("C:\\app\\compras-erro.html");
 
@@ -318,11 +293,9 @@ keila.SaveToDisk("C:\\arquivos\\certificados\\keila.pfx");
 
 //List<Metadado> metadata = documento.ObtemMetadados();
 
-
 //documento.ExtrairPagina(1).Salvar($"{path}{output}");
 
 //DocumentoPDF documento = new DocumentoPDF($"{path}1.pdf");
-
 
 /*
 documento
