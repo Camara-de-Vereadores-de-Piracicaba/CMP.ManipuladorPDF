@@ -58,11 +58,16 @@ namespace CMP.ManipuladorPDF.V2
         /// Se o iText deve fechar <paramref name="destino"/> ao final. Use <c>false</c> para
         /// <c>Response.Body</c> (o pipeline HTTP gerencia o fechamento) e <c>true</c> para arquivos.
         /// </param>
+        /// <param name="aoAvisar">
+        /// Recebe avisos de problemas não fatais (ex.: falha na liberação antecipada de objetos).
+        /// Opcional, mas recomendado: sem ele esses problemas passam despercebidos.
+        /// </param>
         public static void ImprimirParaStream(
             IEnumerable<FonteDocumentoImpressao> fontes,
             Stream destino,
             string hashFinal = null,
-            bool fecharStreamDestino = true
+            bool fecharStreamDestino = true,
+            Action<string> aoAvisar = null
         )
         {
             if (fontes == null)
@@ -73,7 +78,18 @@ namespace CMP.ManipuladorPDF.V2
             PdfWriter pdfWriter = new PdfWriter(destino);
             pdfWriter.SetCloseStream(fecharStreamDestino);
             PdfDocument documentoFinal = new PdfDocument(pdfWriter);
-            PdfMerger merger = new PdfMerger(documentoFinal);
+
+            // Merge SEM árvore de tags e sem outlines. Mesclar tags exigiria marcar o destino como
+            // "tagged" e fundir as struct trees de todos os documentos numa árvore única: com origens
+            // heterogêneas (scans, exports, documentos assinados) isso quebra com
+            // "Tag structure copying failed", e a liberação antecipada de objetos abaixo agrava o
+            // problema por soltar elementos que a árvore do destino ainda referencia.
+            // Consequência aceita: o PDF montado não carrega a estrutura de acessibilidade das origens.
+            PdfMergerProperties propriedades = new PdfMergerProperties()
+                .SetMergeTags(false)
+                .SetMergeOutlines(false);
+
+            PdfMerger merger = new PdfMerger(documentoFinal, propriedades);
 
             List<AssinanteDocumento> todosAssinantes = new List<AssinanteDocumento>();
             int offset = 0;
@@ -108,14 +124,14 @@ namespace CMP.ManipuladorPDF.V2
                     // a cadeia inteira de uma vez ao final, porém sem reabrir o documento todo.
                     DocumentoPDF numerado = protocolado.Numerar(primeiroNumero: offset + 1);
 
-                    offset += MesclarNoDestino(merger, documentoFinal, numerado.ByteArray);
+                    offset += MesclarNoDestino(merger, documentoFinal, numerado.ByteArray, aoAvisar);
                     anexouAlgumDocumento = true;
                 }
 
                 if (anexouAlgumDocumento)
                 {
                     DocumentoPDF paginaDetalhes = ConstruirPaginaDetalhes(hashFinal, todosAssinantes);
-                    MesclarNoDestino(merger, documentoFinal, paginaDetalhes.ByteArray);
+                    MesclarNoDestino(merger, documentoFinal, paginaDetalhes.ByteArray, aoAvisar);
                 }
             }
             finally
@@ -130,7 +146,11 @@ namespace CMP.ManipuladorPDF.V2
         /// Após a mesclagem, tenta liberar os objetos copiados para reduzir o pico de memória — falha
         /// nessa liberação é apenas uma perda de otimização e não afeta a corretude da saída.
         /// </summary>
-        private static int MesclarNoDestino(PdfMerger merger, PdfDocument documentoFinal, byte[] conteudo)
+        private static int MesclarNoDestino(
+            PdfMerger merger,
+            PdfDocument documentoFinal,
+            byte[] conteudo,
+            Action<string> aoAvisar)
         {
             using (PdfReader leitor = new PdfReader(new MemoryStream(conteudo)))
             using (PdfDocument origem = new PdfDocument(leitor))
@@ -142,9 +162,13 @@ namespace CMP.ManipuladorPDF.V2
                 {
                     documentoFinal.FlushCopiedObjects(origem);
                 }
-                catch
+                catch (Exception excecao)
                 {
-                    // Liberação antecipada é best-effort; ignora e segue.
+                    // A liberação antecipada é uma otimização de memória: se falhar, o documento sai
+                    // correto, porém com pico de RAM maior. Avisa para não ficar invisível — foi
+                    // justamente uma falha silenciosa aqui que mascarou um problema de merge.
+                    aoAvisar?.Invoke(
+                        $"Falha ao liberar objetos copiados após mesclar {paginas} página(s): {excecao.Message}");
                 }
 
                 return paginas;
