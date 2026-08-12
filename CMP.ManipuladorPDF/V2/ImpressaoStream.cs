@@ -4,6 +4,7 @@ using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace CMP.ManipuladorPDF.V2
 {
@@ -62,12 +63,18 @@ namespace CMP.ManipuladorPDF.V2
         /// Recebe avisos de problemas não fatais (ex.: falha na liberação antecipada de objetos).
         /// Opcional, mas recomendado: sem ele esses problemas passam despercebidos.
         /// </param>
+        /// <param name="cancellationToken">
+        /// Interrompe a montagem entre documentos. Existe porque a impressão é longa e cara: sem ele,
+        /// abandonar o download (fechar a aba, cancelar) não para nada — o servidor segue gerando a
+        /// cadeia inteira. A granularidade é por documento, suficiente para liberar o trabalho logo.
+        /// </param>
         public static void ImprimirParaStream(
             IEnumerable<FonteDocumentoImpressao> fontes,
             Stream destino,
             string hashFinal = null,
             bool fecharStreamDestino = true,
-            Action<string> aoAvisar = null
+            Action<string> aoAvisar = null,
+            CancellationToken cancellationToken = default
         )
         {
             if (fontes == null)
@@ -94,11 +101,14 @@ namespace CMP.ManipuladorPDF.V2
             List<AssinanteDocumento> todosAssinantes = new List<AssinanteDocumento>();
             int offset = 0;
             bool anexouAlgumDocumento = false;
+            bool concluiu = false;
 
             try
             {
                 foreach (FonteDocumentoImpressao fonte in fontes)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (fonte == null || fonte.AbrirConteudo == null)
                         continue;
 
@@ -130,14 +140,28 @@ namespace CMP.ManipuladorPDF.V2
 
                 if (anexouAlgumDocumento)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     DocumentoPDF paginaDetalhes = ConstruirPaginaDetalhes(hashFinal, todosAssinantes);
                     MesclarNoDestino(merger, documentoFinal, paginaDetalhes.ByteArray, aoAvisar);
                 }
+
+                concluiu = true;
             }
             finally
             {
-                merger.Close();
-                documentoFinal.Close();
+                try
+                {
+                    merger.Close();
+                    documentoFinal.Close();
+                }
+                catch (Exception excecao) when (!concluiu)
+                {
+                    // Só chega aqui quando já estamos desfazendo por outra falha (cancelamento,
+                    // cliente desconectado). Fechar escreve a xref no destino, o que naturalmente
+                    // falha se o destino morreu — não pode mascarar a exceção original.
+                    aoAvisar?.Invoke($"Falha ao fechar o documento após interrupção: {excecao.Message}");
+                }
             }
         }
 
