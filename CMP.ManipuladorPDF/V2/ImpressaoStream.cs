@@ -132,7 +132,7 @@ namespace CMP.ManipuladorPDF.V2
 
                     // Numeração contínua por fonte (primeiroNumero = offset + 1) — equivalente a numerar
                     // a cadeia inteira de uma vez ao final, porém sem reabrir o documento todo.
-                    DocumentoPDF numerado = protocolado.Numerar(primeiroNumero: offset + 1);
+                    DocumentoPDF numerado = protocolado.Numerar(primeiroNumero: offset + 1, prefixo: "fls. ");
 
                     offset += MesclarNoDestino(merger, documentoFinal, numerado.ByteArray, aoAvisar);
                     anexouAlgumDocumento = true;
