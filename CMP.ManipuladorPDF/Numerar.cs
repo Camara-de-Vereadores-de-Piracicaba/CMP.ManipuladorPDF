@@ -1,6 +1,7 @@
 ﻿using iText.Kernel.Colors;
 using iText.Kernel.Pdf;
 using iText.Kernel.Pdf.Canvas;
+using iText.Kernel.Utils;
 using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
@@ -33,8 +34,8 @@ namespace CMP.ManipuladorPDF
             documento = documento.DesencriptarCasoNecessario();
             using MemoryStream outputStream = new MemoryStream();
             using PdfWriter pdfWriter = new PdfWriter(outputStream);
-            using PdfReader pdfReader = new PdfReader(new MemoryStream(documento.ByteArray));
-            PdfDocument pdfDocument = new PdfDocument(pdfReader, pdfWriter);
+            PdfDocument pdfDocument = new PdfDocument(pdfWriter);
+            CopiarPaginas(documento.ByteArray, pdfDocument);
             int totalPaginas = pdfDocument.GetNumberOfPages();
 
             int numero = primeiroNumero;
@@ -104,6 +105,27 @@ namespace CMP.ManipuladorPDF
 
             return new DocumentoPDF(outputStream);
 
+        }
+
+        /// <summary>
+        /// Copia só as páginas para um documento novo, no mesmo critério da impressão:
+        /// sem árvore de tags, sem outlines e sem o catálogo de origem (certificação, permissões, assinatura).
+        /// </summary>
+        private static void CopiarPaginas(byte[] conteudo, PdfDocument destino)
+        {
+            PdfMergerProperties propriedades = new PdfMergerProperties()
+                .SetMergeTags(false)
+                .SetMergeOutlines(false);
+            PdfMerger merger = new PdfMerger(destino, propriedades);
+
+            using PdfReader leitor = new PdfReader(new MemoryStream(conteudo));
+            if (DocumentoPDFConfig.UNETHICAL_READING)
+                leitor.SetUnethicalReading(true);
+
+            using PdfDocument origem = new PdfDocument(leitor);
+            int totalPaginas = origem.GetNumberOfPages();
+            if (totalPaginas > 0)
+                merger.Merge(origem, 1, totalPaginas);
         }
 
         /// <summary>
