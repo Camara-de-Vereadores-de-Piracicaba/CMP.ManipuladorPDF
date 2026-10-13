@@ -1,5 +1,8 @@
 using CMP.Certificados;
 using CMP.ManipuladorPDF;
+using CMP.ManipuladorPDF.V2;
+using iText.Kernel.Pdf;
+using iText.Kernel.Pdf.Canvas.Parser;
 
 namespace Tests
 {
@@ -64,6 +67,25 @@ namespace Tests
             DocumentoPDF final = pdf
                 .AdicionarDetalhesAoFinal("XXXXXXXX");
 
+        }
+
+        [TestMethod]
+        public void ImpressaoStreamComCaractereSemGlifoTest()
+        {
+            FonteDocumentoImpressao fonte = new()
+            {
+                AbrirConteudo = () => FileManager.GetFile("test_pdf_complex.pdf"),
+                Hash = "XXXXXXXX",
+                Titulo = "XXXXXXXX - Ofício \U0001F680 \u0001 <b>negrito</b> & <img src=\"http://127.0.0.1/x.png\" />"
+            };
+
+            using MemoryStream destino = new();
+            ImpressaoStream.ImprimirParaStream(new[] { fonte }, destino, fecharStreamDestino: false);
+
+            using PdfDocument pdf = new(new PdfReader(new MemoryStream(destino.ToArray())));
+            string ultimaPagina = PdfTextExtractor.GetTextFromPage(pdf.GetLastPage());
+
+            Assert.IsTrue(ultimaPagina.Contains("<b>negrito</b> &"), ultimaPagina);
         }
 
         [TestMethod]

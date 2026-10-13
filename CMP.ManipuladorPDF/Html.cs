@@ -49,18 +49,7 @@ namespace CMP.ManipuladorPDF
                 .SetKeywords(keywords)
                 .AddCreationDate();
 
-            ConverterProperties properties = new ConverterProperties();
-
-            FontProvider fontProvider = new BasicFontProvider();
-
-            int fontCount = fontProvider.AddDirectory(DocumentoPDFConfig.FONT_PATH);
-
-            if (fontCount == 0)
-            {
-                throw new FontDirectoryEmptyException();
-            }
-
-            properties.SetFontProvider(fontProvider);
+            ConverterProperties properties = CriarPropriedadesConversao();
 
             try
             {
@@ -77,6 +66,40 @@ namespace CMP.ManipuladorPDF
                 throw new HtmlConverterException(exception.Message);
 
             }
+
+            return new DocumentoPDF(outputStream);
+        }
+
+        private static ConverterProperties CriarPropriedadesConversao()
+        {
+            ConverterProperties properties = new ConverterProperties();
+
+            FontProvider fontProvider = new BasicFontProvider();
+
+            int fontCount = fontProvider.AddDirectory(DocumentoPDFConfig.FONT_PATH);
+
+            if (fontCount == 0)
+            {
+                throw new FontDirectoryEmptyException();
+            }
+
+            properties.SetFontProvider(fontProvider);
+
+            return properties;
+        }
+
+        /// <summary>
+        /// Converte HTML em PDF comum, sem PDF/A. Para páginas mescladas em documentos que já não
+        /// são PDF/A: ali a conformidade se perde no merge, e a validação só serviria para derrubar
+        /// a conversão por um caractere sem glifo na fonte (emoji, símbolo colado do Word etc.).
+        /// </summary>
+        internal static DocumentoPDF ConverterParaPdfSimples(this string html)
+        {
+            using MemoryStream outputStream = new MemoryStream();
+            PdfDocument pdfDocument = new PdfDocument(new PdfWriter(outputStream));
+            pdfDocument.SetDefaultPageSize(PageSize.A4);
+
+            HtmlConverter.ConvertToPdf(html, pdfDocument, CriarPropriedadesConversao());
 
             return new DocumentoPDF(outputStream);
         }

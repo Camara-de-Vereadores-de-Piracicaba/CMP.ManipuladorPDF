@@ -4,6 +4,7 @@ using QRCoder;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading;
 
 namespace CMP.ManipuladorPDF.V2
@@ -262,10 +263,10 @@ namespace CMP.ManipuladorPDF.V2
                 string docTitle = "";
                 if (signature.Documento != null && signature.Documento.Titulo != null)
                 {
-                    docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
+                    docTitle = $"<h2>{WebUtility.HtmlEncode(signature.Documento.Titulo)}</h2>";
                 }
 
-                string date = signature.Data;
+                string date = WebUtility.HtmlEncode(signature.Data);
                 signatures += $@"
                     <div class=""signature"">
                     <div class=""signature-icon"">
@@ -273,8 +274,8 @@ namespace CMP.ManipuladorPDF.V2
                     </div>
                     <div class=""signature-info"">
                         {docTitle}
-                        <h1>{signature.Nome}</h1>
-                        <h2>{signature.Email}</h2>
+                        <h1>{WebUtility.HtmlEncode(signature.Nome)}</h1>
+                        <h2>{WebUtility.HtmlEncode(signature.Email)}</h2>
                         <h4>Assinado no dia {date}</h4>
                     </div>
                 </div>";
@@ -405,7 +406,7 @@ namespace CMP.ManipuladorPDF.V2
                 </div>
             ";
 
-            return html.ConverterParaPdf();
+            return html.ConverterParaPdfSimples();
         }
 
     }

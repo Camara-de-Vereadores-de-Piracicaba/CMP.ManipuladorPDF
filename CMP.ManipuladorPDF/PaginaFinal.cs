@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 
 namespace CMP.ManipuladorPDF
 {
@@ -53,10 +54,10 @@ namespace CMP.ManipuladorPDF
                 string docTitle = "";
                 if (assinantes != null && signature.Documento.Titulo != null)
                 {
-                    docTitle = $"<h2>{signature.Documento.Titulo}</h2>";
+                    docTitle = $"<h2>{WebUtility.HtmlEncode(signature.Documento.Titulo)}</h2>";
                 }
 
-                string date = signature.Data;
+                string date = WebUtility.HtmlEncode(signature.Data);
                 signatures += $@"
                     <div class=""signature"">
                     <div class=""signature-icon"">
@@ -64,8 +65,8 @@ namespace CMP.ManipuladorPDF
                     </div>
                     <div class=""signature-info"">
                         {docTitle}
-                        <h1>{signature.Nome}</h1>
-                        <h2>{signature.Email}</h2>
+                        <h1>{WebUtility.HtmlEncode(signature.Nome)}</h1>
+                        <h2>{WebUtility.HtmlEncode(signature.Email)}</h2>
                         <h4>Assinado no dia {date}</h4>
                     </div>
                 </div>";
@@ -196,7 +197,7 @@ namespace CMP.ManipuladorPDF
                 </div>
             ";
 
-            MemoryStream _paginaFinal = html.ConverterParaPdf().ConverterParaMemoryStream();
+            MemoryStream _paginaFinal = html.ConverterParaPdfSimples().ConverterParaMemoryStream();
             MemoryStream _paginaFinalStream = new MemoryStream(_paginaFinal.ToArray());
             PdfDocument paginaFinal = new PdfDocument(new PdfReader(_paginaFinalStream));
 
